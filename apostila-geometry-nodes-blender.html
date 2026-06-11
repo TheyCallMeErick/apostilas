@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometry Nodes no Blender — Apostila completa: modelagem como função</title>
+<meta name="description" content="Apostila completa de Geometry Nodes no Blender: campos, domínios, atributos, instâncias, curvas, zonas de simulação e a ponte com o shading — com diagramas, matemática, laboratórios e exercícios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161719;
+  --panel:#1f2125;
+  --panel-2:#26282d;
+  --line:#33363c;
+  --line-soft:#2b2e33;
+  --ink:#e9e7e2;
+  --muted:#a3a19a;
+  --faint:#74726c;
+  --node-header:#2f5a2f;
+  --node-header-ink:#cfe8c2;
+  --green:#8fc04c;
+  --sock-shader:#63c763;
+  --sock-color:#c7c729;
+  --sock-vector:#7a7ad6;
+  --sock-float:#a1a1a1;
+  --ray-in:#ffd54f;
+  --ray-refl:#ff8a65;
+  --ray-trans:#4fc3f7;
+  --ray-scat:#aed581;
+  --beg:#4fc3f7;
+  --adv:#ce93d8;
+  --radius:10px;
+  --maxw:880px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(circle, #232529 1px, transparent 1px);
+  background-size:26px 26px;
+  color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:16.5px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:#3a5a2a;color:#fff}
+a{color:var(--green);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+code{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:.85em;
+  background:var(--panel-2);
+  border:1px solid var(--line-soft);
+  border-radius:4px;
+  padding:.1em .4em;
+  color:#d7e6c0;
+}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;line-height:1.25;letter-spacing:-.01em}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1240px;margin:0 auto;gap:36px;padding:0 24px}
+main{max-width:var(--maxw);padding-bottom:120px;min-width:0}
+
+/* ---------- sidebar ---------- */
+.toc{
+  position:sticky;top:0;align-self:start;
+  max-height:100vh;overflow-y:auto;
+  padding:32px 0 32px;
+  font-size:13px;
+  scrollbar-width:thin;
+}
+.toc .brand{
+  font-family:'Space Grotesk';font-weight:700;font-size:15px;color:var(--ink);
+  display:flex;align-items:center;gap:8px;margin-bottom:18px;
+}
+.toc .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--sock-shader);box-shadow:0 0 8px #63c76366}
+.toc ol{list-style:none}
+.toc li{margin:1px 0}
+.toc a{
+  display:block;color:var(--muted);padding:4px 10px;border-left:2px solid var(--line-soft);
+  border-radius:0 5px 5px 0;
+}
+.toc a:hover{color:var(--ink);text-decoration:none;background:var(--panel)}
+.toc .grp{
+  margin:16px 0 5px;color:var(--faint);font-family:'JetBrains Mono';font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.14em;padding-left:12px;
+}
+@media (max-width:1020px){
+  .shell{grid-template-columns:1fr}
+  .toc{position:static;max-height:none;border-bottom:1px solid var(--line);margin-bottom:8px;padding-bottom:18px}
+  .toc ol{display:flex;flex-wrap:wrap;gap:2px 6px}
+  .toc a{border-left:none;border:1px solid var(--line-soft);border-radius:99px;padding:3px 11px}
+  .toc .grp{width:100%}
+}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 30px}
+.hero .kicker{
+  font-family:'JetBrains Mono';font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.hero .kicker::before{content:"";display:inline-block;width:26px;height:1px;background:var(--green)}
+.hero h1{font-size:clamp(34px,5.4vw,56px);font-weight:700;letter-spacing:-.025em;margin-bottom:18px}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero p.lead{font-size:18.5px;color:var(--muted);max-width:680px;margin-bottom:8px}
+.hero .meta{
+  display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;font-family:'JetBrains Mono';
+  font-size:12px;color:var(--faint);
+}
+.hero .meta span{display:flex;align-items:center;gap:7px}
+.hero .meta i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+/* ---------- section headings ---------- */
+section{padding-top:34px}
+.sec-head{margin:36px 0 14px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.sec-head .idx{
+  font-family:'JetBrains Mono';font-size:13px;color:var(--faint);
+  border:1px solid var(--line);border-radius:6px;padding:2px 9px;white-space:nowrap;
+}
+.sec-head h2{font-size:clamp(24px,3.4vw,32px)}
+.sec-sub{color:var(--muted);max-width:700px;margin-bottom:10px}
+
+/* ---------- node card (assinatura visual) ---------- */
+.node{
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(180deg,var(--panel) 0%,#1b1d21 100%);
+  margin:30px 0;overflow:hidden;
+  box-shadow:0 14px 40px -18px rgba(0,0,0,.55);
+}
+.node-head{
+  background:var(--node-header);color:var(--node-header-ink);
+  padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.node-head h3{font-size:19px;font-weight:600;color:#eef7e6;letter-spacing:0}
+.node-head .chip{
+  margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;background:#00000033;border:1px solid #ffffff22;
+  border-radius:99px;padding:2px 10px;color:#dfeccf;white-space:nowrap;
+}
+.node-head .sock{width:11px;height:11px;border-radius:50%;background:var(--sock-shader);border:1.5px solid #0c180c;flex:none}
+.node-body{padding:20px 22px 24px}
+.engine{
+  font-family:'JetBrains Mono';font-size:11px;color:var(--faint);
+  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+}
+.engine b{color:var(--muted);font-weight:500}
+
+/* níveis */
+.lvl{border:1px solid var(--line-soft);border-radius:8px;padding:16px 18px;margin:14px 0;background:#1b1d2055}
+.lvl .tag{
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:7px;margin-bottom:8px;
+}
+.lvl .tag::before{content:"";width:8px;height:8px;border-radius:2px;display:inline-block}
+.lvl.beg .tag{color:var(--beg)} .lvl.beg .tag::before{background:var(--beg)}
+.lvl.adv .tag{color:var(--adv)} .lvl.adv .tag::before{background:var(--adv)}
+.lvl p+p{margin-top:10px}
+.lvl ul{margin:8px 0 0 20px}
+.lvl li{margin:5px 0}
+
+/* figuras SVG */
+figure.diagram{
+  margin:18px 0;border:1px solid var(--line-soft);border-radius:8px;
+  background:#141518;padding:14px 12px 8px;overflow:hidden;
+}
+figure.diagram svg{width:100%;height:auto;display:block}
+figure.diagram figcaption{
+  font-size:12.5px;color:var(--faint);padding:8px 6px 4px;line-height:1.55;
+  font-family:'JetBrains Mono';
+}
+
+/* tabela de inputs / comparativa */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:14px 0}
+.tbl th{
+  text-align:left;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;
+  border-bottom:1px solid var(--line);padding:7px 10px;
+}
+.tbl td{border-bottom:1px solid var(--line-soft);padding:8px 10px;vertical-align:top;color:#d6d4cf}
+.tbl td:first-child{white-space:nowrap;font-weight:500}
+.tbl .sk{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:baseline;border:1px solid #0008}
+.sk.c{background:var(--sock-color)} .sk.f{background:var(--sock-float)} .sk.v{background:var(--sock-vector)} .sk.s{background:var(--sock-shader)}
+.tbl-wrap{overflow-x:auto}
+
+/* exemplos reais */
+.realw{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0 4px;
+}
+.realw .ex{
+  border:1px solid var(--line-soft);border-radius:7px;padding:10px 12px;background:var(--panel-2);
+  font-size:13.5px;line-height:1.45;
+}
+.realw .ex b{display:block;font-weight:600;color:var(--ink);margin-bottom:2px;font-size:13px}
+.realw .ex span{color:var(--muted);font-size:12.5px}
+
+/* callouts */
+.tip{
+  border-left:3px solid var(--green);background:#22301c66;border-radius:0 8px 8px 0;
+  padding:12px 16px;margin:14px 0;font-size:14.5px;color:#d9e5c9;
+}
+.tip b{color:#cfe8a8}
+.warn{
+  border-left:3px solid #e0a83f;background:#33291466;border-radius:0 8px 8px 0;
+  padding:12px 16px;margin:14px 0;font-size:14.5px;color:#e8d9b8;
+}
+.warn b{color:#f0c069}
+
+/* refs */
+sup.ref a{
+  font-family:'JetBrains Mono';font-size:.68em;color:var(--green);
+  border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:2px;
+}
+ol.bib{margin-left:22px;font-size:14px;color:var(--muted)}
+ol.bib li{margin:10px 0;line-height:1.6}
+ol.bib b{color:var(--ink);font-weight:600}
+ol.bib .where{font-style:italic}
+ol.bib code{font-size:.82em}
+
+p+p{margin-top:12px}
+main>section>p, .prose p{color:#d6d4cf}
+hr.sep{border:none;border-top:1px dashed var(--line);margin:46px 0 8px}
+
+footer{
+  border-top:1px solid var(--line);margin-top:70px;padding:26px 0 0;
+  font-size:13px;color:var(--faint);line-height:1.7;
+}
+footer a{color:var(--muted)}
+
+/* ---------- apostila: matemática ---------- */
+.math{
+  background:#101114;border:1px solid var(--line-soft);border-left:3px solid var(--adv);
+  border-radius:0 8px 8px 0;padding:14px 18px;margin:14px 0;
+  font-family:'JetBrains Mono',monospace;font-size:14px;color:#e3ddf0;
+  overflow-x:auto;line-height:2;
+}
+.math .eq{display:block;text-align:center;font-size:15px;white-space:nowrap}
+.math .legend{display:block;margin-top:8px;font-size:12px;color:var(--muted);line-height:1.7;white-space:normal;font-family:'Inter',sans-serif}
+.math .legend code{font-size:.92em}
+h4.sub{
+  font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);margin:22px 0 8px;display:flex;align-items:center;gap:10px;
+}
+h4.sub::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+
+/* ---------- erros comuns ---------- */
+.bugs{border:1px solid #5a3a2a55;border-radius:8px;background:#2a1d1455;padding:14px 18px;margin:14px 0}
+.bugs ul{margin-left:18px}
+.bugs li{margin:7px 0;font-size:14.5px;color:#e3cdbb}
+.bugs li b{color:#f0b78a}
+
+/* ---------- laboratórios / experimente ---------- */
+.lab{border:1px solid #3a4a2f;border-radius:8px;background:#1c2418aa;padding:16px 20px;margin:16px 0}
+.lab .lab-tag{
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--green);display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.lab .lab-tag::before{content:"▸";font-size:13px}
+.lab ol{margin-left:20px}
+.lab ol li{margin:7px 0;font-size:14.5px;color:#d6e0c6}
+.lab p{font-size:14.5px;color:#cdd8bd}
+.lab p.obs{margin-top:10px;color:var(--muted);font-size:13.5px;border-top:1px dashed #3a4a2f;padding-top:10px}
+kbd{
+  font-family:'JetBrains Mono';font-size:.82em;background:#2c2e34;border:1px solid #45484f;
+  border-bottom-width:2px;border-radius:5px;padding:.08em .45em;color:#e2e0da;
+}
+
+/* ---------- exercícios ---------- */
+details.exq{border:1px solid var(--line-soft);border-radius:8px;margin:10px 0;background:var(--panel-2);overflow:hidden}
+details.exq summary{
+  cursor:pointer;padding:12px 16px;font-size:14.5px;color:#dcdad4;list-style:none;
+  display:flex;gap:12px;align-items:baseline;
+}
+details.exq summary::-webkit-details-marker{display:none}
+details.exq summary .qn{font-family:'JetBrains Mono';font-size:12px;color:var(--green);white-space:nowrap}
+details.exq summary:hover{background:#2b2d33}
+details.exq .ans{padding:4px 16px 14px 16px;font-size:14px;color:var(--muted);border-top:1px dashed var(--line-soft)}
+details.exq .ans b{color:#cfe8a8}
+details.exq[open] summary{border-bottom:1px solid var(--line-soft)}
+
+/* ---------- glossário ---------- */
+dl.gloss{margin:14px 0}
+dl.gloss dt{font-weight:600;color:var(--ink);margin-top:14px;font-size:15px}
+dl.gloss dt code{font-size:.85em}
+dl.gloss dd{margin-left:0;color:var(--muted);font-size:14.5px;line-height:1.65}
+
+/* ---------- impressão ---------- */
+@media print{
+  body{background:#fff;color:#1c1c1c;font-size:11.5pt}
+  .toc{display:none}
+  .shell{display:block;max-width:none;padding:0 6mm}
+  main{max-width:none}
+  .node,.lvl,.lab,.bugs,figure.diagram,details.exq,.tip,.warn,.math{break-inside:avoid;background:#fff;border-color:#bbb}
+  .node{box-shadow:none}
+  .node-head{background:#dfe9d4;color:#1c1c1c}
+  .node-head h3{color:#1c1c1c}
+  main *{color:#1c1c1c!important}
+  a{text-decoration:underline}
+  details.exq{display:block} details.exq .ans{display:block}
+  figure.diagram{background:#fff}
+}
+
+/* svg shared */
+.svg-lbl{font-family:'JetBrains Mono',monospace;font-size:11px;fill:#a3a19a}
+.svg-lbl.s{font-size:10px;fill:#74726c}
+.svg-tit{font-family:'Space Grotesk',sans-serif;font-size:12.5px;fill:#c9c7c1;font-weight:600}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ======================= SIDEBAR ======================= -->
+<nav class="toc" aria-label="Sumário">
+  <div class="brand"><span class="dot" style="background:#4fd0c0;box-shadow:0 0 8px #4fd0c066"></span>Apostila · Geometry Nodes</div>
+  <ol>
+    <li class="grp">Parte I — Fundamentos</li>
+    <li><a href="#oque">Cap. 1 · Geometria como função</a></li>
+    <li><a href="#dominios">Cap. 2 · Domínios e atributos</a></li>
+    <li><a href="#fields">Cap. 3 · Campos (fields)</a></li>
+    <li><a href="#instancias-cap">Cap. 4 · Instâncias</a></li>
+    <li class="grp">Parte II — As famílias de nós</li>
+    <li><a href="#leitura">Ler &amp; escrever atributos</a></li>
+    <li><a href="#geracao">Gerar geometria</a></li>
+    <li><a href="#instanciar">Instanciar na prática</a></li>
+    <li><a href="#curvas">Curvas</a></li>
+    <li><a href="#malha">Operações de malha</a></li>
+    <li><a href="#utilitarios">Seleções e campos úteis</a></li>
+    <li><a href="#zonas">Zonas: Simulation &amp; Repeat</a></li>
+    <li><a href="#shading">A ponte com o shading</a></li>
+    <li class="grp">Parte III — Estudo</li>
+    <li><a href="#tabela">Mapa rápido dos nós</a></li>
+    <li><a href="#receitas">Receitas de leitura</a></li>
+    <li><a href="#labs">Laboratórios práticos</a></li>
+    <li><a href="#exercicios">Exercícios de fixação</a></li>
+    <li><a href="#glossario">Glossário</a></li>
+    <li><a href="#referencias">Referências</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ======================= HERO ======================= -->
+<header class="hero">
+  <div class="kicker">Apostila de modelagem procedural · Geometry Nodes</div>
+  <h1>Geometry Nodes: modelagem como <em>função</em></h1>
+  <p class="lead">Nas duas apostilas anteriores, os nós decidiam a aparência de superfícies que já existiam. Aqui, os nós criam <strong>a própria geometria</strong>: espalham pedras, erguem cercas ao longo de curvas, fazem prédios paramétricos e simulações que crescem quadro a quadro. O preço de entrada são três conceitos novos — domínios, campos e instâncias — e esta apostila existe para pagá-lo com calma: diagramas, a matemática por trás, laboratórios completos e exercícios.</p>
+  <div class="meta">
+    <span><i style="background:var(--beg)"></i>Nível iniciante</span>
+    <span><i style="background:var(--adv)"></i>Nível avançado</span>
+    <span><i style="background:#4fd0c0"></i>Socket geometria</span>
+    <span><i style="background:var(--sock-float);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></i>Socket losango = campo</span>
+    <span><i style="background:var(--sock-vector)"></i>Vetor</span>
+  </div>
+  <div class="tip" style="margin-top:26px"><b>Como estudar com esta apostila:</b> mantenha o <em>Spreadsheet</em> aberto ao lado do editor de nós o tempo todo — ele é para o Geometry Nodes o que o Viewer era para o shading: a janela onde você <em>vê os dados</em>. Primeira passada: blocos azuis + figuras + "Experimente". Segunda: blocos roxos e caixas de matemática. Os Caps. 2 e 3 (domínios e campos) são o coração de tudo — se algo da Parte II parecer mágico, a resposta está neles.</div>
+</header>
+<!-- ======================= CAP 1 — GEOMETRIA COMO FUNÇÃO ======================= -->
+<section id="oque">
+  <div class="sec-head"><span class="idx">Cap. 1</span><h2>Geometria como função: o que muda aqui</h2></div>
+  <p class="sec-sub">Geometry Nodes não é "modelar com nós": é descrever uma <em>regra</em> que fabrica geometria. A diferença entre esculpir uma estátua e escrever a receita que esculpe mil.</p>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Tecnicamente, uma árvore de Geometry Nodes é um <strong>modificador</strong>: ela mora na pilha de modificadores do objeto, recebe a geometria original pelo nó <code>Group Input</code>, transforma à vontade, e devolve pelo <code>Group Output</code>. A malha original nunca é destruída — apague o modificador e tudo volta.</p>
+    <p>Disso vêm os três superpoderes:</p>
+    <ul>
+      <li><strong>Não-destrutivo:</strong> qualquer decisão pode ser revista a qualquer momento — o "desfazer infinito".</li>
+      <li><strong>Paramétrico:</strong> valores expostos no Group Input viram sliders no painel do modificador. Um setup, infinitas variações.</li>
+      <li><strong>Escalável:</strong> a mesma regra que espalha 10 pedras espalha 10 milhões — você edita a regra, não as pedras.</li>
+    </ul>
+    <p>E o preço: você para de manipular <em>coisas</em> e passa a manipular <em>dados sobre coisas</em>. A ferramenta para enxergar esses dados é o <strong>Spreadsheet</strong> (a planilha): cada linha é um vértice/ponto/face, cada coluna um atributo. Abra-o agora e nunca mais feche.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 250" role="img" aria-label="Pipeline do modificador: geometria original entra no Group Input, atravessa a árvore de nós e sai transformada pelo Group Output">
+      <defs><marker id="q-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4fd0c0"/></marker></defs>
+      <g font-family="'Space Grotesk',sans-serif" font-size="12.5" font-weight="600">
+        <rect x="30" y="86" width="130" height="78" rx="8" fill="#26282d" stroke="#3a3d44"/>
+        <text x="44" y="112" fill="#dcdad4">malha original</text>
+        <path d="M55 150 l16 -18 l16 18 z" fill="none" stroke="#74726c" stroke-width="1.6"/>
+        <circle cx="118" cy="140" r="11" fill="none" stroke="#74726c" stroke-width="1.6"/>
+        <rect x="220" y="56" width="330" height="138" rx="10" fill="#1c2422" stroke="#2f5a50" stroke-width="1.5"/>
+        <text x="236" y="80" fill="#9fe0d4">árvore de Geometry Nodes (o modificador)</text>
+        <rect x="240" y="98" width="92" height="34" rx="6" fill="#26282d" stroke="#3a3d44"/><text x="250" y="120" fill="#b9c4c0" font-size="11">Group Input</text>
+        <rect x="352" y="98" width="80" height="34" rx="6" fill="#26282d" stroke="#3a3d44"/><text x="360" y="120" fill="#b9c4c0" font-size="11">nós, nós...</text>
+        <rect x="450" y="98" width="86" height="34" rx="6" fill="#26282d" stroke="#3a3d44"/><text x="458" y="120" fill="#b9c4c0" font-size="11">Group Output</text>
+        <text x="240" y="172" fill="#74726c" font-size="11" font-weight="400">inputs expostos = sliders no painel do modificador</text>
+        <rect x="610" y="86" width="130" height="78" rx="8" fill="#26282d" stroke="#3a3d44"/>
+        <text x="624" y="112" fill="#dcdad4">resultado</text>
+        <g stroke="#74726c" stroke-width="1.6" fill="none">
+          <path d="M632 150 l12 -14 l12 14 z"/><path d="M662 150 l12 -14 l12 14 z"/><path d="M692 150 l12 -14 l12 14 z"/>
+        </g>
+      </g>
+      <line x1="160" y1="115" x2="236" y2="115" stroke="#4fd0c0" stroke-width="2.4" marker-end="url(#q-a)"/>
+      <line x1="332" y1="115" x2="348" y2="115" stroke="#4fd0c0" stroke-width="2.4" marker-end="url(#q-a)"/>
+      <line x1="432" y1="115" x2="446" y2="115" stroke="#4fd0c0" stroke-width="2.4" marker-end="url(#q-a)"/>
+      <line x1="550" y1="115" x2="606" y2="115" stroke="#4fd0c0" stroke-width="2.4" marker-end="url(#q-a)"/>
+      <text x="30" y="36" class="svg-tit">geometria_nova = f(geometria_original, parâmetros)</text>
+      <text x="30" y="232" class="svg-lbl s">a original fica intacta; o modificador é a função; o painel são os argumentos</text>
+    </svg>
+    <figcaption>Fig. 1 — O contrato do modificador. Toda a apostila cabe nesta assinatura de função: o que muda de nó para nó é <em>como</em> a geometria é transformada lá dentro.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>O socket turquesa transporta um <strong>geometry set</strong>: um contêiner que pode carregar, ao mesmo tempo, malha, curvas, nuvem de pontos, volume e instâncias — cada componente com seus próprios atributos. Nós que esperam um tipo específico (ex.: operações de malha) simplesmente ignoram os outros componentes, sem erro.</p>
+    <p>A avaliação é por demanda e com <em>copy-on-write</em>: ramos não conectados ao Output não executam, e dados só são copiados quando modificados — duplicar geometria "de graça" até o primeiro Set Position. A linhagem intelectual é dupla: o dataflow dos shade trees de Cook (1984)<sup class="ref"><a href="#r2">[2]</a></sup> — o mesmo das outras apostilas — casado com a tradição de modelagem procedural paramétrica que remonta ao Sketchpad de Sutherland (1963)<sup class="ref"><a href="#r1">[1]</a></sup> e floresceu em sistemas como L-systems<sup class="ref"><a href="#r3">[3]</a></sup> e gramáticas de forma para cidades e prédios<sup class="ref"><a href="#r5">[5]</a>,<a href="#r6">[6]</a></sup>.</p>
+    <p>Desde o Blender 4.x, árvores também podem rodar como <strong>operadores</strong> (menu de ferramentas, executam uma vez e "assam" o resultado) além de modificadores (vivos, reavaliados a cada mudança) — mesma linguagem, dois modos de vida.</p>
+  </div>
+</section>
+
+<!-- ======================= CAP 2 — DOMÍNIOS ======================= -->
+<section id="dominios">
+  <div class="sec-head"><span class="idx">Cap. 2</span><h2>Domínios e atributos: onde os dados moram</h2></div>
+  <p class="sec-sub">Todo dado em Geometry Nodes está pendurado em algum elemento da geometria. Saber <em>em qual</em> — ponto? face? spline? instância? — é a diferença entre o setup que funciona e o que faz algo misteriosamente errado.</p>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Uma malha tem quatro tipos de elemento, e cada um pode carregar atributos próprios:</p>
+    <ul>
+      <li><strong>Point (vértice)</strong> — onde mora a <code>position</code>, o atributo mais importante do sistema.</li>
+      <li><strong>Edge (aresta)</strong> — ex.: marcação de crease/seam.</li>
+      <li><strong>Face</strong> — ex.: índice de material, shade smooth.</li>
+      <li><strong>Face Corner (canto de face)</strong> — o mais sutil: cada face tem o "seu" canto em cada vértice. É onde moram UVs — porque o mesmo vértice pode ter UVs diferentes em faces diferentes (é assim que existem seams!).</li>
+    </ul>
+    <p>Curvas adicionam <strong>Spline</strong> (a curva inteira) e <strong>Control Point</strong>; instâncias têm o domínio <strong>Instance</strong>. O Spreadsheet tem um seletor de domínio no topo: alternar entre eles e ver as colunas mudarem é a melhor aula deste capítulo.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 270" role="img" aria-label="Um quad com seus quatro tipos de elemento destacados: vértices, arestas, face e os quatro face corners">
+      <g>
+        <polygon points="120,60 320,60 320,210 120,210" fill="#26302b" stroke="#5a5e66" stroke-width="2.5"/>
+        <g fill="#ffd54f"><circle cx="120" cy="60" r="7"/><circle cx="320" cy="60" r="7"/><circle cx="320" cy="210" r="7"/><circle cx="120" cy="210" r="7"/></g>
+        <text x="96" y="44" class="svg-lbl" fill="#ffd54f">Point (4): position, pesos...</text>
+        <text x="332" y="140" class="svg-lbl" fill="#8fa6bd">Edge (4): crease, seam...</text>
+        <line x1="328" y1="132" x2="322" y2="132" stroke="#8fa6bd" stroke-width="1.4"/>
+        <text x="176" y="142" class="svg-lbl" fill="#9bbf72">Face (1): material,</text>
+        <text x="176" y="158" class="svg-lbl" fill="#9bbf72">shade smooth...</text>
+        <g fill="none" stroke="#ce93d8" stroke-width="2">
+          <path d="M134 88 a 18 18 0 0 1 18 -18"/>
+          <path d="M306 70 a 18 18 0 0 1 -18 -18" transform="translate(0,18)"/>
+          <path d="M306 182 a 18 18 0 0 1 18 18" transform="translate(-18,0)"/>
+          <path d="M152 200 a 18 18 0 0 1 -18 -18" transform="translate(0,0)"/>
+        </g>
+        <text x="96" y="248" class="svg-lbl" fill="#ce93d8">Face Corner (4): UVs, vertex colors por face — o mesmo vértice pode ter valores diferentes em faces vizinhas</text>
+      </g>
+      <g>
+        <path d="M460 200 C 520 80, 620 240, 700 90" fill="none" stroke="#4fd0c0" stroke-width="2.6"/>
+        <g fill="#ffd54f"><circle cx="460" cy="200" r="6"/><circle cx="545" cy="138" r="6"/><circle cx="624" cy="170" r="6"/><circle cx="700" cy="90" r="6"/></g>
+        <text x="452" y="232" class="svg-lbl" fill="#ffd54f">Control Point</text>
+        <text x="560" y="64" class="svg-lbl" fill="#4fd0c0">Spline (a curva inteira):</text>
+        <text x="560" y="80" class="svg-lbl" fill="#4fd0c0">cyclic, resolution...</text>
+      </g>
+    </svg>
+    <figcaption>Fig. 2 — Os domínios de malha (esquerda) e de curva (direita). Cada atributo pertence a exatamente um domínio; UVs em face corners é o detalhe que mais surpreende quem chega do shading.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>Atributos têm nome, tipo (float, vetor, cor, int, bool...) e domínio. Os <em>built-in</em> (<code>position</code>, <code>radius</code>, <code>material_index</code>, <code>.uv_map</code>...) coexistem com os seus, criados por <code>Store Named Attribute</code> ou capturados anonimamente por <code>Capture Attribute</code>.</p>
+    <p><strong>Interpolação entre domínios:</strong> quando um nó pede um atributo num domínio diferente do original, o Blender converte automaticamente — ponto→face tira a média dos vértices da face; face→ponto, a média das faces que tocam o vértice. É silencioso, geralmente útil, ocasionalmente a fonte do bug: uma seleção "dura" por face vira gradiente suave ao ser lida em pontos. O nó explícito para controlar isso (e escolher média/mín/máx) existe: <code>Evaluate on Domain / Attribute Statistic</code> para os casos finos.</p>
+    <p><strong>Custo:</strong> um atributo float em 1 milhão de pontos são 4 MB; vetores, 12 MB — multiplicado por cada cópia copy-on-write. Em setups pesados, atributos demais são o vazamento de memória clássico; capture só o que será usado depois que a geometria mudar.</p>
+  </div>
+</section>
+
+<!-- ======================= CAP 3 — FIELDS ======================= -->
+<section id="fields">
+  <div class="sec-head"><span class="idx">Cap. 3</span><h2>Campos (fields): o conceito que destrava tudo</h2></div>
+  <p class="sec-sub">Os sockets em losango são a maior diferença em relação ao shading — e o ponto onde 90% dos iniciantes empacam. A boa notícia: a ideia é uma só, e você já a conhece.</p>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Repare nos sockets: alguns são <strong>círculos</strong>, outros são <strong>losangos</strong>. Um círculo carrega <em>um valor</em> (o número 3, o vetor (0,0,1)). Um losango carrega um <strong>campo</strong>: uma <em>pergunta que será feita a cada elemento</em> da geometria, individualmente.</p>
+    <p>Exemplo: o nó <code>Position</code> não devolve "uma posição" — devolve a pergunta "qual é a sua posição?". Quem responde é cada vértice, na hora em que o campo é avaliado por um nó que tem geometria nas mãos (um <code>Set Position</code>, por exemplo). Por isso o mesmo fio dá um resultado diferente em cada ponto.</p>
+    <p>Se você fez a apostila de shader nodes, já viveu isso sem nome: lá, <em>toda</em> a árvore era um campo avaliado por amostra de render. Aqui o sistema só torna explícito <em>quando</em> e <em>sobre qual geometria</em> a pergunta é feita.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 270" role="img" aria-label="Um campo fluindo: o nó Position alimenta uma conta matemática que entra no Set Position; a função é avaliada uma vez por ponto, deformando uma grade em onda">
+      <defs><marker id="f-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8fc04c"/></marker></defs>
+      <g font-family="'Space Grotesk',sans-serif" font-size="12" font-weight="600">
+        <rect x="36" y="90" width="92" height="40" rx="7" fill="#26282d" stroke="#3a3d44"/><text x="50" y="115" fill="#dcdad4">Position</text>
+        <rect x="170" y="80" width="120" height="60" rx="7" fill="#26282d" stroke="#3a3d44"/><text x="182" y="104" fill="#dcdad4">sin(x · 3)</text><text x="182" y="124" fill="#74726c" font-size="10.5" font-weight="400">(Separate + Math)</text>
+        <rect x="330" y="74" width="120" height="72" rx="7" fill="#26282d" stroke="#3a3d44"/><rect x="330" y="74" width="120" height="22" rx="7" fill="#2f5a50"/><text x="340" y="90" fill="#bfe9e0" font-size="11.5">Set Position</text><text x="340" y="120" fill="#74726c" font-size="10.5" font-weight="400">Offset Z ◇</text>
+      </g>
+      <g fill="#a1a1a1"><polygon points="128,110 136,103 144,110 136,117"/><polygon points="290,110 298,103 306,110 298,117"/></g>
+      <line x1="144" y1="110" x2="166" y2="110" stroke="#8fc04c" stroke-width="2" marker-end="url(#f-a)"/>
+      <line x1="306" y1="110" x2="326" y2="110" stroke="#8fc04c" stroke-width="2" marker-end="url(#f-a)"/>
+      <text x="36" y="50" class="svg-tit">losango = "uma pergunta por elemento"</text>
+      <text x="36" y="170" class="svg-lbl s">o campo só "acontece" dentro do Set Position,</text>
+      <text x="36" y="186" class="svg-lbl s">uma avaliação por ponto da geometria conectada</text>
+      <!-- resultado -->
+      <g stroke="#4fd0c0" stroke-width="2" fill="none">
+        <path d="M500 160 q 20 -34 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0"/>
+        <path d="M500 190 q 20 -34 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0" opacity=".6"/>
+        <path d="M500 220 q 20 -34 40 0 t 40 0 t 40 0 t 40 0 t 40 0 t 40 0" opacity=".35"/>
+      </g>
+      <g fill="#ffd54f">
+        <circle cx="500" cy="160" r="3"/><circle cx="540" cy="126" r="3"/><circle cx="580" cy="160" r="3"/><circle cx="620" cy="126" r="3"/><circle cx="660" cy="160" r="3"/><circle cx="700" cy="126" r="3"/>
+      </g>
+      <text x="500" y="84" class="svg-tit">resultado: cada ponto respondeu</text>
+      <text x="500" y="102" class="svg-lbl s">com a SUA posição → onda</text>
+    </svg>
+    <figcaption>Fig. 3 — Um campo em ação. O fio entre Position e Set Position não transporta números: transporta uma função. Os números só nascem dentro do Set Position, um por ponto.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <div class="math">
+      <span class="eq">campo: f(elemento, contexto) → valor &nbsp;·&nbsp; Set Position: ∀p ∈ pontos: position(p) ← f(p)</span>
+      <span class="legend">Formalmente, campos são funções de primeira classe construídas por composição (um Math somando dois campos devolve um campo) e avaliadas com lazy evaluation num <em>contexto</em>: a geometria do nó avaliador + o domínio do socket. O mesmo campo Position dá respostas diferentes em nós diferentes — e é exatamente esse o poder.</span>
+    </div>
+    <ul>
+      <li><strong>Inputs de campo:</strong> <code>Position</code>, <code>Index</code>, <code>Normal</code>, <code>ID</code>, <code>Named Attribute</code> e amigos são as "variáveis livres"; constantes (círculos) ligadas em losangos viram campos constantes automaticamente.</li>
+      <li><strong>Capture Attribute — o nó da viagem no tempo:</strong> campos são avaliados <em>na geometria do avaliador</em>. Se você quer a posição que os pontos tinham <em>antes</em> de uma deformação, precisa capturá-la antes: o Capture avalia o campo ali, congela o resultado como atributo (anônimo) e o transporta junto com a geometria. "Preciso do valor de antes" → Capture, sempre.</li>
+      <li><strong>O losango com ponto no meio</strong> indica que um valor único foi ligado onde cabia um campo — útil para conferir intenção num relance.</li>
+      <li><strong>Por que não "tudo campo"?</strong> Operações estruturais (criar/deletar geometria, Join, Boolean) não são por-elemento — consomem e produzem geometria inteira; por isso seus sockets são círculos turquesa, não losangos.</li>
+    </ul>
+  </div>
+
+  <div class="tip"><b>Tradução definitiva:</b> círculo = substantivo (um dado). Losango = verbo no infinitivo (algo a fazer com cada elemento). O Set Position é quem conjuga o verbo.</div>
+</section>
+
+<!-- ======================= CAP 4 — INSTÂNCIAS ======================= -->
+<section id="instancias-cap">
+  <div class="sec-head"><span class="idx">Cap. 4</span><h2>Instâncias: a economia que move tudo</h2></div>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Espalhar mil árvores copiando a malha mil vezes explodiria a memória. A solução: guardar <strong>uma</strong> árvore e mil <em>etiquetas</em> dizendo "desenhe aquela árvore aqui, deste tamanho, com esta rotação". Cada etiqueta é uma <strong>instância</strong>: só uma transformação (posição + rotação + escala) apontando para uma geometria compartilhada.</p>
+    <p>Enquanto são instâncias, são quase de graça — milhões delas em tempo real. O nó <code>Realize Instances</code> converte as etiquetas em geometria de verdade ("realiza"): necessário quando você precisa <em>editar os vértices</em> das cópias individualmente, e o momento em que a memória é cobrada.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 240" role="img" aria-label="Instâncias: uma única malha de árvore referenciada por várias transformações, versus cópias realizadas que ocupam memória individual">
+      <g>
+        <text x="50" y="34" class="svg-tit">Instâncias: 1 malha + N transformações</text>
+        <g id="tree-proto">
+          <rect x="92" y="120" width="10" height="26" fill="#6b4a2a"/>
+          <polygon points="97,70 70,124 124,124" fill="#3a5a2f"/>
+        </g>
+        <rect x="58" y="56" width="80" height="100" rx="8" fill="none" stroke="#4fd0c0" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="54" y="180" class="svg-lbl s">a malha (1×)</text>
+        <g stroke="#4fd0c0" stroke-width="1.2" opacity=".8">
+          <line x1="140" y1="106" x2="208" y2="92"/><line x1="140" y1="116" x2="232" y2="146"/><line x1="140" y1="126" x2="206" y2="196"/>
+        </g>
+        <g font-family="'JetBrains Mono',monospace" font-size="10" fill="#9fe0d4">
+          <text x="214" y="90">T₁: pos(2,1) rot 12° esc 1.0</text>
+          <text x="238" y="148">T₂: pos(5,0) rot −40° esc 0.7</text>
+          <text x="212" y="200">T₃: pos(1,4) rot 90° esc 1.3</text>
+        </g>
+        <text x="50" y="228" class="svg-lbl s">memória: 1 malha + 3 matrizes — escala para milhões</text>
+      </g>
+      <g>
+        <text x="470" y="34" class="svg-tit">Realize Instances: N malhas reais</text>
+        <g fill="#3a5a2f" stroke="none">
+          <polygon points="510,90 488,132 532,132"/><polygon points="590,110 564,158 616,158"/><polygon points="676,84 652,130 700,130"/>
+        </g>
+        <g fill="#6b4a2a">
+          <rect x="506" y="132" width="8" height="20"/><rect x="586" y="158" width="9" height="22"/><rect x="672" y="130" width="8" height="20"/>
+        </g>
+        <text x="470" y="206" class="svg-lbl s">cada cópia tem vértices próprios e editáveis;</text>
+        <text x="470" y="222" class="svg-lbl s">memória cobrada por cópia — realize tarde, realize pouco</text>
+      </g>
+    </svg>
+    <figcaption>Fig. 4 — Instanciar é referenciar; realizar é copiar. A regra de produção: permaneça em instâncias o máximo possível e realize apenas quando uma operação por-vértice exigir.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>Instâncias formam um domínio próprio: atributos por instância (a transformação, mas também qualquer Store Named Attribute no domínio Instance) são baratíssimos. Nós como <code>Translate/Rotate/Scale Instances</code> editam só as etiquetas; <code>Instance on Points</code> aceita campos em Rotation/Scale — toda a variação (Random Value, alinhar à normal via Align Rotation to Vector) acontece sem tocar numa malha.</p>
+    <p>A renderização também conspira a favor: o Cycles mantém uma única BVH para a geometria-protótipo e a reusa por instância — instanciamento não é só economia de RAM, é economia de tempo de render. A ideia de "muitos elementos baratos descritos por poucos dados" é a mesma dos sistemas de partículas clássicos de Reeves (1983)<sup class="ref"><a href="#r15">[15]</a></sup>, criados para o efeito Gênesis de Star Trek II.</p>
+    <p>Pegadinhas de realize: atributos do domínio Instance são transferidos para os pontos ao realizar (bom!), mas IDs e ordens podem mudar; e <code>Merge by Distance</code> pós-realize é o jeito canônico de "soldar" instâncias encostadas (cercas, trilhos) numa malha contínua.</p>
+  </div>
+</section>
+
+<hr class="sep">
+<!-- ======================= LER & ESCREVER ======================= -->
+<section id="leitura">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Ler &amp; escrever atributos — o alfabeto</h2></div>
+  <p class="sec-sub">Quase todo nó da Parte II é uma combinação de três gestos: ler um campo, calcular algo, escrever de volta. Estes são os nós dos gestos puros.</p>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Set Position</h3><span class="chip">Escrita · o deformador universal</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Domínio:</b> Point</span><span><b>Gesto:</b> escrever position (e portanto: deformar)</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O nó mais importante do sistema: reescreve a posição de cada ponto. <code>Position</code> substitui; <code>Offset</code> soma (quase sempre o que você quer). Com um campo no Offset, ele é <em>todos os modificadores de deformação ao mesmo tempo</em>: onda (seno da posição), ruído (Noise Texture no Offset), inflar (Normal × valor), atrair para um objeto, achatar...</p>
+      <p>O input <code>Selection</code> — presente em quase todo nó de escrita — limita o efeito: ligue qualquer campo booleano/0–1 ali e só os elementos selecionados mudam.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">∀p com Selection(p): position(p) ← Position(p) + Offset(p)</span>
+        <span class="legend">Três receitas-mãe, todas variações desta linha: <em>inflar</em> = Offset = Normal · d; <em>ruído orgânico</em> = Offset = (NoiseColor − 0.5) · amplitude (o ruído de Perlin<sup class="ref"><a href="#r13">[13]</a></sup> tem média 0.5 — o −0.5 o centra; sem isso o objeto "migra"); <em>onda</em> = Offset Z = sin(Position.X · freq) · amp. Lembre do Capture (Cap. 3): se outro nó depois precisar da posição <em>original</em>, capture-a antes deste nó.</span>
+      </div>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Grid 50×50; <code>Set Position</code> com Offset = Combine XYZ(0, 0, NoiseTexture.Fac − 0.5).</li>
+        <li>Veja o terreno nascer; agora ligue um Gradient Texture (Spherical) multiplicando o ruído: montanhas no centro, plano nas bordas — sua primeira máscara de campo.</li>
+        <li>Abra o Spreadsheet e observe a coluna <code>position</code> mudando ao vivo.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Named Attribute, Store &amp; Capture</h3><span class="chip">Memória · nomear e congelar</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Domínio:</b> qualquer</span><span><b>Gesto:</b> guardar resultados para depois (ou para o shading)</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Três primos com papéis distintos: <code>Store Named Attribute</code> grava um campo com um <em>nome</em> na geometria (ex.: "ferrugem" = 0.73 neste ponto) — visível no Spreadsheet e legível por qualquer um, inclusive pelo material via nó Attribute; <code>Named Attribute</code> lê de volta pelo nome; <code>Capture Attribute</code> faz o mesmo que o Store, mas anônimo — um "post-it interno" da árvore, para congelar um valor antes de a geometria mudar.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Regra de escolha: vai sair da árvore (shading, outro modificador, export)? <strong>Store</strong>, com nome documentado. É só "viagem no tempo" interna? <strong>Capture</strong> — anônimos são limpos automaticamente quando deixam de ser usados, não poluem o namespace e sobrevivem a operações que renomeariam conflitos. Cuidado com o domínio do Store: gravar no domínio errado dispara a interpolação automática do Cap. 2 e "amacia" máscaras duras. E atenção ao tipo: gravar um vetor como float joga fora dois componentes em silêncio.</p>
+    </div>
+  </div>
+</div>
+
+  <h4 class="sub">Os inputs de campo essenciais, em uma linha cada</h4>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>A pergunta que ele faz a cada elemento</th></tr>
+    <tr><td>Position</td><td>"Onde você está?" (espaço do objeto)</td></tr>
+    <tr><td>Index</td><td>"Qual é o seu número de ordem?" — base de seleções por padrão (par/ímpar, a cada N)</td></tr>
+    <tr><td>Normal</td><td>"Para onde você aponta?"</td></tr>
+    <tr><td>ID</td><td>"Qual seu identificador estável?" (sobrevive a reordenações; pontos distribuídos ganham um)</td></tr>
+    <tr><td>Is Viewport</td><td>"Estou no viewport ou no render?" — versão leve para trabalhar, pesada para renderizar</td></tr>
+    <tr><td>Scene Time</td><td>"Que segundos/frame são agora?" — animação sem keyframes</td></tr>
+  </table></div>
+</section>
+
+<!-- ======================= GERAÇÃO ======================= -->
+<section id="geracao">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Gerar geometria — do nada ao algo</h2></div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Primitivas &amp; Join Geometry</h3><span class="chip">Geração · blocos de montar</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Saída:</b> malha ou curva nova</span><span><b>Gesto:</b> criar do zero, paramétrico</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Mesh Primitives (Cube, Cylinder, Grid, UV Sphere, Ico Sphere...) e Curve Primitives (Line, Circle, Spiral, Bézier Segment...) são os mesmos objetos do <kbd>Shift</kbd>+<kbd>A</kbd> do viewport — com a diferença crucial de que aqui os parâmetros (raio, vértices, dimensões) são <em>sockets</em>: animáveis, calculáveis, exponíveis no modificador. <code>Join Geometry</code> cola tudo num único fluxo (aceita vários fios no mesmo socket!), e <code>Transform Geometry</code> move/gira/escala o conjunto inteiro (círculo, não losango — compare com Set Position).</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Modelagem "hard-surface" procedural é, em essência, primitivas + Transforms + Booleans + Join, parametrizadas por meia dúzia de valores — a tradição das gramáticas de forma de Müller et al. (2006)<sup class="ref"><a href="#r6">[6]</a></sup> reduzida a dataflow. Join preserva atributos por componente quando os nomes coincidem; materiais diferentes sobrevivem via <code>material_index</code>. Para variações discretas (3 modelos de janela), o padrão é gerar todos e escolher com <code>Switch</code> ou, por instância, com <code>Pick Instance</code> (próxima seção).</p>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Distribute Points on Faces</h3><span class="chip">Geração · o semeador</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Saída:</b> nuvem de pontos + normais/rotações</span><span><b>Matemática:</b> amostragem aleatória / Poisson disk (Bridson 2007)</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O ponto de partida de todo scattering: cobre uma superfície de pontos aleatórios, prontos para receber instâncias (grama, pedras, multidões). Dois modos: <code>Random</code> (rápido, pontos podem nascer colados) e <code>Poisson Disk</code> (garante uma <em>distância mínima</em> entre pontos — o visual "natural" de coisas que competem por espaço, como árvores). <code>Density</code> aceita campo: pinte um vertex group/textura e a vegetação obedece.</p>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 230" role="img" aria-label="Comparação: distribuição aleatória pura com aglomerados e vazios, versus Poisson disk com espaçamento mínimo uniforme e natural">
+        <g>
+          <rect x="50" y="50" width="300" height="150" fill="#1c2422" stroke="#3a3d44"/>
+          <g fill="#9bbf72">
+            <circle cx="80" cy="80" r="4"/><circle cx="92" cy="88" r="4"/><circle cx="86" cy="74" r="4"/><circle cx="180" cy="70" r="4"/><circle cx="262" cy="96" r="4"/><circle cx="268" cy="104" r="4"/><circle cx="120" cy="160" r="4"/><circle cx="300" cy="170" r="4"/><circle cx="310" cy="162" r="4"/><circle cx="305" cy="178" r="4"/><circle cx="210" cy="150" r="4"/><circle cx="76" cy="182" r="4"/>
+          </g>
+          <text x="50" y="40" class="svg-tit">Random: aglomerados e vazios</text>
+          <text x="50" y="222" class="svg-lbl s">estatisticamente correto, visualmente "sujo"</text>
+        </g>
+        <g>
+          <rect x="420" y="50" width="300" height="150" fill="#1c2422" stroke="#3a3d44"/>
+          <g fill="#9bbf72">
+            <circle cx="452" cy="78" r="4"/><circle cx="516" cy="70" r="4"/><circle cx="582" cy="84" r="4"/><circle cx="648" cy="72" r="4"/><circle cx="700" cy="96" r="4"/><circle cx="446" cy="136" r="4"/><circle cx="508" cy="124" r="4"/><circle cx="572" cy="140" r="4"/><circle cx="640" cy="128" r="4"/><circle cx="696" cy="152" r="4"/><circle cx="470" cy="184" r="4"/><circle cx="540" cy="176" r="4"/><circle cx="606" cy="188" r="4"/><circle cx="668" cy="180" r="4"/>
+          </g>
+          <text x="420" y="40" class="svg-tit">Poisson Disk: distância mínima garantida</text>
+          <text x="420" y="222" class="svg-lbl s">o "aleatório organizado" da natureza (blue noise)</text>
+        </g>
+      </svg>
+      <figcaption>Fig. 5 — A mesma densidade, duas distribuições. Poisson disk produz o espectro "blue noise" — aleatório sem aglomerados — que o olho lê como orgânico.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O modo Poisson usa eliminação por amostragem (na linha do algoritmo de Bridson, 2007<sup class="ref"><a href="#r8">[8]</a></sup>): gera excesso aleatório e remove violadores da Distance Min — por isso <code>Density Max</code> + <code>Distance Min</code> trabalham juntos e a densidade pedida nem sempre é atingida. Saídas preciosas: <code>Normal</code> e <code>Rotation</code> por ponto (alinhe instâncias à superfície de graça) e a estabilidade do <code>Seed</code> — mesmo seed, mesmos pontos, entre sessões. Pontos herdam por interpolação os atributos da superfície (pesos pintados, UVs → leia com Named Attribute) — o canal de controle artístico mais direto que existe.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= INSTANCIAR ======================= -->
+<section id="instanciar">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Instanciar na prática</h2></div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Instance on Points</h3><span class="chip">Instâncias · o carimbo</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Entrada:</b> pontos + geometria-protótipo</span><span><b>Gesto:</b> uma etiqueta de instância por ponto</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O complemento do Distribute: para cada ponto, carimba uma instância da geometria ligada em <code>Instance</code>. Os três campos que dão vida ao resultado: <code>Rotation</code> (use a saída Rotation do Distribute + um Random Value em Z para girar cada um), <code>Scale</code> (Random Value entre 0.7–1.3 mata a clonagem evidente) e <code>Pick Instance</code> + <code>Instance Index</code> (com uma Collection ligada, sorteia <em>qual</em> objeto da coleção vai em cada ponto — três modelos de pedra viram um pedregal variado).</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>A receita canônica completa: <code>Collection Info</code> (Separate Children + Reset Children) → Instance com Pick Instance, Index = Random Value Int(0, N−1, seed por ID); Rotation = Align Rotation to Vector(Normal) combinada (Rotate Rotation) com Euler aleatório em Z; Scale = Random Float com distribuição assimétrica (muitas pequenas, poucas grandes — mais natural que uniforme). Tudo isso permanece no domínio Instance: zero custo de malha até um eventual Realize. Para "carimbar dentro de volume", troque o Distribute por <code>Mesh to Volume → Distribute Points in Volume</code>.</p>
+    </div>
+    <div class="bugs">
+      <h4 class="sub" style="margin-top:0">Erros comuns</h4>
+      <ul>
+        <li><b>Original aparecendo na cena:</b> a coleção-fonte continua visível; mova-a para uma collection desabilitada no render (ou use o checkbox de exclusão).</li>
+        <li><b>Instâncias "deitadas":</b> esqueceu de ligar a Rotation do Distribute — tudo nasce com a orientação do mundo.</li>
+        <li><b>Realize cedo demais:</b> a cena trava; realize só se for deformar vértices das cópias.</li>
+        <li><b>Mesmo sorteio em tudo:</b> Random Value sem ID/seed por ponto dá o mesmo número para todos; ligue o campo ID no input ID do Random.</li>
+      </ul>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Grid deformado do lab anterior + Distribute (Poisson, Distance 0.3) + Instance on Points com um Ico Sphere achatado ("pedra").</li>
+        <li>Scale = Random Value (0.5–1.5); Rotation = saída do Distribute.</li>
+        <li>Ligue a Density num Noise → Map Range: as pedras agora aparecem em "manchas" — você acabou de reusar o vocabulário inteiro da apostila de shader nodes.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+</section>
+
+<hr class="sep">
+<!-- ======================= CURVAS ======================= -->
+<section id="curvas">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Curvas — a espinha de tudo que é comprido</h2></div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Curve to Mesh (e o ecossistema de curvas)</h3><span class="chip">Curvas · varredura</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Entrada:</b> curva + perfil</span><span><b>Gesto:</b> arrastar um perfil 2D ao longo de uma espinha 3D</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O nó que fabrica tudo que é "comprido": cabos, trilhos, corrimãos, canos, molduras, correntes. Ligue a curva-caminho em <code>Curve</code> e uma curva-perfil (um Curve Circle, um retângulo) em <code>Profile Curve</code>: o perfil é varrido ao longo do caminho. O atributo <code>radius</code> da curva engorda/afina o resultado ponto a ponto — um Set Curve Radius com um campo e o cabo fica orgânico.</p>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 240" role="img" aria-label="Curve to Mesh: uma curva-espinha e um perfil circular geram um tubo; o raio variável afina o tubo ao longo do caminho">
+        <path d="M60 180 C 160 60, 300 220, 420 110" fill="none" stroke="#4fd0c0" stroke-width="2.5"/>
+        <text x="60" y="210" class="svg-lbl" fill="#4fd0c0">curva (a espinha)</text>
+        <circle cx="540" cy="170" r="26" fill="none" stroke="#ffd54f" stroke-width="2.5"/>
+        <text x="510" y="218" class="svg-lbl" fill="#ffd54f">perfil (2D)</text>
+        <text x="585" y="166" class="svg-tit">+</text>
+        <g stroke="#9bbf72" stroke-width="2" fill="none">
+          <path d="M620 200 C 650 150, 666 150, 700 110"/>
+          <path d="M640 214 C 672 162, 688 158, 724 124"/>
+          <ellipse cx="630" cy="207" rx="11" ry="8" transform="rotate(-52 630 207)"/>
+          <ellipse cx="664" cy="158" rx="9" ry="6.5" transform="rotate(-38 664 158)"/>
+          <ellipse cx="712" cy="117" rx="7" ry="5" transform="rotate(-48 712 117)"/>
+        </g>
+        <text x="606" y="84" class="svg-tit">= tubo</text>
+        <text x="600" y="234" class="svg-lbl s">radius variável afina a ponta</text>
+        <g stroke="#74726c" stroke-width="1.2" stroke-dasharray="3 4">
+          <ellipse cx="150" cy="124" rx="16" ry="9" transform="rotate(-46 150 124)" fill="none"/>
+          <ellipse cx="300" cy="160" rx="16" ry="9" transform="rotate(30 300 160)" fill="none"/>
+        </g>
+        <text x="120" y="92" class="svg-lbl s">o perfil "viaja" orientado pela tangente</text>
+      </svg>
+      <figcaption>Fig. 6 — Varredura (sweep): perfil × caminho. O perfil é orientado pela tangente da curva e escalado pelo radius — toda a família "cano/cabo/trilho" em um nó.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O entorno que transforma o nó em sistema: <code>Resample Curve</code> (re-amostra em N pontos ou por comprimento — pré-requisito de quase tudo, inclusive instanciar postes em espaçamento uniforme); <code>Spline Parameter → Factor</code> (0 na raiz, 1 na ponta — o "gradiente ao longo" que dirige radius, cor e seleções); <code>Trim/Fillet/Fill Curve</code>; <code>Curve Tilt</code> (torção do perfil); <code>Mesh to Curve</code> (extrai arestas como curvas — o caminho inverso). Matemática subjacente: splines de Bézier/NURBS interpoladas pelos algoritmos clássicos de de Casteljau/CAGD<sup class="ref"><a href="#r11">[11]</a></sup>; a orientação do perfil usa um referencial transportado ao longo da curva (evitando o "flip" do referencial de Frenet em inflexões).</p>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Curve Spiral → Curve to Mesh com Curve Circle (Radius 0.05): uma mola.</li>
+        <li>Set Curve Radius com <code>Spline Parameter.Factor</code> invertido: a mola vira um chifre/concha.</li>
+        <li>Resample (Length 0.3) + Instance on Points com um cubo: postes uniformes ao longo de qualquer curva — a base de toda cerca procedural.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= MALHA ======================= -->
+<section id="malha">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Operações de malha — o edit mode procedural</h2></div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Extrude Mesh (e companhia)</h3><span class="chip">Malha · topologia viva</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Domínio:</b> faces/arestas/vértices</span><span><b>Gesto:</b> o E do edit mode, dirigido por campos</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O Extrude Mesh faz o que o <kbd>E</kbd> faz — mas com Selection e Offset Scale como <em>campos</em>: "extrude só as faces onde o ruído passa de 0.6, cada uma por uma altura aleatória" vira três fios. É o nó-semente de cidades grey-box, circuitos, padrões sci-fi (greebles). A saída <code>Top</code> (seleção das faces recém-criadas) permite encadear: extrude → escala o topo (Scale Elements) → extrude de novo — um "andar" de prédio por iteração.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O resto do "edit mode em nós", em uma linha cada: <code>Subdivide Mesh</code> (corta sem suavizar) vs <code>Subdivision Surface</code> (Catmull–Clark<sup class="ref"><a href="#r7">[7]</a></sup>, o mesmo do modificador); <code>Mesh Boolean</code> (união/diferença/interseção — o boolean exato do Blender deriva do método robusto de Zhou et al. 2016<sup class="ref"><a href="#r9">[9]</a></sup>, herdeiro da tradição CSG<sup class="ref"><a href="#r10">[10]</a></sup>); <code>Merge by Distance</code> (solda); <code>Dual Mesh</code> (faces↔vértices — hexágonos a partir de triângulos; este e outros remapeamentos topológicos são o tema central de Botsch et al.<sup class="ref"><a href="#r12">[12]</a></sup>); <code>Scale Elements</code> (escala faces/arestas individualmente, em torno de si mesmas); <code>Set Shade Smooth</code>; <code>Delete/Separate Geometry</code> (o par "filtrar": apagar ou dividir por seleção). Repare no padrão: cada um é (Selection: quem) + (parâmetros: quanto) — o vocabulário dos Caps. 2–3 outra vez.</p>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Grid 10×10 → Extrude Mesh (Faces), Offset Scale = Random Value (0, 2, ID por face).</li>
+        <li>Uma "cidade de blocos" instantânea; refine: Selection = Random Value (Boolean, prob. 0.5) para nem toda face subir.</li>
+        <li>Encadeie um segundo Extrude usando a saída Top do primeiro como Selection: andares.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= UTILITÁRIOS ======================= -->
+<section id="utilitarios">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Seleções e campos úteis — a caixa de ferramentas</h2></div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Random Value, Compare &amp; Switch</h3><span class="chip">Utilitários · decisões</span></div>
+  <div class="node-body">
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O trio das decisões: <code>Random Value</code> sorteia (float, int, vetor ou booleano — com Probability!) um valor <em>por elemento</em>, estável pelo par ID+Seed; <code>Compare</code> transforma números em seleções ("maior que 0.5?" → booleano); <code>Switch</code> escolhe entre dois de qualquer coisa — inclusive entre duas <em>geometrias</em> inteiras, o "if" do sistema. Boolean Math (AND/OR/NOT) combina seleções como camadas.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O Random é um hash determinístico de (ID, Seed) — não há estado: mesmo input, mesmo output, sempre (essencial para renders estáveis em animação; é o White Noise da outra apostila com roupa nova). Padrões de seleção que valem decorar: por índice (<code>Index % N == 0</code> via Math Modulo + Compare — "um a cada N"); por região (<code>Position.Z &gt; h</code>); por proximidade (<code>Geometry Proximity → Distance &lt; r</code> — seleção esférica em torno de outro objeto); por ângulo (<code>dot(Normal, (0,0,1)) &gt; 0.7</code> — "faces para cima", o musgo da apostila anterior). <code>Raycast</code> merece menção de honra: atira raios de uma geometria contra outra e devolve hit/posição/normal/atributo — projetar pontos num terreno, "escanear" superfícies, sombras procedurais.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= ZONAS ======================= -->
+<section id="zonas">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Zonas: Simulation &amp; Repeat — quando o dataflow ganha tempo e loops</h2></div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>Simulation Zone &amp; Repeat Zone</h3><span class="chip">Zonas · estado e iteração</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Disponível:</b> Blender 3.6+ (Simulation) / 4.0+ (Repeat)</span><span><b>Gesto:</b> quebrar, de propósito, a regra "sem estado"</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Até aqui, tudo era uma fórmula recalculada do zero. As <strong>zonas</strong> introduzem as duas coisas que faltavam:</p>
+      <ul>
+        <li><code>Simulation Zone</code> — memória entre <em>frames</em>: o que sai da zona no frame N entra nela no frame N+1. De repente, coisas <em>acumulam</em>: pontos que caem e continuam caindo, malhas que crescem, trilhas que ficam. É o portão dos efeitos tipo partículas, crescimento e erosão.</li>
+        <li><code>Repeat Zone</code> — um loop de verdade <em>dentro</em> de um frame: repita este bloco N vezes (fractais, subdivisões recursivas, os "andares" do Extrude sem copiar nós).</li>
+      </ul>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 230" role="img" aria-label="Simulation Zone: a saída do frame N realimenta a entrada do frame N mais um, formando um ciclo no tempo">
+        <defs><marker id="z-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e0a83f"/></marker></defs>
+        <g font-family="'Space Grotesk',sans-serif" font-size="12.5" font-weight="600">
+          <rect x="200" y="70" width="360" height="90" rx="10" fill="#241f16" stroke="#5a4a1f" stroke-width="1.5"/>
+          <text x="216" y="96" fill="#f0dfa0">Simulation Zone</text>
+          <rect x="220" y="108" width="140" height="34" rx="6" fill="#26282d" stroke="#3a3d44"/><text x="230" y="130" fill="#b9c4c0" font-size="11">Set Position (+gravidade)</text>
+          <rect x="384" y="108" width="120" height="34" rx="6" fill="#26282d" stroke="#3a3d44"/><text x="394" y="130" fill="#b9c4c0" font-size="11">colisões, regras...</text>
+        </g>
+        <line x1="60" y1="115" x2="196" y2="115" stroke="#4fd0c0" stroke-width="2.2" marker-end="url(#z-a)"/>
+        <text x="40" y="98" class="svg-lbl">estado inicial</text><text x="40" y="142" class="svg-lbl s">(frame 1)</text>
+        <line x1="560" y1="115" x2="700" y2="115" stroke="#4fd0c0" stroke-width="2.2" marker-end="url(#z-a)"/>
+        <text x="610" y="98" class="svg-lbl">resultado do frame N</text>
+        <path d="M640 130 C 660 206, 120 206, 196 134" fill="none" stroke="#e0a83f" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#z-a)"/>
+        <text x="284" y="212" class="svg-lbl" fill="#e0a83f">...vira a entrada do frame N+1 (a memória)</text>
+        <text x="200" y="44" class="svg-tit">estado(N+1) = regras( estado(N) )</text>
+      </svg>
+      <figcaption>Fig. 7 — A Simulation Zone fecha um ciclo no tempo: dentro dela você escreve só a <em>regra de um passo</em>; a repetição quadro a quadro faz o resto — a definição de sistema dinâmico.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">integração explícita (Euler): pos += vel·Δt; vel += acel·Δt &nbsp;(Δt = saída Delta Time da zona)</span>
+        <span class="legend">Uma simulação de partículas mínima é: Distribute emite, a zona guarda posição+velocidade (Store em atributos!), Set Position integra, regras alteram a velocidade (gravidade, ruído como "vento", Raycast/Proximity para colisão). Usar Delta Time em vez de constantes torna a simulação independente do frame rate. O resultado é cacheado/bakeável (painel Physics → Simulation); sem bake, pular frames re-simula do início. Sistemas de regras locais que geram padrões globais têm pedigree científico ilustre — da morfogênese de Turing (1952)<sup class="ref"><a href="#r14">[14]</a></sup> aos L-systems<sup class="ref"><a href="#r3">[3]</a>,<a href="#r4">[4]</a></sup>; a Repeat Zone, por sua vez, é o lar natural deles: crescimento recursivo de plantas em N iterações.</span>
+      </div>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Mesh Line (1 ponto) → Simulation Zone: dentro, Set Position com Offset = (ruído na XY, −0.05 em Z) — "neve caindo".</li>
+        <li>Adicione antes do Set Position um <code>Join Geometry</code> com novos pontos do Distribute a cada frame: agora <em>acumula</em> emissão.</li>
+        <li>Dê play e veja a primeira simulação sua nascer de quatro nós; asse o cache quando gostar.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= SHADING ======================= -->
+<section id="shading">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>A ponte com o shading: fechando a trilogia</h2></div>
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Geometry Nodes decide <em>o que existe</em>; o material decide <em>como reflete luz</em>. A ponte entre os dois tem três tábuas:</p>
+    <ul>
+      <li><code>Set Material</code> — atribui materiais por Selection: "faces para cima recebem musgo" vira um campo + dois materiais.</li>
+      <li><code>Store Named Attribute</code> → nó <code>Attribute</code> no shader — qualquer número calculado aqui ("idade", "umidade", a altura do prédio) vira input de shading lá. É o canal nobre: a geometria <em>conta sua história</em> ao material.</li>
+      <li>UVs — são um atributo como outro qualquer (em face corners, Cap. 2): dá para gerar, distorcer e armazenar UVs proceduralmente (Store em 2D Vector, nome lido no shader via Attribute ou UV Map).</li>
+    </ul>
+  </div>
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>Padrão de produção da trilogia inteira em uma frase: <em>GN calcula e grava atributos semânticos; o shader os traduz em BSDFs</em>. Exemplo completo: a simulação grava "tempo_de_vida" por ponto → o shader lê via Attribute → Color Ramp (faísca → fumaça) → Emission com Blackbody pela mesma idade. Instâncias têm um detalhe: atributos do domínio Instance só chegam ao shader depois de transferidos (realize ou leitura via Instance attribute nos nós novos) — quando o Attribute "não funciona", o domínio é o primeiro suspeito.</p>
+  </div>
+</section>
+
+<hr class="sep">
+<!-- ======================= MAPA RÁPIDO ======================= -->
+<section id="tabela">
+  <div class="sec-head"><span class="idx">Cap. 5</span><h2>Mapa rápido dos nós</h2></div>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>Família</th><th>Gesto</th><th>Combinação clássica</th></tr>
+    <tr><td>Set Position</td><td>Escrita</td><td>Deformar pontos</td><td>Offset = Noise − 0.5 (terreno)</td></tr>
+    <tr><td>Store / Named Attribute</td><td>Memória</td><td>Gravar/ler por nome</td><td>→ nó Attribute no shader</td></tr>
+    <tr><td>Capture Attribute</td><td>Memória</td><td>Congelar um campo "antes"</td><td>Posição original pré-deformação</td></tr>
+    <tr><td>Position / Index / Normal / ID</td><td>Campo</td><td>As perguntas básicas</td><td>Alimentam tudo</td></tr>
+    <tr><td>Distribute Points on Faces</td><td>Geração</td><td>Semear pontos</td><td>Poisson + Density por textura</td></tr>
+    <tr><td>Instance on Points</td><td>Instâncias</td><td>Carimbar protótipos</td><td>+ Pick Instance + Random Scale</td></tr>
+    <tr><td>Realize Instances</td><td>Instâncias</td><td>Etiquetas → malha real</td><td>Só antes de editar vértices</td></tr>
+    <tr><td>Collection Info</td><td>Entrada</td><td>Trazer uma coleção</td><td>Variedade via Pick Instance</td></tr>
+    <tr><td>Curve to Mesh</td><td>Curvas</td><td>Varredura perfil × caminho</td><td>+ Set Curve Radius (Factor)</td></tr>
+    <tr><td>Resample Curve</td><td>Curvas</td><td>Reamostrar uniforme</td><td>Antes de instanciar ao longo</td></tr>
+    <tr><td>Extrude Mesh</td><td>Malha</td><td>O "E" por campos</td><td>Saída Top encadeada (andares)</td></tr>
+    <tr><td>Mesh Boolean / Join / Merge</td><td>Malha</td><td>Combinar sólidos</td><td>Hard-surface procedural</td></tr>
+    <tr><td>Subdivision Surface</td><td>Malha</td><td>Catmull–Clark</td><td>Suavizar resultado final</td></tr>
+    <tr><td>Random Value</td><td>Utilitário</td><td>Sorteio por elemento</td><td>ID + Seed = estável</td></tr>
+    <tr><td>Compare / Boolean Math / Switch</td><td>Utilitário</td><td>Decidir e selecionar</td><td>Seleções compostas</td></tr>
+    <tr><td>Raycast / Geometry Proximity</td><td>Utilitário</td><td>Consultar outra geometria</td><td>Projetar no chão; seleção por raio</td></tr>
+    <tr><td>Simulation Zone</td><td>Zona</td><td>Memória entre frames</td><td>Partículas, crescimento</td></tr>
+    <tr><td>Repeat Zone</td><td>Zona</td><td>Loop dentro do frame</td><td>Fractais, recursão</td></tr>
+    <tr><td>Set Material</td><td>Ponte</td><td>Material por seleção</td><td>Campos decidem o shader</td></tr>
+    <tr><td>Transform Geometry</td><td>Transformar</td><td>Mover o conjunto inteiro</td><td>Compor primitivas</td></tr>
+  </table></div>
+</section>
+
+<!-- ======================= RECEITAS ======================= -->
+<section id="receitas">
+  <div class="sec-head"><span class="idx">Cap. 6</span><h2>Receitas de leitura: os padrões que se repetem</h2></div>
+  <div class="prose">
+    <p>Como nas outras apostilas, o aparente infinito se reduz a poucos padrões. Aprenda a vê-los e qualquer setup alheio vira leitura:</p>
+    <p><strong>1 · O scatter:</strong> <code>superfície → Distribute Points → Instance on Points → (Realize?)</code>, temperado por Density (campo), Rotation (normal + random) e Scale (random). Grama, pedras, multidão, sardas — tudo é scatter.</p>
+    <p><strong>2 · A varredura:</strong> <code>curva → Resample → Curve to Mesh (perfil)</code> ou <code>curva → Resample → Instance on Points</code>. Tudo que segue um caminho — cercas, trilhos, cabos, colares — é uma destas duas linhas.</p>
+    <p><strong>3 · Selecionar-e-agir:</strong> um campo booleano (Compare sobre Position/Normal/Noise/Proximity) ligado no Selection de um nó de ação (Extrude, Delete, Set Material, Set Position). É o "edit mode falado em campos" — metade da Parte II é este padrão.</p>
+    <p><strong>4 · Capturar-antes:</strong> <code>Capture Attribute → (geometria muda) → usar o capturado</code>. Sempre que a resposta dependa do estado <em>anterior</em> da geometria.</p>
+    <p><strong>5 · Gravar-para-o-shader:</strong> <code>cálculo → Store Named Attribute → [no material] Attribute → Color Ramp → BSDF</code>. A geometria conta a história; o material a pinta.</p>
+    <p><strong>6 · O passo de simulação:</strong> <code>estado → regras → estado</code>, dentro de uma Simulation Zone, com atributos fazendo o papel de variáveis (velocidade, idade). Todo efeito "vivo" é este ciclo.</p>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- ======================= LABS ======================= -->
+<section id="labs">
+  <div class="sec-head"><span class="idx">Cap. 7</span><h2>Laboratórios práticos</h2></div>
+  <p class="sec-sub">Quatro projetos completos, em dificuldade crescente, cada um amarrando vários capítulos. Spreadsheet aberto, sempre.</p>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 1 · O terreno povoado (campos + scatter)</span>
+    <ol>
+      <li>Grid 60×60 → Set Position (Offset Z = Noise − 0.5, amplificado por um Gradient esférico) — o terreno do Cap. "Set Position".</li>
+      <li><em>Capture</em> a altura (Position.Z) pós-deformação; Distribute Points (Poisson) com Density dirigida por ela invertida (vegetação só nas baixadas).</li>
+      <li>Instance on Points com uma coleção de 3 "plantas" (cones serve), Pick Instance + Random Scale/Rotation.</li>
+      <li>Store Named Attribute "altura" e use no material: Color Ramp neve/rocha/grama pela mesma altura.</li>
+    </ol>
+    <p class="obs">Critério de domínio: explicar por que a altura precisou de Capture (dica: em que geometria o Distribute avalia campos?).</p>
+  </div>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 2 · A cerca infinita (curvas + instâncias)</span>
+    <ol>
+      <li>Curva Bézier desenhada à mão = o traçado. Ramo A: Resample (Length = espaçamento exposto) → Instance on Points com o mourão; Rotation alinhada à tangente da curva (Curve Tangent → Align Rotation to Vector).</li>
+      <li>Ramo B: a mesma curva → Curve to Mesh com perfil retangular fino, duplicado em duas alturas (Transform + Join) = as travessas.</li>
+      <li>Join dos ramos; exponha espaçamento, alturas e um seed de "tortura" (Random leve na rotação dos mourões).</li>
+      <li>Edite a curva no viewport e veja a cerca inteira obedecer.</li>
+    </ol>
+    <p class="obs">Critério de domínio: trocar o traçado por outra curva qualquer e nada quebrar — o teste de toda boa parametrização.</p>
+  </div>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 3 · O quarteirão paramétrico (malha + repeat)</span>
+    <ol>
+      <li>Grid 8×8 (os lotes) → Extrude Mesh com Offset Scale = Random por face (ID): o grey-box de prédios do Cap. "Extrude".</li>
+      <li>Envolva o segundo extrude numa Repeat Zone (Iterations = "andares" exposto), usando a saída Top como Selection a cada volta e um Scale Elements (0.94) para o efeito "bolo de noiva".</li>
+      <li>Set Material por seleção: topo = "laje", lados = "fachada"; Store "altura_predio" para o shader variar janelas acesas.</li>
+      <li>Brinque com Seed e Iterations no painel do modificador: cidades infinitas por dois sliders.</li>
+    </ol>
+    <p class="obs">Critério de domínio: apontar onde o padrão "selecionar-e-agir" aparece três vezes no setup.</p>
+  </div>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 4 · Neve que acumula (Simulation Zone + Raycast)</span>
+    <ol>
+      <li>Emissor: plano alto; a cada frame, Distribute gera flocos novos, somados via Join dentro de uma Simulation Zone.</li>
+      <li>Dentro da zona: Set Position move flocos para baixo (−Z · Delta Time · velocidade); ruído leve em XY ("vento").</li>
+      <li>Raycast contra o objeto-cenário: onde o floco está abaixo do hit, prenda-o na posição do hit (Switch entre "caindo" e "pousado" por um atributo booleano armazenado).</li>
+      <li>Instance on Points (esferinhas) fora da zona; asse o cache e renderize uma nevasca que acumula nos telhados.</li>
+    </ol>
+    <p class="obs">Critério de domínio: identificar, no seu setup, estado (quais atributos persistem), regra (o que roda por passo) e condição de parada de cada floco.</p>
+  </div>
+</section>
+
+<!-- ======================= EXERCÍCIOS ======================= -->
+<section id="exercicios">
+  <div class="sec-head"><span class="idx">Cap. 8</span><h2>Exercícios de fixação</h2></div>
+  <p class="sec-sub">Responda antes de expandir o gabarito.</p>
+
+  <details class="exq"><summary><span class="qn">Q1</span>Qual a diferença entre um socket círculo e um socket losango, em uma frase precisa?</summary>
+  <div class="ans"><b>Gabarito:</b> o círculo transporta <em>um valor</em> já conhecido; o losango transporta um <em>campo</em> — uma função que só vira valores quando um nó com geometria a avalia, uma vez por elemento do domínio pedido.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q2</span>Por que UVs moram em face corners e não em vértices?</summary>
+  <div class="ans"><b>Gabarito:</b> porque um mesmo vértice pode precisar de coordenadas UV diferentes em faces diferentes — é exatamente isso que um seam é: o vértice da costura tem um UV de cada lado. Se UVs fossem por vértice, seams (e qualquer unwrap não-contínuo) seriam impossíveis.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q3</span>Você deformou um grid com Set Position e quer pintar de vermelho os pontos que <em>subiram</em>. O Compare entre Position.Z e... o quê? Como obter "a altura de antes"?</summary>
+  <div class="ans"><b>Gabarito:</b> a posição original não existe mais depois do Set Position — campos são avaliados na geometria atual. Solução: <em>Capture Attribute</em> da Position.Z <strong>antes</strong> do Set Position; depois, Compare(Position.Z atual &gt; capturado). É o padrão "capturar-antes" (receita 4).</div></details>
+
+  <details class="exq"><summary><span class="qn">Q4</span>Sua floresta de 2 milhões de árvores trava ao adicionar um nó. Qual nó provavelmente entrou na corrente, e qual a regra que ele violou?</summary>
+  <div class="ans"><b>Gabarito:</b> um <em>Realize Instances</em> (ou um nó que realiza implicitamente, como certas operações de malha sobre instâncias): as 2 milhões de etiquetas viraram 2 milhões de malhas com vértices próprios. Regra violada: permanecer em instâncias até o último momento possível; deformações por cópia devem ser feitas via transformações de instância, não por vértice.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q5</span>O Random Value está dando o mesmo número para todas as instâncias. Causa e correção?</summary>
+  <div class="ans"><b>Gabarito:</b> o Random é um hash de (ID, Seed); sem um ID por elemento ligado, ele avalia com o mesmo contexto para todos. Correção: ligar o campo <em>ID</em> (ou Index) no input ID do Random Value — cada elemento passa a sortear o próprio valor, estável entre frames.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q6</span>Random vs Poisson Disk no Distribute: quando cada um, e o que é "blue noise"?</summary>
+  <div class="ans"><b>Gabarito:</b> Random é mais rápido e serve quando aglomerados não incomodam (poeira, estrelas); Poisson Disk garante distância mínima — o padrão de coisas que competem por espaço (árvores, pessoas, poros). Blue noise é o espectro dessa distribuição: energia só em altas frequências (sem "manchas" de baixa frequência), que o olho lê como aleatório-porém-uniforme.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q7</span>Monte (em palavras) a corrente que instancia um poste a cada 2 m ao longo de qualquer curva, em pé sobre ela.</summary>
+  <div class="ans"><b>Gabarito:</b> curva → <em>Resample Curve</em> (mode Length, 2 m) → <em>Instance on Points</em> com o poste; Rotation = Align Rotation to Vector usando a <em>Curve Tangent</em> (eixo que deita o poste ao longo) ou a normal desejada — em terreno, um Raycast projeta os pontos no chão antes. Padrão "varredura" (receita 2).</div></details>
+
+  <details class="exq"><summary><span class="qn">Q8</span>Por que uma Simulation Zone precisa do Delta Time, e o que acontece se você somar uma constante por frame em vez disso?</summary>
+  <div class="ans"><b>Gabarito:</b> Delta Time é o tempo real decorrido por passo; multiplicar velocidades por ele torna o movimento independente do frame rate. Com constante por frame, a física muda de velocidade quando o FPS muda (24 vs 60), e a simulação fica não-portável — o erro clássico de integração de Euler mal parametrizada.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q9</span>Diferencie Store Named Attribute de Capture Attribute e diga qual usar para mandar um valor ao material.</summary>
+  <div class="ans"><b>Gabarito:</b> ambos congelam um campo na geometria; o Store dá um <em>nome público</em> (Spreadsheet, shader via nó Attribute, outros modificadores), o Capture é anônimo e interno à árvore. Para o material: Store, sempre — o shader só enxerga atributos nomeados.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q10</span>Escreva em nós a seleção "faces voltadas para cima E acima de 2 m E com 30% de sorte".</summary>
+  <div class="ans"><b>Gabarito:</b> A = Compare( VectorMath.Dot(Normal, (0,0,1)) &gt; 0.7 ); B = Compare( SeparateXYZ(Position).Z &gt; 2 ); C = Random Value (Boolean, Probability 0.3, ID); seleção = Boolean Math AND(AND(A, B), C). Padrão "selecionar-e-agir" com composição booleana (receita 3).</div></details>
+
+  <details class="exq"><summary><span class="qn">Q11</span>(Desafio) Em que sentido o Geometry Nodes "quebra" o modelo funcional puro das outras apostilas, e onde exatamente essa quebra fica confinada?</summary>
+  <div class="ans"><b>Gabarito:</b> o dataflow continua sem estado — mesma entrada, mesma saída — <em>exceto</em> dentro das zonas: a Simulation Zone introduz estado persistente entre frames (a saída realimenta a entrada), e a Repeat Zone introduz iteração com variáveis de loop. A quebra é deliberadamente cercada: fora das zonas, tudo permanece declarativo e re-executável; dentro, vive a dinâmica. É a mesma separação que linguagens funcionais fazem com efeitos colaterais.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q12</span>(Desafio) O nó Attribute do shader não encontra o atributo que você armazenou por instância. Por quê, e quais as duas saídas?</summary>
+  <div class="ans"><b>Gabarito:</b> o atributo vive no domínio <em>Instance</em>, e o shading avalia sobre a geometria da superfície (pontos/corners) — domínios não se enxergam automaticamente através da fronteira GN→material. Saídas: (1) Realize Instances (o realize transfere atributos de instância para os elementos resultantes), ou (2) armazenar o valor já num domínio de malha do protótipo antes de instanciar / usar os mecanismos de leitura de atributo de instância das versões recentes. Diagnóstico geral: "Attribute vazio no shader" → conferir nome, depois domínio.</div></details>
+</section>
+
+<!-- ======================= GLOSSÁRIO ======================= -->
+<section id="glossario">
+  <div class="sec-head"><span class="idx">Cap. 9</span><h2>Glossário</h2></div>
+  <dl class="gloss">
+    <dt>Atributo</dt><dd>Dado tipado pendurado num domínio da geometria (position, radius, os seus). A moeda corrente do sistema.</dd>
+    <dt>Blue noise</dt><dd>Distribuição aleatória sem aglomerados (energia só em alta frequência); o que o Poisson disk produz.</dd>
+    <dt>Campo (field)</dt><dd>Função "por elemento" transportada pelos sockets losango; só vira valores ao ser avaliada por um nó com geometria.</dd>
+    <dt>Capture</dt><dd>Congelar a avaliação de um campo num atributo anônimo — a "viagem no tempo" para estados anteriores da geometria.</dd>
+    <dt>Catmull–Clark</dt><dd>O algoritmo de subdivisão suave (1978) do Subdivision Surface.</dd>
+    <dt>Copy-on-write</dt><dd>Estratégia de avaliação: dados só são copiados quando modificados — duplicações são baratas até a primeira escrita.</dd>
+    <dt>CSG</dt><dd>Constructive Solid Geometry: modelar por união/diferença/interseção de sólidos; a tradição por trás do Mesh Boolean.</dd>
+    <dt>Delta Time</dt><dd>Tempo decorrido por passo de simulação; multiplique velocidades por ele para independência de frame rate.</dd>
+    <dt>Domínio</dt><dd>O "andar" onde um atributo mora: Point, Edge, Face, Face Corner, Spline, Instance.</dd>
+    <dt>Face corner</dt><dd>O canto que cada face possui em cada vértice; o lar dos UVs e das cores por face.</dd>
+    <dt>Geometry set</dt><dd>O contêiner do socket turquesa: malha + curvas + pontos + volume + instâncias, juntos.</dd>
+    <dt>ID</dt><dd>Identificador estável por elemento; o par (ID, Seed) torna sorteios determinísticos.</dd>
+    <dt>Instância</dt><dd>Referência (transformação + protótipo) em vez de cópia; quase grátis até o Realize.</dd>
+    <dt>L-system</dt><dd>Gramática de reescrita (Lindenmayer, 1968) que gera plantas por regras locais; espírito ancestral das Repeat Zones.</dd>
+    <dt>Modificador</dt><dd>O "modo de vida" padrão de uma árvore GN: função viva na pilha do objeto, não-destrutiva.</dd>
+    <dt>Operador</dt><dd>O outro modo de vida (4.x): a árvore roda uma vez como ferramenta e assa o resultado.</dd>
+    <dt>Poisson disk</dt><dd>Amostragem com distância mínima entre pontos (Bridson, 2007); o modo "natural" do Distribute.</dd>
+    <dt>Realize</dt><dd>Converter instâncias em geometria real e editável — pagando a memória correspondente.</dd>
+    <dt>Seed (semente)</dt><dd>Número que seleciona uma variação do aleatório determinístico; mude o seed, mude o mundo.</dd>
+    <dt>Selection</dt><dd>Input booleano presente nos nós de ação: o campo que decide <em>quem</em> é afetado.</dd>
+    <dt>Spreadsheet</dt><dd>A planilha de dados da geometria, por domínio; o "debugger" oficial do sistema.</dd>
+    <dt>Spline</dt><dd>Uma curva individual (uma geometria de curvas pode conter várias); domínio próprio.</dd>
+    <dt>Varredura (sweep)</dt><dd>Gerar superfície arrastando um perfil ao longo de um caminho; o gesto do Curve to Mesh.</dd>
+    <dt>Zona</dt><dd>Região da árvore com semântica especial: Simulation (estado entre frames) e Repeat (loop interno).</dd>
+  </dl>
+</section>
+
+<hr class="sep">
+
+<!-- ======================= REFERÊNCIAS ======================= -->
+<section id="referencias">
+  <div class="sec-head"><span class="idx">Cap. 10</span><h2>Referências científicas</h2></div>
+  <ol class="bib">
+    <li id="r1"><b>Sutherland, I. E.</b> (1963). <span class="where">Sketchpad: A Man-Machine Graphical Communication System.</span> Tese de doutorado, MIT. — O ancestral de toda modelagem paramétrica por restrições.</li>
+    <li id="r2"><b>Cook, R. L.</b> (1984). <span class="where">Shade Trees.</span> SIGGRAPH '84. — O dataflow por nós, compartilhado pelas três apostilas.</li>
+    <li id="r3"><b>Lindenmayer, A.</b> (1968). <span class="where">Mathematical Models for Cellular Interactions in Development.</span> J. Theoretical Biology 18. — Os L-systems.</li>
+    <li id="r4"><b>Prusinkiewicz, P.; Lindenmayer, A.</b> (1990). <span class="where">The Algorithmic Beauty of Plants.</span> Springer (gratuito em algorithmicbotany.org). — Plantas por regras de reescrita; leitura encantadora.</li>
+    <li id="r5"><b>Parish, Y. I. H.; Müller, P.</b> (2001). <span class="where">Procedural Modeling of Cities.</span> SIGGRAPH 2001. — Cidades por L-systems estendidos.</li>
+    <li id="r6"><b>Müller, P. et al.</b> (2006). <span class="where">Procedural Modeling of Buildings.</span> SIGGRAPH 2006. — A gramática de formas CGA; prédios paramétricos como os do Lab 3.</li>
+    <li id="r7"><b>Catmull, E.; Clark, J.</b> (1978). <span class="where">Recursively Generated B-Spline Surfaces on Arbitrary Topological Meshes.</span> Computer-Aided Design 10(6). — A subdivisão Catmull–Clark.</li>
+    <li id="r8"><b>Bridson, R.</b> (2007). <span class="where">Fast Poisson Disk Sampling in Arbitrary Dimensions.</span> SIGGRAPH 2007 Sketches. — O algoritmo do modo Poisson do Distribute.</li>
+    <li id="r9"><b>Zhou, Q.; Grinspun, E.; Zorin, D.; Jacobson, A.</b> (2016). <span class="where">Mesh Arrangements for Solid Geometry.</span> ACM TOG 35(4). — A base do boolean exato do Blender.</li>
+    <li id="r10"><b>Requicha, A. A. G.</b> (1980). <span class="where">Representations for Rigid Solids: Theory, Methods, and Systems.</span> ACM Computing Surveys 12(4). — A teoria do CSG.</li>
+    <li id="r11"><b>Farin, G.</b> (2002). <span class="where">Curves and Surfaces for CAGD, 5ª ed.</span> Morgan Kaufmann. — Bézier, B-splines e o algoritmo de de Casteljau por trás das curvas.</li>
+    <li id="r12"><b>Botsch, M. et al.</b> (2010). <span class="where">Polygon Mesh Processing.</span> A K Peters. — O livro-texto das operações de malha (dual, simplificação, remesh).</li>
+    <li id="r13"><b>Perlin, K.</b> (1985). <span class="where">An Image Synthesizer.</span> SIGGRAPH '85. — O ruído que também alimenta campos aqui.</li>
+    <li id="r14"><b>Turing, A. M.</b> (1952). <span class="where">The Chemical Basis of Morphogenesis.</span> Phil. Trans. Royal Society B 237. — Padrões globais a partir de regras locais; o espírito das Simulation Zones.</li>
+    <li id="r15"><b>Reeves, W. T.</b> (1983). <span class="where">Particle Systems — A Technique for Modeling a Class of Fuzzy Objects.</span> ACM TOG 2(2). — Os sistemas de partículas (efeito Gênesis); muitos elementos baratos, poucos dados.</li>
+  </ol>
+  <h4 class="sub">Para continuar os estudos</h4>
+  <p style="color:var(--muted);font-size:14.5px;line-height:1.75">Sequência sugerida: (1) o manual do Blender, seção <em>Geometry Nodes</em>, com o Spreadsheet aberto; (2) <em>The Algorithmic Beauty of Plants</em><sup class="ref"><a href="#r4">[4]</a></sup> para sentir o poder de regras pequenas; (3) recriar nos seus próprios nós um setup clássico de Houdini (scatter, cidade, crescimento) — a tradução entre os dois sistemas ensina o que é essencial e o que é sintaxe; (4) as apostilas irmãs de <strong>Shader Nodes</strong> (de onde vêm as texturas que dirigem seus campos) e <strong>BSDFs</strong> (o destino final dos atributos que você armazena).</p>
+</section>
+
+<footer>
+  <p>Apostila escrita com base no manual do Blender (série 4.x/5.x) e na literatura citada. Nomes de nós e parâmetros referem-se ao Blender 4.2+; recursos com versão mínima estão sinalizados (Simulation Zone 3.6+, Repeat Zone 4.0+). Diagramas são esquemáticos, com proporções exageradas para clareza didática. Terceiro volume da trilogia, com "Shader Nodes" e "BSDFs no Blender".</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

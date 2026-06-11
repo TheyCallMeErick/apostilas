@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shader Nodes no Blender — Apostila completa: a linguagem visual dos materiais</title>
+<meta name="description" content="Apostila completa do sistema de shader nodes do Blender (Cycles/EEVEE): inputs, texturas procedurais, cor, vetores, conversores, node groups — com diagramas, matemática, laboratórios e exercícios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161719;
+  --panel:#1f2125;
+  --panel-2:#26282d;
+  --line:#33363c;
+  --line-soft:#2b2e33;
+  --ink:#e9e7e2;
+  --muted:#a3a19a;
+  --faint:#74726c;
+  --node-header:#2f5a2f;
+  --node-header-ink:#cfe8c2;
+  --green:#8fc04c;
+  --sock-shader:#63c763;
+  --sock-color:#c7c729;
+  --sock-vector:#7a7ad6;
+  --sock-float:#a1a1a1;
+  --ray-in:#ffd54f;
+  --ray-refl:#ff8a65;
+  --ray-trans:#4fc3f7;
+  --ray-scat:#aed581;
+  --beg:#4fc3f7;
+  --adv:#ce93d8;
+  --radius:10px;
+  --maxw:880px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(circle, #232529 1px, transparent 1px);
+  background-size:26px 26px;
+  color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:16.5px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:#3a5a2a;color:#fff}
+a{color:var(--green);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+code{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:.85em;
+  background:var(--panel-2);
+  border:1px solid var(--line-soft);
+  border-radius:4px;
+  padding:.1em .4em;
+  color:#d7e6c0;
+}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;line-height:1.25;letter-spacing:-.01em}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1240px;margin:0 auto;gap:36px;padding:0 24px}
+main{max-width:var(--maxw);padding-bottom:120px;min-width:0}
+
+/* ---------- sidebar ---------- */
+.toc{
+  position:sticky;top:0;align-self:start;
+  max-height:100vh;overflow-y:auto;
+  padding:32px 0 32px;
+  font-size:13px;
+  scrollbar-width:thin;
+}
+.toc .brand{
+  font-family:'Space Grotesk';font-weight:700;font-size:15px;color:var(--ink);
+  display:flex;align-items:center;gap:8px;margin-bottom:18px;
+}
+.toc .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--sock-shader);box-shadow:0 0 8px #63c76366}
+.toc ol{list-style:none}
+.toc li{margin:1px 0}
+.toc a{
+  display:block;color:var(--muted);padding:4px 10px;border-left:2px solid var(--line-soft);
+  border-radius:0 5px 5px 0;
+}
+.toc a:hover{color:var(--ink);text-decoration:none;background:var(--panel)}
+.toc .grp{
+  margin:16px 0 5px;color:var(--faint);font-family:'JetBrains Mono';font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.14em;padding-left:12px;
+}
+@media (max-width:1020px){
+  .shell{grid-template-columns:1fr}
+  .toc{position:static;max-height:none;border-bottom:1px solid var(--line);margin-bottom:8px;padding-bottom:18px}
+  .toc ol{display:flex;flex-wrap:wrap;gap:2px 6px}
+  .toc a{border-left:none;border:1px solid var(--line-soft);border-radius:99px;padding:3px 11px}
+  .toc .grp{width:100%}
+}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 30px}
+.hero .kicker{
+  font-family:'JetBrains Mono';font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.hero .kicker::before{content:"";display:inline-block;width:26px;height:1px;background:var(--green)}
+.hero h1{font-size:clamp(34px,5.4vw,56px);font-weight:700;letter-spacing:-.025em;margin-bottom:18px}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero p.lead{font-size:18.5px;color:var(--muted);max-width:680px;margin-bottom:8px}
+.hero .meta{
+  display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;font-family:'JetBrains Mono';
+  font-size:12px;color:var(--faint);
+}
+.hero .meta span{display:flex;align-items:center;gap:7px}
+.hero .meta i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+/* ---------- section headings ---------- */
+section{padding-top:34px}
+.sec-head{margin:36px 0 14px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.sec-head .idx{
+  font-family:'JetBrains Mono';font-size:13px;color:var(--faint);
+  border:1px solid var(--line);border-radius:6px;padding:2px 9px;white-space:nowrap;
+}
+.sec-head h2{font-size:clamp(24px,3.4vw,32px)}
+.sec-sub{color:var(--muted);max-width:700px;margin-bottom:10px}
+
+/* ---------- node card (assinatura visual) ---------- */
+.node{
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(180deg,var(--panel) 0%,#1b1d21 100%);
+  margin:30px 0;overflow:hidden;
+  box-shadow:0 14px 40px -18px rgba(0,0,0,.55);
+}
+.node-head{
+  background:var(--node-header);color:var(--node-header-ink);
+  padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.node-head h3{font-size:19px;font-weight:600;color:#eef7e6;letter-spacing:0}
+.node-head .chip{
+  margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;background:#00000033;border:1px solid #ffffff22;
+  border-radius:99px;padding:2px 10px;color:#dfeccf;white-space:nowrap;
+}
+.node-head .sock{width:11px;height:11px;border-radius:50%;background:var(--sock-shader);border:1.5px solid #0c180c;flex:none}
+.node-body{padding:20px 22px 24px}
+.engine{
+  font-family:'JetBrains Mono';font-size:11px;color:var(--faint);
+  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+}
+.engine b{color:var(--muted);font-weight:500}
+
+/* níveis */
+.lvl{border:1px solid var(--line-soft);border-radius:8px;padding:16px 18px;margin:14px 0;background:#1b1d2055}
+.lvl .tag{
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:7px;margin-bottom:8px;
+}
+.lvl .tag::before{content:"";width:8px;height:8px;border-radius:2px;display:inline-block}
+.lvl.beg .tag{color:var(--beg)} .lvl.beg .tag::before{background:var(--beg)}
+.lvl.adv .tag{color:var(--adv)} .lvl.adv .tag::before{background:var(--adv)}
+.lvl p+p{margin-top:10px}
+.lvl ul{margin:8px 0 0 20px}
+.lvl li{margin:5px 0}
+
+/* figuras SVG */
+figure.diagram{
+  margin:18px 0;border:1px solid var(--line-soft);border-radius:8px;
+  background:#141518;padding:14px 12px 8px;overflow:hidden;
+}
+figure.diagram svg{width:100%;height:auto;display:block}
+figure.diagram figcaption{
+  font-size:12.5px;color:var(--faint);padding:8px 6px 4px;line-height:1.55;
+  font-family:'JetBrains Mono';
+}
+
+/* tabela de inputs / comparativa */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:14px 0}
+.tbl th{
+  text-align:left;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;
+  border-bottom:1px solid var(--line);padding:7px 10px;
+}
+.tbl td{border-bottom:1px solid var(--line-soft);padding:8px 10px;vertical-align:top;color:#d6d4cf}
+.tbl td:first-child{white-space:nowrap;font-weight:500}
+.tbl .sk{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:baseline;border:1px solid #0008}
+.sk.c{background:var(--sock-color)} .sk.f{background:var(--sock-float)} .sk.v{background:var(--sock-vector)} .sk.s{background:var(--sock-shader)}
+.tbl-wrap{overflow-x:auto}
+
+/* exemplos reais */
+.realw{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0 4px;
+}
+.realw .ex{
+  border:1px solid var(--line-soft);border-radius:7px;padding:10px 12px;background:var(--panel-2);
+  font-size:13.5px;line-height:1.45;
+}
+.realw .ex b{display:block;font-weight:600;color:var(--ink);margin-bottom:2px;font-size:13px}
+.realw .ex span{color:var(--muted);font-size:12.5px}
+
+/* callouts */
+.tip{
+  border-left:3px solid var(--green);background:#22301c66;border-radius:0 8px 8px 0;
+  padding:12px 16px;margin:14px 0;font-size:14.5px;color:#d9e5c9;
+}
+.tip b{color:#cfe8a8}
+.warn{
+  border-left:3px solid #e0a83f;background:#33291466;border-radius:0 8px 8px 0;
+  padding:12px 16px;margin:14px 0;font-size:14.5px;color:#e8d9b8;
+}
+.warn b{color:#f0c069}
+
+/* refs */
+sup.ref a{
+  font-family:'JetBrains Mono';font-size:.68em;color:var(--green);
+  border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:2px;
+}
+ol.bib{margin-left:22px;font-size:14px;color:var(--muted)}
+ol.bib li{margin:10px 0;line-height:1.6}
+ol.bib b{color:var(--ink);font-weight:600}
+ol.bib .where{font-style:italic}
+ol.bib code{font-size:.82em}
+
+p+p{margin-top:12px}
+main>section>p, .prose p{color:#d6d4cf}
+hr.sep{border:none;border-top:1px dashed var(--line);margin:46px 0 8px}
+
+footer{
+  border-top:1px solid var(--line);margin-top:70px;padding:26px 0 0;
+  font-size:13px;color:var(--faint);line-height:1.7;
+}
+footer a{color:var(--muted)}
+
+/* ---------- apostila: matemática ---------- */
+.math{
+  background:#101114;border:1px solid var(--line-soft);border-left:3px solid var(--adv);
+  border-radius:0 8px 8px 0;padding:14px 18px;margin:14px 0;
+  font-family:'JetBrains Mono',monospace;font-size:14px;color:#e3ddf0;
+  overflow-x:auto;line-height:2;
+}
+.math .eq{display:block;text-align:center;font-size:15px;white-space:nowrap}
+.math .legend{display:block;margin-top:8px;font-size:12px;color:var(--muted);line-height:1.7;white-space:normal;font-family:'Inter',sans-serif}
+.math .legend code{font-size:.92em}
+h4.sub{
+  font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);margin:22px 0 8px;display:flex;align-items:center;gap:10px;
+}
+h4.sub::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+
+/* ---------- erros comuns ---------- */
+.bugs{border:1px solid #5a3a2a55;border-radius:8px;background:#2a1d1455;padding:14px 18px;margin:14px 0}
+.bugs ul{margin-left:18px}
+.bugs li{margin:7px 0;font-size:14.5px;color:#e3cdbb}
+.bugs li b{color:#f0b78a}
+
+/* ---------- laboratórios / experimente ---------- */
+.lab{border:1px solid #3a4a2f;border-radius:8px;background:#1c2418aa;padding:16px 20px;margin:16px 0}
+.lab .lab-tag{
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--green);display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.lab .lab-tag::before{content:"▸";font-size:13px}
+.lab ol{margin-left:20px}
+.lab ol li{margin:7px 0;font-size:14.5px;color:#d6e0c6}
+.lab p{font-size:14.5px;color:#cdd8bd}
+.lab p.obs{margin-top:10px;color:var(--muted);font-size:13.5px;border-top:1px dashed #3a4a2f;padding-top:10px}
+kbd{
+  font-family:'JetBrains Mono';font-size:.82em;background:#2c2e34;border:1px solid #45484f;
+  border-bottom-width:2px;border-radius:5px;padding:.08em .45em;color:#e2e0da;
+}
+
+/* ---------- exercícios ---------- */
+details.exq{border:1px solid var(--line-soft);border-radius:8px;margin:10px 0;background:var(--panel-2);overflow:hidden}
+details.exq summary{
+  cursor:pointer;padding:12px 16px;font-size:14.5px;color:#dcdad4;list-style:none;
+  display:flex;gap:12px;align-items:baseline;
+}
+details.exq summary::-webkit-details-marker{display:none}
+details.exq summary .qn{font-family:'JetBrains Mono';font-size:12px;color:var(--green);white-space:nowrap}
+details.exq summary:hover{background:#2b2d33}
+details.exq .ans{padding:4px 16px 14px 16px;font-size:14px;color:var(--muted);border-top:1px dashed var(--line-soft)}
+details.exq .ans b{color:#cfe8a8}
+details.exq[open] summary{border-bottom:1px solid var(--line-soft)}
+
+/* ---------- glossário ---------- */
+dl.gloss{margin:14px 0}
+dl.gloss dt{font-weight:600;color:var(--ink);margin-top:14px;font-size:15px}
+dl.gloss dt code{font-size:.85em}
+dl.gloss dd{margin-left:0;color:var(--muted);font-size:14.5px;line-height:1.65}
+
+/* ---------- impressão ---------- */
+@media print{
+  body{background:#fff;color:#1c1c1c;font-size:11.5pt}
+  .toc{display:none}
+  .shell{display:block;max-width:none;padding:0 6mm}
+  main{max-width:none}
+  .node,.lvl,.lab,.bugs,figure.diagram,details.exq,.tip,.warn,.math{break-inside:avoid;background:#fff;border-color:#bbb}
+  .node{box-shadow:none}
+  .node-head{background:#dfe9d4;color:#1c1c1c}
+  .node-head h3{color:#1c1c1c}
+  main *{color:#1c1c1c!important}
+  a{text-decoration:underline}
+  details.exq{display:block} details.exq .ans{display:block}
+  figure.diagram{background:#fff}
+}
+
+/* svg shared */
+.svg-lbl{font-family:'JetBrains Mono',monospace;font-size:11px;fill:#a3a19a}
+.svg-lbl.s{font-size:10px;fill:#74726c}
+.svg-tit{font-family:'Space Grotesk',sans-serif;font-size:12.5px;fill:#c9c7c1;font-weight:600}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ======================= SIDEBAR ======================= -->
+<nav class="toc" aria-label="Sumário">
+  <div class="brand"><span class="dot"></span>Apostila · Shader Nodes</div>
+  <ol>
+    <li class="grp">Parte I — Fundamentos</li>
+    <li><a href="#arvore">Cap. 1 · A árvore de nós</a></li>
+    <li><a href="#coordenadas">Cap. 2 · Coordenadas e espaços</a></li>
+    <li><a href="#cor-dados">Cap. 3 · Cor, dados e sRGB</a></li>
+    <li><a href="#avaliacao">Cap. 4 · Como o material executa</a></li>
+    <li class="grp">Parte II — As famílias de nós</li>
+    <li><a href="#input">Input — perguntar à cena</a></li>
+    <li><a href="#texturas">Texture — gerar padrões</a></li>
+    <li><a href="#cor">Color — tratar cores</a></li>
+    <li><a href="#vetor">Vector — bump, normal, relevo</a></li>
+    <li><a href="#converter">Converter — a calculadora</a></li>
+    <li><a href="#organizacao">Groups, frames e OSL</a></li>
+    <li class="grp">Parte III — Estudo</li>
+    <li><a href="#tabela">Mapa rápido dos nós</a></li>
+    <li><a href="#receitas">Receitas de leitura</a></li>
+    <li><a href="#labs">Laboratórios práticos</a></li>
+    <li><a href="#exercicios">Exercícios de fixação</a></li>
+    <li><a href="#glossario">Glossário</a></li>
+    <li><a href="#referencias">Referências</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ======================= HERO ======================= -->
+<header class="hero">
+  <div class="kicker">Apostila de shading · Cycles &amp; EEVEE</div>
+  <h1>Shader nodes: a <em>linguagem visual</em> dos materiais</h1>
+  <p class="lead">Se as BSDFs são as "personalidades ópticas" das superfícies, os shader nodes são a linguagem com que você as descreve, mistura e alimenta com padrões. Esta apostila destrincha o sistema inteiro do Shader Editor — de onde vêm as coordenadas, como nascem as texturas procedurais, o que cada socket colorido transporta e como tudo isso vira um programinha executado milhões de vezes por render — com diagramas, a matemática por trás dos nós, laboratórios e exercícios.</p>
+  <div class="meta">
+    <span><i style="background:var(--beg)"></i>Nível iniciante</span>
+    <span><i style="background:var(--adv)"></i>Nível avançado</span>
+    <span><i style="background:var(--sock-shader)"></i>Socket shader</span>
+    <span><i style="background:var(--sock-color)"></i>Socket cor</span>
+    <span><i style="background:var(--sock-vector)"></i>Socket vetor</span>
+    <span><i style="background:var(--sock-float)"></i>Socket valor</span>
+  </div>
+  <div class="tip" style="margin-top:26px"><b>Como estudar com esta apostila:</b> ela é a companheira da apostila de BSDFs — lá você estudou <em>o que</em> ligar no Material Output; aqui, <em>tudo que vem antes</em>. Na primeira passada, leia os blocos azuis e reproduza cada "Experimente" com um plano e um Viewer (ligue qualquer socket numa Emission para "ver" o dado). Na segunda, encare os blocos roxos e as caixas de matemática. Termine com os <a href="#labs">laboratórios</a> — materiais procedurais completos — e os <a href="#exercicios">exercícios</a>.</div>
+</header>
+<!-- ======================= CAP 1 — A ÁRVORE ======================= -->
+<section id="arvore">
+  <div class="sec-head"><span class="idx">Cap. 1</span><h2>A árvore de nós: anatomia e fluxo</h2></div>
+  <p class="sec-sub">Um material do Blender é um pequeno programa escrito visualmente. Entender as três regras do fluxo — da esquerda para a direita, um valor por socket, tudo por amostra — destrava todo o resto.</p>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Cada nó é uma <strong>caixinha que transforma dados</strong>: recebe valores pelos sockets da esquerda (inputs), faz a sua única tarefa, e entrega o resultado pelos sockets da direita (outputs). Os "fios" (links) carregam esses valores de um nó para o próximo, sempre da esquerda para a direita, até desaguar no <code>Material Output</code>.</p>
+    <p>A pergunta certa ao ler qualquer árvore de nós não é "o que esse nó faz?", e sim: <strong>"que valor está passando neste fio?"</strong>. Um número? Uma cor? Uma direção? Aprender a "enxergar" o conteúdo dos fios é a habilidade central deste material — e a cor de cada socket já dá a dica.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 300" role="img" aria-label="Anatomia de um nó: cabeçalho com nome, sockets de entrada à esquerda, propriedades no corpo, sockets de saída à direita">
+      <defs>
+        <marker id="n1-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#74726c"/></marker>
+      </defs>
+      <!-- nó -->
+      <rect x="250" y="50" width="260" height="200" rx="10" fill="#26282d" stroke="#3a3d44" stroke-width="1.5"/>
+      <rect x="250" y="50" width="260" height="34" rx="10" fill="#2f5a2f"/>
+      <rect x="250" y="74" width="260" height="10" fill="#2f5a2f"/>
+      <text x="266" y="72" fill="#eef7e6" font-family="'Space Grotesk',sans-serif" font-size="14" font-weight="600">Noise Texture</text>
+      <!-- propriedade -->
+      <rect x="266" y="98" width="228" height="22" rx="4" fill="#1b1d21" stroke="#33363c"/>
+      <text x="276" y="113" class="svg-lbl">4D ▾</text>
+      <!-- sockets entrada -->
+      <g>
+        <circle cx="250" cy="146" r="6" fill="#7a7ad6" stroke="#0b0b14" stroke-width="1.5"/><text x="266" y="150" class="svg-lbl">Vector</text>
+        <circle cx="250" cy="176" r="6" fill="#a1a1a1" stroke="#101010" stroke-width="1.5"/><text x="266" y="180" class="svg-lbl">Scale</text>
+        <circle cx="250" cy="206" r="6" fill="#a1a1a1" stroke="#101010" stroke-width="1.5"/><text x="266" y="210" class="svg-lbl">Detail</text>
+        <circle cx="250" cy="236" r="6" fill="#a1a1a1" stroke="#101010" stroke-width="1.5"/><text x="266" y="240" class="svg-lbl">Roughness</text>
+      </g>
+      <!-- sockets saída -->
+      <g>
+        <circle cx="510" cy="146" r="6" fill="#a1a1a1" stroke="#101010" stroke-width="1.5"/><text x="446" y="150" class="svg-lbl">Fac</text>
+        <circle cx="510" cy="176" r="6" fill="#c7c729" stroke="#14140a" stroke-width="1.5"/><text x="436" y="180" class="svg-lbl">Color</text>
+      </g>
+      <!-- anotações -->
+      <line x1="120" y1="64" x2="246" y2="64" stroke="#74726c" stroke-width="1.2" marker-end="url(#n1-a)"/>
+      <text x="36" y="58" class="svg-lbl s">cabeçalho: nome</text><text x="36" y="72" class="svg-lbl s">e categoria (cor)</text>
+      <line x1="150" y1="176" x2="240" y2="176" stroke="#74726c" stroke-width="1.2" marker-end="url(#n1-a)"/>
+      <text x="48" y="170" class="svg-lbl s">inputs: valores</text><text x="48" y="184" class="svg-lbl s">que ele consome</text>
+      <line x1="640" y1="160" x2="520" y2="160" stroke="#74726c" stroke-width="1.2" marker-end="url(#n1-a)"/>
+      <text x="648" y="156" class="svg-lbl s">outputs: o que</text><text x="648" y="170" class="svg-lbl s">ele produz</text>
+      <line x1="610" y1="110" x2="500" y2="110" stroke="#74726c" stroke-width="1.2" marker-end="url(#n1-a)"/>
+      <text x="618" y="106" class="svg-lbl s">propriedades:</text><text x="618" y="120" class="svg-lbl s">modos sem socket</text>
+      <text x="252" y="282" class="svg-lbl s">socket sem fio = usa o valor digitado ali mesmo (literal)</text>
+    </svg>
+    <figcaption>Fig. 1 — Anatomia de um nó. Repare que inputs sem fio não estão "vazios": o número ou cor mostrado no próprio socket é o valor usado. Propriedades (dropdowns) mudam o algoritmo do nó e não podem ser animadas por outros nós.</figcaption>
+  </figure>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 250" role="img" aria-label="Fluxo de dados: Texture Coordinate alimenta Noise Texture, que alimenta o Roughness do Principled, que vai ao Material Output">
+      <defs><marker id="n2-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8fc04c"/></marker></defs>
+      <g font-family="'Space Grotesk',sans-serif" font-size="12.5" font-weight="600">
+        <rect x="30" y="90" width="150" height="62" rx="8" fill="#26282d" stroke="#3a3d44"/><rect x="30" y="90" width="150" height="24" rx="8" fill="#37474f"/><text x="42" y="107" fill="#dce8ee">Texture Coordinate</text>
+        <circle cx="180" cy="134" r="5.5" fill="#7a7ad6"/><text x="124" y="138" class="svg-lbl">Object</text>
+        <rect x="240" y="80" width="140" height="80" rx="8" fill="#26282d" stroke="#3a3d44"/><rect x="240" y="80" width="140" height="24" rx="8" fill="#5a4a1f"/><text x="252" y="97" fill="#f0dfa0">Noise Texture</text>
+        <circle cx="240" cy="124" r="5.5" fill="#7a7ad6"/><text x="254" y="128" class="svg-lbl">Vector</text>
+        <circle cx="380" cy="124" r="5.5" fill="#a1a1a1"/><text x="344" y="128" class="svg-lbl">Fac</text>
+        <rect x="440" y="60" width="150" height="120" rx="8" fill="#26282d" stroke="#3a3d44"/><rect x="440" y="60" width="150" height="24" rx="8" fill="#2f5a2f"/><text x="452" y="77" fill="#eef7e6">Principled BSDF</text>
+        <circle cx="440" cy="110" r="5.5" fill="#c7c729"/><text x="454" y="114" class="svg-lbl">Base Color</text>
+        <circle cx="440" cy="140" r="5.5" fill="#a1a1a1"/><text x="454" y="144" class="svg-lbl">Roughness</text>
+        <circle cx="590" cy="110" r="5.5" fill="#63c763"/><text x="544" y="114" class="svg-lbl">BSDF</text>
+        <rect x="630" y="86" width="110" height="60" rx="8" fill="#26282d" stroke="#3a3d44"/><rect x="630" y="86" width="110" height="24" rx="8" fill="#5a2a2a"/><text x="640" y="103" fill="#eed4d4">Output</text>
+        <circle cx="630" cy="128" r="5.5" fill="#63c763"/><text x="644" y="132" class="svg-lbl">Surface</text>
+      </g>
+      <path d="M180 134 C 212 134, 208 124, 240 124" fill="none" stroke="#8fc04c" stroke-width="2"/>
+      <path d="M380 124 C 412 124, 408 140, 440 140" fill="none" stroke="#8fc04c" stroke-width="2"/>
+      <path d="M590 110 C 612 110, 608 128, 630 128" fill="none" stroke="#8fc04c" stroke-width="2"/>
+      <text x="80" y="220" class="svg-lbl s">"onde estou?" → "qual o valor do ruído aqui?" → "então o roughness aqui é esse" → render</text>
+      <text x="30" y="44" class="svg-tit">Leia todo material assim: dados fluem da pergunta (esquerda) para a resposta (direita)</text>
+    </svg>
+    <figcaption>Fig. 2 — Uma árvore mínima e o seu significado. O Noise não "pinta" nada: ele responde, para cada ponto da superfície, um número — que aqui é interpretado como rugosidade.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada — os tipos de socket</span>
+    <p>O sistema de nós é tipado, e cada cor de socket é um tipo de dado:</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <tr><th>Socket</th><th>Tipo</th><th>Conteúdo</th></tr>
+      <tr><td><span class="sk f"></span>Cinza</td><td>Float</td><td>Um número (Fac, Roughness, Scale...). A faixa "natural" é 0–1, mas nada impede valores fora dela.</td></tr>
+      <tr><td><span class="sk c"></span>Amarelo</td><td>Color</td><td>Trio RGB (+alpha em alguns nós), em espaço <em>linear</em> de cena (Cap. 3).</td></tr>
+      <tr><td><span class="sk v"></span>Roxo/azul</td><td>Vector</td><td>Trio XYZ: posição, direção ou coordenada de textura. Mesma "forma" da cor, semântica diferente.</td></tr>
+      <tr><td><span class="sk s"></span>Verde</td><td>Shader</td><td>Uma BSDF/closure — não é um número! Só pode ser misturada (Mix/Add) e entregue ao Output; não dá para "fazer conta" com ela.</td></tr>
+    </table></div>
+    <p><strong>Conversões implícitas</strong> acontecem quando você liga tipos diferentes — e são fonte clássica de surpresas:</p>
+    <ul>
+      <li>Color → Float: vira luminância/média (por isso ligar uma textura colorida num Fac "funciona").</li>
+      <li>Float → Color: vira cinza (R=G=B).</li>
+      <li>Color ↔ Vector: cópia direta de componentes (RGB↔XYZ) — útil de propósito (normal maps são "cores" que codificam vetores), perigoso por acidente.</li>
+      <li>Shader → qualquer coisa: <em>impossível</em>. A exceção de mão única é o <code>Shader to RGB</code> do EEVEE, que "fotografa" o resultado do shader (ver Converter).</li>
+    </ul>
+    <p>Historicamente, a ideia de descrever materiais como grafos vem dos <em>shade trees</em> de Rob Cook (1984)<sup class="ref"><a href="#r1">[1]</a></sup> — o paper que deu origem tanto aos editores de nós quanto, indiretamente, às linguagens de shading como a RenderMan SL e o OSL.</p>
+  </div>
+
+  <div class="tip"><b>O truque do Viewer:</b> ligue qualquer socket num nó <code>Emission → Output</code> (ou use o atalho de preview de extensões como o Node Wrangler, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+clique) para "ver" o dado cru daquele fio no viewport. Estudar nós sem um viewer é estudar no escuro — use-o em todos os "Experimente" desta apostila.</div>
+</section>
+
+<!-- ======================= CAP 2 — COORDENADAS ======================= -->
+<section id="coordenadas">
+  <div class="sec-head"><span class="idx">Cap. 2</span><h2>Coordenadas e espaços: o "onde" de toda textura</h2></div>
+  <p class="sec-sub">Toda textura — de imagem ou procedural — é uma função que recebe uma posição e devolve um valor. Escolher <em>qual posição</em> entregar a ela é a decisão mais importante (e mais ignorada) do shading.</p>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>O nó <strong>Texture Coordinate</strong> oferece vários "sistemas de endereço" para o mesmo ponto da superfície:</p>
+    <ul>
+      <li><code>UV</code> — o endereço que <em>você</em> desenhou ao fazer unwrap: a casca do objeto aberta e achatada num quadrado 0–1. É o padrão para texturas de imagem pintadas/baked.</li>
+      <li><code>Generated</code> — endereço automático: a caixa que envolve o objeto, normalizada de 0 a 1. Ótimo para procedurais quando não há UV; <em>acompanha a deformação</em> do objeto.</li>
+      <li><code>Object</code> — posição em relação ao pivô do objeto, em unidades reais. A melhor escolha para procedurais: escala consistente entre objetos e possibilidade de usar <em>outro</em> objeto (um Empty) como controle remoto da textura.</li>
+      <li><code>Normal</code> — a direção para onde a superfície aponta (útil para "neve no topo").</li>
+      <li><code>Camera / Window / Reflection</code> — endereços que dependem da câmera: efeitos de tela, matte painting, fake reflections estilo "metal de desenho animado".</li>
+    </ul>
+    <p>O nó <strong>Mapping</strong> é o parceiro inseparável: desloca (Location), gira (Rotation) e escala (Scale) qualquer coordenada antes de entregá-la à textura — é o "ajuste fino do endereço".</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 270" role="img" aria-label="Comparação entre coordenadas Generated, que envolvem o objeto como uma caixa de gradiente, e UV, a malha aberta e planificada">
+      <defs>
+        <linearGradient id="gen-g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1c2e3e"/><stop offset="1" stop-color="#7fb2d9"/></linearGradient>
+      </defs>
+      <text x="60" y="34" class="svg-tit">Generated: a "caixa" 0–1 do objeto</text>
+      <g>
+        <polygon points="100,200 200,200 240,160 140,160" fill="url(#gen-g)" stroke="#5a5e66" stroke-width="1.5"/>
+        <polygon points="100,200 200,200 200,110 100,110" fill="url(#gen-g)" stroke="#5a5e66" stroke-width="1.5"/>
+        <polygon points="200,200 240,160 240,80 200,110" fill="url(#gen-g)" stroke="#5a5e66" stroke-width="1.5" opacity=".85"/>
+        <polygon points="100,110 200,110 240,80 140,80" fill="url(#gen-g)" stroke="#5a5e66" stroke-width="1.5" opacity=".9"/>
+        <text x="86" y="226" class="svg-lbl s">(0,0,0)</text><text x="226" y="72" class="svg-lbl s">(1,1,1)</text>
+      </g>
+      <text x="60" y="252" class="svg-lbl s">automática; deforma junto com o objeto</text>
+      <text x="430" y="34" class="svg-tit">UV: a casca aberta por você</text>
+      <g stroke="#7a9ec0" stroke-width="1.3" fill="#27405a55">
+        <rect x="470" y="90" width="80" height="80"/>
+        <rect x="550" y="90" width="80" height="80"/>
+        <rect x="630" y="90" width="60" height="80"/>
+        <rect x="470" y="170" width="80" height="60"/>
+        <rect x="550" y="170" width="80" height="60"/>
+      </g>
+      <rect x="450" y="70" width="260" height="180" fill="none" stroke="#5a5e66" stroke-width="1.5" stroke-dasharray="5 5"/>
+      <text x="456" y="64" class="svg-lbl s">espaço UV 0–1</text>
+      <text x="430" y="252" class="svg-lbl s">controle total; exige unwrap; texturas de imagem vivem aqui</text>
+    </svg>
+    <figcaption>Fig. 3 — Dois "endereços" para os mesmos pontos. Procedurais aceitam qualquer um (são 3D por natureza); imagens 2D praticamente exigem UV. Misturar os dois com consciência é metade do ofício.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>Por trás dos nomes amigáveis há <strong>espaços de coordenadas</strong> com matrizes de transformação entre eles:</p>
+    <ul>
+      <li><strong>World space</strong> — o espaço global da cena. <code>Object</code> = world transformado pela inversa da matriz do objeto; por isso a textura "gruda" no objeto quando ele se move. Usar a saída <code>Position</code> do nó Geometry (world) faz o contrário: o objeto "nada" através da textura ao se mover — efeito desejável para água, indesejável para madeira.</li>
+      <li><strong>Tangent space</strong> — o espaço local da superfície (tangente, bitangente, normal), definido pelo UV. É onde vivem os normal maps (Cap. Vector) e a anisotropia; depende de UVs bem construídos — UV espelhado/zoado = normal map quebrado.</li>
+      <li><strong>Camera/NDC</strong> — <code>Window</code> entrega a posição na tela (0–1): a base de efeitos "screen-space" e de projeções de matte painting.</li>
+    </ul>
+    <p>Dois detalhes que pegam todo mundo:</p>
+    <ul>
+      <li><code>Generated</code> é calculada a partir da bounding box <em>sem modificadores</em> e acompanha deformações (em malhas com Subsurf/Armature ela "estica junto"); <code>Object</code> não estica — escolha conforme você quer que a textura acompanhe ou não a deformação.</li>
+      <li>A ordem do Mapping importa: ele aplica Scale → Rotation → Location (modo Point). Girar depois de escalar de forma não-uniforme <em>cisalha</em> a textura — se o resultado parecer "torto", inverta a estratégia com dois Mappings encadeados.</li>
+    </ul>
+    <p>O conceito de mapear texturas por coordenadas paramétricas remonta à tese de Ed Catmull (1974)<sup class="ref"><a href="#r2">[2]</a></sup>; reflexões por direção (a saída <code>Reflection</code>) vêm do environment mapping de Blinn &amp; Newell (1976)<sup class="ref"><a href="#r3">[3]</a></sup>.</p>
+  </div>
+
+  <div class="lab">
+    <span class="lab-tag">Experimente no Blender</span>
+    <ol>
+      <li>Cubo com Checker Texture; ligue nele, alternadamente, <code>Generated</code>, <code>Object</code> e <code>UV</code> e observe a diferença ao <em>escalar o cubo no Object Mode</em> (Generated estica, Object repete).</li>
+      <li>Troque o input do Mapping para a saída <code>Object</code> de um <em>Empty</em> (Texture Coordinate → Object dropdown): mova o Empty e veja a textura inteira obedecer — um "controle remoto" de textura.</li>
+      <li>Ligue <code>Normal</code> num Separate XYZ → use só o Z num Color Ramp: você acaba de fazer a máscara "neve no topo".</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ======================= CAP 3 — COR E DADOS ======================= -->
+<section id="cor-dados">
+  <div class="sec-head"><span class="idx">Cap. 3</span><h2>Cor, dados e o caso sRGB: o capítulo que evita 80% dos bugs</h2></div>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Monitores não mostram a luz "crua": eles aplicam uma curva (sRGB/gamma) que clareia os tons médios, porque nosso olho percebe escuros com mais detalhe. Isso cria duas famílias de imagem:</p>
+    <ul>
+      <li><strong>Imagens de cor</strong> (fotos, albedo pintado) — já vêm "tortas" pela curva sRGB, prontas para o olho.</li>
+      <li><strong>Imagens de dados</strong> (roughness, metallic, normal, height, masks) — são números disfarçados de imagem. Curva nenhuma deve tocá-las.</li>
+    </ul>
+    <p>O render, por sua vez, faz toda a matemática em <strong>luz linear</strong> (proporcional a fótons de verdade). Então a regra de ouro tem uma linha: no nó Image Texture, deixe <code>Color Space: sRGB</code> para texturas de cor e mude para <code>Non-Color</code> para todo o resto. Errar isso deixa o material "lavado" ou "queimado" e o normal map com relevo doente — e ninguém percebe a causa porque o erro é silencioso.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 270" role="img" aria-label="Curva sRGB: relação não linear entre o valor armazenado e a luz real; a diagonal é o espaço linear">
+      <line x1="90" y1="220" x2="700" y2="220" stroke="#3a3d44" stroke-width="1.5"/>
+      <line x1="90" y1="220" x2="90" y2="40" stroke="#3a3d44" stroke-width="1.5"/>
+      <text x="96" y="36" class="svg-lbl">luz real (linear)</text>
+      <text x="560" y="246" class="svg-lbl">valor no arquivo →</text>
+      <line x1="90" y1="220" x2="700" y2="50" stroke="#5a5e66" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <text x="496" y="120" class="svg-lbl s">linear (dados): y = x</text>
+      <path d="M90 220 C 200 218, 260 200, 350 160 C 460 110, 580 72, 700 50" fill="none" stroke="#ffb74d" stroke-width="2.5"/>
+      <text x="150" y="150" class="svg-lbl" fill="#ffb74d">decodificação sRGB: y ≈ x^2.2</text>
+      <text x="150" y="170" class="svg-lbl s">"0.5 no arquivo" vale só ~0.22 de luz real</text>
+      <line x1="395" y1="220" x2="395" y2="142" stroke="#ffb74d" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="395" y1="142" x2="90" y2="142" stroke="#ffb74d" stroke-width="1" stroke-dasharray="2 4"/>
+    </svg>
+    <figcaption>Fig. 4 — A curva de transferência sRGB. Marcar um mapa de roughness como sRGB faz o renderizador aplicar esta curva nele: todos os seus números mudam (0.5 vira ~0.22) e o material inteiro responde errado.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <div class="math">
+      <span class="eq">decodificação sRGB (IEC 61966-2-1): linear = ((v + 0.055)/1.055)^2.4 para v &gt; 0.04045; senão v/12.92</span>
+      <span class="legend">A "gamma 2.2" é a aproximação famosa dessa curva por partes. O fluxo correto chama-se <em>linear workflow</em>: decodificar entradas sRGB → calcular tudo em linear → aplicar a transformação de exibição no final. No Blender, a etapa final é o Color Management (Filmic/AgX), que além do gamma comprime o range alto — por isso a cor renderizada nunca "bate" exatamente com o color picker: AgX dessatura altas luzes de propósito, imitando filme.</span>
+    </div>
+    <ul>
+      <li><strong>Sockets de cor já são lineares:</strong> o picker mostra valores já decodificados; a curva só existe na fronteira com arquivos e com a tela.</li>
+      <li><strong>8 bits vs float:</strong> PNG/JPG de 8 bits têm 256 níveis — suficiente para cor (graças ao sRGB, que distribui níveis perceptualmente), insuficiente para height maps e HDRIs. Use EXR (linear, float) para dados contínuos e iluminação; é também por isso que displacement de PNG sai "em degraus".</li>
+      <li><strong>Alpha:</strong> o Blender trabalha com alpha <em>associado</em> (premultiplied) internamente; PNGs são straight. O nó Image Texture converte sozinho, mas composições manuais de alpha em nós devem lembrar da diferença.</li>
+      <li><strong>Cor ≠ vetor:</strong> um normal map "lilás" é um vetor (x,y,z) re-escalado para (0–1); qualquer operação de cor (curvas, hue) sobre ele corrompe a geometria codificada.</li>
+    </ul>
+  </div>
+
+  <div class="warn"><b>Checklist de import de texturas PBR:</b> Albedo → sRGB · Roughness/Metallic/AO/Height/Masks → Non-Color · Normal → Non-Color + nó Normal Map. Errou um deles, o material inteiro mente para você.</div>
+</section>
+
+<!-- ======================= CAP 4 — EXECUÇÃO ======================= -->
+<section id="avaliacao">
+  <div class="sec-head"><span class="idx">Cap. 4</span><h2>Como o material executa: um programa por amostra</h2></div>
+  <p class="sec-sub">Saber o modelo de execução explica por que certos nós existem (Light Path), por que outros são caros (Bevel, AO) e por que algumas ideias são impossíveis (ler o pixel vizinho).</p>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Quando um raio do Cycles atinge a superfície (Cap. 4 da apostila de BSDFs), a árvore de nós inteira é <strong>executada naquele ponto exato</strong>, do zero, para responder uma única pergunta: "qual é o material <em>aqui</em>?". Milhões de batidas de raio = milhões de execuções independentes.</p>
+    <p>Consequências práticas imediatas:</p>
+    <ul>
+      <li>Cada execução só conhece <em>o seu ponto</em>: posição, normal, UV, qual tipo de raio chegou. Não existe "olhar o pixel do lado" nem "lembrar do frame anterior".</li>
+      <li>Nós não têm ordem de "tempo": a árvore toda é uma única expressão matemática avaliada de uma vez.</li>
+      <li>Nó barato repetido milhões de vezes continua barato; nó que dispara <em>raios extras</em> (Ambient Occlusion, Bevel) multiplica o custo do render inteiro.</li>
+    </ul>
+  </div>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>No Cycles, a árvore é compilada para o <strong>SVM</strong> (Shader Virtual Machine) — um bytecode em pilha executado na GPU/CPU por interseção — ou, na CPU, opcionalmente para <strong>OSL</strong> (Open Shading Language, Gritz et al. 2010<sup class="ref"><a href="#r13">[13]</a></sup>), onde cada material vira um shader de verdade com possibilidade de código customizado (nó Script). No EEVEE, a mesma árvore é traduzida para GLSL e executada por fragmento na rasterização — daí as diferenças de suporte (Light Path limitado, Shader to RGB exclusivo, AO/Bevel ausentes).</p>
+    <ul>
+      <li><strong>O modelo é funcional puro:</strong> sem estado, sem loops controláveis pelo usuário, sem efeitos colaterais. Tudo que parece "iteração" (octaves do Noise) é um loop fixo <em>dentro</em> do nó.</li>
+      <li><strong>Avaliação preguiçosa de verdade não existe</strong>, mas o compilador remove ramos mortos: um Mix com Fac constante 0 elimina o ramo B inteiro. Fac vindo de textura mantém os dois ramos vivos para sempre — relevante para performance.</li>
+      <li><strong>Derivadas e filtragem:</strong> texturas de imagem são filtradas por mipmaps (Williams 1983<sup class="ref"><a href="#r11">[11]</a></sup>) usando derivadas da UV na tela; procedurais não têm mipmaps — em distância, viram ruído de alta frequência que cintila. Antialiasing de procedural se faz com menos Detail, mais samples, ou baking para imagem.</li>
+      <li><strong>Por que o Light Path existe:</strong> como o shader roda uma vez <em>por tipo de raio</em>, ele pode responder coisas diferentes para a câmera, para sombras e para reflexos — um superpoder não-físico impossível na vida real e indispensável na produção (Parte II, Input).</li>
+    </ul>
+  </div>
+
+  <div class="tip"><b>Modelo mental definitivo:</b> escrever uma árvore de nós é escrever a função <code>material(ponto) → propriedades</code>. Todos os nós da Parte II se encaixam em três papéis: <em>perguntar</em> algo sobre o ponto (Input), <em>calcular</em> em cima da resposta (Texture/Color/Vector/Converter) ou <em>responder</em> ao renderizador (Shader/Output).</div>
+</section>
+
+<hr class="sep">
+<!-- ======================= INPUT ======================= -->
+<section id="input">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Input — os nós que perguntam à cena</h2></div>
+  <p class="sec-sub">Todo material começa com uma pergunta: onde estou? para onde aponto? que raio me atingiu? quem é meu objeto? Os nós de Input são o vocabulário dessas perguntas. (Texture Coordinate e Mapping, os dois maiores, já moram no Cap. 2.)</p>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#7a7ad6"></span><h3>Geometry</h3><span class="chip">Input · dados da superfície</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Pergunta:</b> "como é a superfície exatamente aqui?"</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O raio-X do ponto sendo renderizado: <code>Position</code> (onde estou, no mundo), <code>Normal</code> (para onde aponto, já com smooth shading e normal maps), <code>True Normal</code> (a normal "crua" do polígono), <code>Incoming</code> (de onde o raio veio), <code>Backfacing</code> (1 se o raio bateu por trás da face) e <code>Pointiness</code> (quão côncavo/convexo o ponto é — a base de máscaras de desgaste e sujeira em cantos).</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p><code>Pointiness</code> é a curvatura média aproximada por vértice (calculada do ângulo entre normais vizinhas) e <em>interpolada</em> — depende da densidade da malha: low-poly dá máscaras moles; é Cycles-only e costuma pedir um Color Ramp agressivo (entradas ~0.45–0.55) para virar máscara útil. <code>Backfacing</code> + Mix Shader cria materiais dupla-face (folha com frente/verso distintos). <code>Position</code> está em world space: objetos animados "nadam" por texturas ligadas nela — escolha consciente entre Position (mundo) e Texture Coordinate→Object (gruda no objeto). <code>Parametric</code> entrega coordenadas barycêntricas do triângulo — raríssimo, mas é o jeito de visualizar a triangulação real.</p>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Suzanne com Subdivision (2–3 níveis), material com <code>Pointiness → Color Ramp → Base Color</code>.</li>
+        <li>Aperte o contraste do ramp até quinas ficarem brancas e cavidades pretas.</li>
+        <li>Use essa máscara num Mix entre material "limpo" e "enferrujado": desgaste automático de cantos, sem pintar nada.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Light Path</h3><span class="chip">Input · tipo de raio</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles (parcial no EEVEE)</span><span><b>Pergunta:</b> "que tipo de raio está me avaliando agora?"</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O nó mais "trapaceiro" e mais usado da produção: ele diz se o shader está sendo visto <strong>pela câmera</strong>, por um <strong>raio de sombra</strong>, por um <strong>reflexo</strong>, por um bounce <strong>difuso</strong>... e permite responder diferente para cada um. Exemplos clássicos: um céu que a câmera vê mas que não estoura os reflexos; um emissor de luz invisível para a câmera; vidro que projeta sombra "barata".</p>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="Um mesmo objeto avaliado por três raios diferentes: raio de câmera, raio de sombra e raio de reflexo, cada um podendo receber resposta distinta">
+        <defs><marker id="lp-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker></defs>
+        <circle cx="420" cy="150" r="52" fill="#3a4a2a" stroke="#56683f" stroke-width="2"/>
+        <text x="394" y="156" class="svg-lbl">objeto</text>
+        <rect x="60" y="120" width="40" height="30" rx="5" fill="#2c2e34" stroke="#5a5e66"/>
+        <text x="52" y="172" class="svg-lbl s">câmera</text>
+        <line x1="102" y1="135" x2="364" y2="148" stroke="#ffd54f" stroke-width="2.4" marker-end="url(#lp-a)"/>
+        <text x="150" y="126" class="svg-lbl" fill="#ffd54f">Is Camera Ray = 1</text>
+        <circle cx="660" cy="50" r="14" fill="#ffd54f33" stroke="#ffd54f" stroke-width="1.5"/>
+        <line x1="648" y1="60" x2="458" y2="122" stroke="#ff8a65" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#lp-a)"/>
+        <text x="500" y="78" class="svg-lbl" fill="#ff8a65">Is Shadow Ray = 1</text>
+        <line x1="220" y1="236" x2="378" y2="186" stroke="#4fc3f7" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#lp-a)"/>
+        <rect x="140" y="226" width="80" height="14" fill="#8fa6bd" opacity=".6"/>
+        <text x="120" y="222" class="svg-lbl" fill="#4fc3f7">vindo de um espelho: Is Glossy Ray = 1</text>
+        <text x="60" y="34" class="svg-tit">O mesmo shader pode responder 3 coisas diferentes</text>
+      </svg>
+      <figcaption>Fig. 5 — O shader roda uma vez por raio, e o Light Path identifica o "chamador". Fisicamente impossível, artisticamente indispensável.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>As saídas booleanas (<code>Is Camera/Shadow/Diffuse/Glossy/Singular/Reflection/Transmission Ray</code>) valem 0/1 e tipicamente alimentam o Fac de um Mix Shader. As numéricas dão telemetria do caminho: <code>Ray Length</code> (distância desde a última batida — base de absorção fake e de "fog por dentro"), <code>Ray Depth / Diffuse Depth / Glossy Depth / Transparent Depth</code> (em que bounce estamos — permite, por exemplo, simplificar o material a partir do 2º bounce para acelerar o render). Receita canônica de vidro de produção: <code>Mix(Glass, Transparent, Fac = Is Shadow Ray)</code> — sombras limpas sem cáusticas caras. Atenção: cada ramo "fake" quebra a reciprocidade física; use como tempero, não como base.</p>
+    </div>
+    <div class="bugs">
+      <h4 class="sub" style="margin-top:0">Erros comuns</h4>
+      <ul>
+        <li><b>Esperar tudo no EEVEE:</b> rasterizador não tem "raios" clássicos; só Is Camera Ray (e olhe lá) se comporta como no Cycles.</li>
+        <li><b>Fake demais:</b> céu invisível em reflexos + luz invisível na câmera + sombra falsa = render que não fecha com nada; documente os truques.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Fresnel &amp; Layer Weight</h3><span class="chip">Input · máscaras de ângulo</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Pergunta:</b> "quão de raspão estou sendo visto?"</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Dois nós que produzem o mesmo tipo de coisa: um número que cresce conforme a superfície fica <strong>de lado para a câmera</strong>. <code>Fresnel</code> usa a física real (depende de IOR); <code>Layer Weight</code> dá duas versões artísticas: <code>Facing</code> (rampa simples controlada por Blend) e <code>Fresnel</code> (idem, parametrizada de 0–1). Servem para misturar materiais por ângulo: cetim que muda de cor, verniz só nas bordas, o "aro" de luz de tecidos.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">Facing = 1 − |N·V| &nbsp;·&nbsp; Fresnel(nó) = F dielétrico exato do Cap. 3 da apostila de BSDFs</span>
+        <span class="legend">N = normal, V = direção para a câmera/raio. Importante: os nós BSDF físicos <em>já calculam Fresnel por dentro</em> — ligar um nó Fresnel no Specular do Principled aplica o efeito duas vezes. O uso legítimo destes nós é dirigir <em>misturas artísticas</em> (Mix de cores/shaders), efeitos NPR, ou recriar manualmente um vidro didático (Mix(Refraction, Glossy, Fac=Fresnel)). Em malhas low-poly, ligue a Normal suavizada/bump no input Normal do nó para a máscara não revelar facetas.</span>
+      </div>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Esfera; Mix Color entre azul profundo e magenta, Fac = Layer Weight → Facing (Blend 0.5) → Base Color.</li>
+        <li>Você fez um "cetim two-tone". Agora troque Facing por Fresnel (IOR 1.45) e compare as curvas de transição.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Object Info &amp; Attribute</h3><span class="chip">Input · variação por objeto</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Pergunta:</b> "quem é o meu objeto / que dado customizado ele carrega?"</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p><code>Object Info</code> entrega dados do <em>objeto inteiro</em>: sua posição, índice, e — a estrela — <code>Random</code>: um número aleatório fixo por objeto/instância. Com ele, <em>um único material</em> pinta cem cadeiras com cem tons levemente diferentes. <code>Attribute</code> é a porta de entrada de dados arbitrários: vertex colors pintados à mão, grupos de vértices, atributos criados no Geometry Nodes — você digita o nome, ele entrega o valor.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O padrão-ouro da variação: <code>Object Info → Random → White Noise/Color Ramp → Hue Saturation</code> sobre a Base Color, ou Random direto no W de um Noise 4D para cada instância sortear um "universo" da textura. <code>Attribute</code> aceita três domínios (Geometry/Object/Instancer) e é o elo com o Geometry Nodes: qualquer atributo nomeado lá (ex.: "idade", "umidade") vira input de shading aqui — a fundação de setups procedurais modernos. Vertex color pintado continua sendo a máscara mais barata que existe (zero textura, zero UV).</p>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Cubo com material: <code>Object Info → Random → Hue/Saturation (Hue)</code> na Base Color.</li>
+        <li>Duplique o cubo (<kbd>Alt</kbd>+<kbd>D</kbd>, instâncias!) várias vezes: cada cópia nasce com um tom próprio, todas com o mesmo material.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+  <h4 class="sub">Os demais nós de Input, em uma linha cada</h4>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>O que entrega</th><th>Uso típico</th></tr>
+    <tr><td>RGB / Value</td><td>Uma cor / um número constante nomeável</td><td>Centralizar um valor usado em vários lugares</td></tr>
+    <tr><td>UV Map</td><td>Um UV específico (além do ativo)</td><td>Materiais com 2 unwraps (detalhe + macro)</td></tr>
+    <tr><td>Color Attribute</td><td>Vertex colors</td><td>Máscaras pintadas à mão, baratíssimas</td></tr>
+    <tr><td>Camera Data</td><td>Distância/posição relativa à câmera</td><td>Fades por distância, atmosfera fake</td></tr>
+    <tr><td>Wireframe</td><td>1 nas arestas da triangulação</td><td>Visual blueprint/holograma</td></tr>
+    <tr><td>Ambient Occlusion</td><td>Oclusão calculada com raios extras (caro)</td><td>Máscaras de sujeira independentes de malha</td></tr>
+    <tr><td>Bevel</td><td>Normais arredondadas por raios extras (caro)</td><td>Cantos "usinados" sem modelar chanfro</td></tr>
+    <tr><td>Tangent</td><td>Direção tangente (UV ou radial)</td><td>Anisotropia de Glossy/Hair</td></tr>
+    <tr><td>Point Info / Particle Info</td><td>Dados de pontos/partículas</td><td>Variação por partícula em sistemas</td></tr>
+    <tr><td>Curves Info</td><td>Intercept/raio ao longo do fio</td><td>Gradientes raiz→ponta em cabelo</td></tr>
+  </table></div>
+</section>
+
+<hr class="sep">
+<!-- ======================= TEXTURAS ======================= -->
+<section id="texturas">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Texture — os nós que geram padrões</h2></div>
+  <p class="sec-sub">Texturas são funções <code>posição → valor</code>. As de imagem consultam pixels; as procedurais calculam matemática pura — infinitas, sem emendas, em 3D nativo. Dominar Noise + Voronoi + Color Ramp já cobre a maior parte do texturizado procedural do mundo.</p>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#c7c729"></span><h3>Image Texture</h3><span class="chip">Texture · pixels</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Função:</b> amostrar uma imagem numa coordenada</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O nó que traz fotos e texturas pintadas para o material. Os quatro controles que importam: <code>Color Space</code> (a regra do Cap. 3: sRGB para cor, Non-Color para dados), <code>Interpolation</code> (Linear suaviza; <em>Closest</em> preserva pixel art), <code>Extension</code> (Repeat ladrilha; Clip corta fora do 0–1 — essencial para decalques) e <code>Projection</code> (Flat usa UV; <em>Box</em> projeta pelos três eixos e mistura — o famoso "triplanar", que dispensa unwrap em rochas e paredes).</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>A amostragem usa mipmaps (Williams 1983<sup class="ref"><a href="#r11">[11]</a></sup>): versões pré-reduzidas da imagem escolhidas pelas derivadas da UV — é o que evita o "fervilhar" de texturas distantes, e o que procedurais não têm. <code>Box</code> com Blend &gt; 0 calcula três amostras (XYZ pelas normais) e as mistura por peso da normal — 3× o custo, zero seam. <code>Alpha</code> sai como socket separado já no espaço certo. Para tiles de produção, o nó entende <strong>UDIM</strong> (numeração 1001, 1002…) automaticamente quando a imagem é salva como sequência UDIM. Limite prático: cada imagem única ocupa VRAM; atlas e reuse importam mais que resolução bruta.</p>
+    </div>
+    <div class="bugs">
+      <h4 class="sub" style="margin-top:0">Erros comuns</h4>
+      <ul>
+        <li><b>Color Space errado:</b> o bug silencioso nº 1 do shading (Cap. 3).</li>
+        <li><b>Textura "esticada" em ilha UV ruim:</b> o nó só lê o endereço que recebe; conserte o unwrap, não o nó.</li>
+        <li><b>Decalque vazando:</b> Extension em Repeat; mude para Clip.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#c7c729"></span><h3>Noise Texture</h3><span class="chip">Texture · o procedural-mãe</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física/matemática:</b> Perlin noise fractal (fBm)</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O canivete suíço procedural: um "mármore de nuvens" suave, contínuo e sem repetição, em 1D a 4D. Os sliders contam uma história simples: <code>Scale</code> = zoom; <code>Detail</code> = quantas camadas de detalhe fino são somadas; <code>Roughness</code> = quão fortes são as camadas finas; <code>Distortion</code> = o ruído entorta a si mesmo (veios de mármore); <code>W</code> (no modo 4D) = a "semente" contínua — anime o W e as nuvens evoluem.</p>
+      <p>Quase nunca se usa o Noise sozinho: o padrão é <code>Noise → Color Ramp</code> para esculpir o cinza em máscaras, manchas, ilhas e veios.</p>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 270" role="img" aria-label="Construção do fBm: três oitavas de ruído com frequência crescente e amplitude decrescente somam-se num sinal fractal">
+        <g fill="none" stroke-width="2">
+          <path d="M50 70 C 110 40, 170 96, 230 64 S 350 36, 410 76 S 530 96, 590 56 S 690 44, 710 66" stroke="#7fb2d9"/>
+          <text x="50" y="38" class="svg-lbl" fill="#7fb2d9">oitava 1 — frequência 1×, amplitude 1×</text>
+          <path d="M50 140 C 80 126, 100 154, 130 140 S 190 122, 220 144 S 280 156, 310 134 S 370 124, 400 146 S 460 154, 490 132 S 550 126, 580 146 S 660 150, 710 134" stroke="#9bbf72"/>
+          <text x="50" y="116" class="svg-lbl" fill="#9bbf72">oitava 2 — frequência 2×, amplitude ½ (Roughness)</text>
+          <path d="M50 196 q 12 -8 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0 t 24 0" stroke="#ce93d8"/>
+          <text x="50" y="180" class="svg-lbl" fill="#ce93d8">oitava 3 — frequência 4×, amplitude ¼ ... (Detail = nº de oitavas)</text>
+          <path d="M50 246 C 95 212, 135 262, 175 238 S 250 206, 295 244 S 365 264, 410 230 S 480 210, 520 246 S 600 258, 645 226 S 695 222, 710 240" stroke="#ffd54f" stroke-width="2.6"/>
+          <text x="50" y="224" class="svg-lbl" fill="#ffd54f">soma = fBm: estrutura grande + detalhe fino, como a natureza</text>
+        </g>
+      </svg>
+      <figcaption>Fig. 6 — fBm (fractional Brownian motion): somar o mesmo ruído em frequências dobradas e amplitudes decrescentes. É a receita por trás de nuvens, terrenos, mármore — e do slider Detail.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">fBm(p) = Σ_{i=0}^{Detail} (Roughness)^i · noise( (Lacunarity)^i · Scale · p )</span>
+        <span class="legend">O bloco base é o gradient noise de Ken Perlin (1985<sup class="ref"><a href="#r5">[5]</a></sup>, melhorado em 2002<sup class="ref"><a href="#r6">[6]</a></sup>; Oscar técnico 1997): gradientes pseudoaleatórios nos vértices de uma grade, interpolados com suavidade C² — contínuo, sem emendas, média ~0.5. A soma fractal (fBm) foi sistematizada por Musgrave<sup class="ref"><a href="#r8">[8]</a></sup>. Desde o Blender 4.1, o antigo nó Musgrave foi <em>fundido</em> neste: o dropdown fBm/Ridged/Hybrid Multifractal etc. vive agora no próprio Noise — Ridged (cristas) é o segredo de montanhas e veios duros. O 4D usa W como quarta dimensão: fatias diferentes do mesmo ruído (seed contínua e animável).</span>
+      </div>
+      <ul>
+        <li><strong>Distortion</strong> = domain warping: <code>noise(p + k·noise(p))</code> — auto-distorção, a alma do mármore.</li>
+        <li><strong>Saída Color vs Fac:</strong> Color são três ruídos descorrelacionados (um por canal) — ótimo para perturbar vetores; Fac é um só.</li>
+        <li><strong>Antialiasing:</strong> sem mipmap, Detail alto cintila ao longe; reduza Detail por distância (Camera Data) ou faça bake.</li>
+      </ul>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Plano com <code>Noise (Scale 4) → Color Ramp → Base Color</code>; aperte as alças do ramp até virar "ilhas".</li>
+        <li>Suba Detail de 0 → 8 com Roughness 0.6: veja as oitavas da Fig. 6 entrando uma a uma.</li>
+        <li>Suba Distortion para 2: nuvens viram mármore. Agora troque o tipo para Ridged Multifractal: mármore vira relevo de montanha.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#c7c729"></span><h3>Voronoi Texture</h3><span class="chip">Texture · células</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Matemática:</b> base celular de Worley (1996)</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O gerador de <strong>células</strong>: espalha pontos aleatórios pelo espaço e, para cada lugar, mede a distância ao ponto mais próximo. Disso nascem couro, pele de réptil, células, espuma, rachaduras, pedras de calçada e estrelas. Saídas principais: <code>Distance</code> (degradê radial em cada célula), <code>Color</code> (uma cor chapada aleatória por célula — perfeita para variar ladrilhos) e <code>Position</code> (o centro da célula).</p>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="Células de Voronoi: pontos-semente e as fronteiras equidistantes entre eles; ao lado, o campo de distância F1 como degradês radiais">
+        <g stroke="#56683f" stroke-width="1.4" fill="#26301f">
+          <polygon points="60,40 180,52 210,130 130,176 48,140"/>
+          <polygon points="180,52 300,38 330,110 210,130"/>
+          <polygon points="210,130 330,110 348,196 240,220 130,176"/>
+          <polygon points="48,140 130,176 240,220 230,236 40,232"/>
+          <polygon points="300,38 360,36 366,120 330,110"/>
+        </g>
+        <g fill="#ffd54f">
+          <circle cx="120" cy="100" r="4"/><circle cx="255" cy="80" r="4"/><circle cx="270" cy="165" r="4"/><circle cx="130" cy="205" r="4"/><circle cx="340" cy="72" r="4"/>
+        </g>
+        <text x="48" y="28" class="svg-tit">células: fronteiras equidistantes entre sementes</text>
+        <g>
+          <radialGradient id="vd" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#101114"/><stop offset="1" stop-color="#cfd6dd"/></radialGradient>
+          <circle cx="500" cy="120" r="56" fill="url(#vd)"/>
+          <circle cx="610" cy="86" r="44" fill="url(#vd)"/>
+          <circle cx="620" cy="180" r="48" fill="url(#vd)"/>
+          <circle cx="700" cy="120" r="40" fill="url(#vd)"/>
+        </g>
+        <text x="468" y="28" class="svg-tit">saída Distance (F1): degradê até a semente</text>
+        <text x="452" y="240" class="svg-lbl s">Color Ramp em cima disso = bolhas, escamas, poros...</text>
+      </svg>
+      <figcaption>Fig. 7 — Voronoi: geometria das células (esquerda) e o campo de distância F1 (direita). Quase todo material celular é um Color Ramp esculpindo este campo.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">F1(p) = min_i ‖p − s_i‖ &nbsp;·&nbsp; F2 = segunda menor &nbsp;·&nbsp; bordas ≈ F2 − F1 (ou modo Distance to Edge)</span>
+        <span class="legend">A "cellular texture basis" de Steven Worley (1996)<sup class="ref"><a href="#r7">[7]</a></sup>: uma semente s_i por célula de grade, com busca nas vizinhas. <code>Randomness</code> interpola entre grade perfeita (0 — ladrilhos, tecidos) e caos total (1 — células orgânicas). As métricas de distância mudam a "personalidade": Euclidean (orgânico), Manhattan/Chebychev (tecnológico, losangos/quadrados), Minkowski (interpola entre elas). <code>Smooth F1</code> funde células suavemente (espuma, water caustics fake). <code>Distance to Edge</code> entrega a distância à fronteira — rachaduras e rejunte em uma saída só.</span>
+      </div>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Plano com Voronoi <code>Distance to Edge → Color Ramp apertado → invertido</code>: rejunte de pedra instantâneo.</li>
+        <li>Ligue a saída <code>Color</code> num Hue/Saturation suave: cada "pedra" ganha um tom próprio.</li>
+        <li>Mude a métrica para Chebychev com Randomness 0: piso de placas técnicas, sem modelar nada.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+  <h4 class="sub">As demais texturas, em uma linha cada</h4>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>Padrão</th><th>Uso típico</th></tr>
+    <tr><td>Wave</td><td>Faixas/anéis senoidais com distorção</td><td>Madeira (anéis), zebra, ondas de interferência</td></tr>
+    <tr><td>Magic</td><td>Interferência psicodélica</td><td>Iridescência fake, sci-fi, glitch</td></tr>
+    <tr><td>Gradient</td><td>Rampa linear/radial/esférica/quadrática</td><td>Máscaras direcionais, fades, controle de mix</td></tr>
+    <tr><td>Checker</td><td>Xadrez 3D</td><td>Calibrar UVs/escala; pisos</td></tr>
+    <tr><td>Brick</td><td>Tijolos paramétricos com rejunte</td><td>Alvenaria, ladrilho, offsets por fileira</td></tr>
+    <tr><td>White Noise</td><td>Hash puro (sem suavidade), 1–4D</td><td>Aleatoriedade por célula/instância, seeds</td></tr>
+    <tr><td>Environment</td><td>Imagem equiretangular no mundo</td><td>HDRI no World</td></tr>
+    <tr><td>Sky</td><td>Céu físico (Nishita): sol, altitude, ar/poeira/ozônio</td><td>Iluminação diurna realista sem HDRI</td></tr>
+    <tr><td>IES</td><td>Perfil fotométrico real de luminária</td><td>Luzes de arquitetura com "desenho" correto</td></tr>
+    <tr><td>Point Density</td><td>Densidade de pontos/partículas como volume</td><td>Nuvens de pontos, efeitos volumétricos</td></tr>
+  </table></div>
+  <div class="tip"><b>Nota de versão:</b> o nó <b>Musgrave</b> foi removido no Blender 4.1 — seus modos fractais (Ridged, Hybrid…) migraram para dentro do Noise Texture. Tutoriais antigos que o citam: substitua por Noise com o dropdown de tipo correspondente.</div>
+</section>
+
+<hr class="sep">
+<!-- ======================= COLOR ======================= -->
+<section id="cor">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Color — os nós que tratam cores</h2></div>
+  <p class="sec-sub">Depois que as texturas geram valores, esta família ajusta, mistura e corrige — o "Photoshop dentro do material". Lembrando do Cap. 3: tudo aqui opera em luz linear.</p>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#c7c729"></span><h3>Mix Color</h3><span class="chip">Color · o nó mais usado do Blender</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Função:</b> interpolar/combinar duas cores por um fator</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Recebe duas cores (A e B) e um <code>Factor</code>: 0 = só A, 1 = só B, 0.5 = metade de cada. O pulo do gato é que o Factor quase nunca é um slider — é uma <strong>máscara</strong>: um Noise, um Pointiness, um vertex color. "Misturar dois materiais onde a máscara mandar" é provavelmente 50% de todo o shading procedural.</p>
+      <p>O dropdown de <code>Blending Mode</code> traz os modos do Photoshop: <em>Multiply</em> (escurecer/sujar — AO entra aqui), <em>Screen/Add</em> (clarear), <em>Overlay</em> (contraste), <em>Linear Light</em> (combinar detalhes de bump)...</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">Mix = lerp(A, B, Fac) = A·(1−Fac) + B·Fac &nbsp;·&nbsp; Multiply = A·B &nbsp;·&nbsp; Screen = 1−(1−A)(1−B)</span>
+        <span class="legend">Detalhes que mordem: (1) <code>Clamp Factor</code> trava o Fac em 0–1 — desligue para extrapolações criativas; (2) <code>Clamp Result</code> trava a saída — modos Add/Linear Light passam de 1.0 com facilidade e estouram roughness/masks adiante; (3) os modos de blend foram desenhados para o espaço sRGB do Photoshop — em linear, Overlay/Soft Light têm "ponto médio" deslocado e resultados mais agressivos que o esperado. O mesmo nó existe em versão Float e Vector (dropdown Data Type) — é o antigo MixRGB generalizado.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#c7c729"></span><h3>RGB Curves &amp; Hue/Saturation</h3><span class="chip">Color · correção</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Função:</b> remapear canais / girar matiz</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p><code>RGB Curves</code> é a ferramenta de curvas dos editores de foto: uma curva por canal (e uma combinada) remapeando entrada→saída — contraste em "S", levantar sombras, tingir só os escuros. <code>Hue/Saturation/Value</code> gira a roda de cores (Hue), satura/dessatura e escurece/clareia, com um Fac para dosar — ideal para criar variações de uma mesma textura sem duplicá-la.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Curves opera por canal em linear (uma curva suave em linear é mais "dura" perceptualmente do que parece — vá com calma) e aceita Fac como intensidade do efeito. O Hue do HSV é uma rotação cíclica: Hue 0.5 = 180° = cores complementares; animar Hue com White Noise por instância é a receita clássica de variação de vegetação. Para correções "científicas" (exposição, white balance), prefira fazer no Compositor/Color Management — dentro do material, correção de cor altera o <em>albedo físico</em> e, com ele, toda a GI.</p>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <tr><th>Outros nós de Color</th><th>Função em uma linha</th></tr>
+      <tr><td>Brightness/Contrast</td><td>Ajustes rápidos e brutos (Curves dá mais controle)</td></tr>
+      <tr><td>Gamma</td><td>Eleva a cor a 1/γ — útil para "dobrar" máscaras rapidamente</td></tr>
+      <tr><td>Invert Color</td><td>1 − cor; inverter máscaras</td></tr>
+      <tr><td>Light Falloff</td><td>Curva de decaimento de luzes (quebra a física do inverso do quadrado — use ciente)</td></tr>
+    </table></div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= VECTOR ======================= -->
+<section id="vetor">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Vector — relevo: bump, normal map e displacement</h2></div>
+  <p class="sec-sub">Os nós de vetor manipulam direções — e a aplicação rainha é o relevo: convencer a luz de que existe detalhe geométrico onde (quase sempre) não existe.</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 290" role="img" aria-label="Comparação entre bump map, normal map e displacement: os dois primeiros mantêm a silhueta lisa e só enganam o shading; o displacement move a geometria de verdade">
+      <defs><marker id="v-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7a7ad6"/></marker></defs>
+      <g>
+        <text x="46" y="34" class="svg-tit">Bump / Normal map</text>
+        <line x1="46" y1="170" x2="330" y2="170" stroke="#5a5e66" stroke-width="3"/>
+        <g stroke="#7a7ad6" stroke-width="1.6">
+          <line x1="80" y1="170" x2="72" y2="138" marker-end="url(#v-a)"/>
+          <line x1="120" y1="170" x2="130" y2="138" marker-end="url(#v-a)"/>
+          <line x1="160" y1="170" x2="150" y2="138" marker-end="url(#v-a)"/>
+          <line x1="200" y1="170" x2="212" y2="140" marker-end="url(#v-a)"/>
+          <line x1="240" y1="170" x2="232" y2="138" marker-end="url(#v-a)"/>
+          <line x1="280" y1="170" x2="290" y2="140" marker-end="url(#v-a)"/>
+        </g>
+        <text x="52" y="200" class="svg-lbl s">geometria continua reta; só as NORMAIS mentem</text>
+        <text x="52" y="218" class="svg-lbl s">→ sombras internas convencem, silhueta entrega</text>
+        <circle cx="330" cy="170" r="3.4" fill="#ff8a65"/><text x="298" y="244" class="svg-lbl" fill="#ff8a65">borda lisa!</text>
+        <line x1="330" y1="232" x2="330" y2="178" stroke="#ff8a65" stroke-width="1.2" stroke-dasharray="3 4"/>
+      </g>
+      <g>
+        <text x="436" y="34" class="svg-tit">Displacement (real)</text>
+        <path d="M436 170 l24 -22 l22 22 l20 -16 l24 16 l20 -26 l26 26 l20 -14 l24 14 l22 -22 l24 22 l20 -14 l24 14" fill="none" stroke="#5a5e66" stroke-width="3"/>
+        <text x="442" y="200" class="svg-lbl s">vértices movidos de verdade pelo height map</text>
+        <text x="442" y="218" class="svg-lbl s">→ silhueta, sombras projetadas e oclusão corretas</text>
+        <circle cx="582" cy="144" r="3.4" fill="#8fc04c"/><text x="556" y="244" class="svg-lbl" fill="#8fc04c">borda com relevo</text>
+        <line x1="582" y1="232" x2="582" y2="150" stroke="#8fc04c" stroke-width="1.2" stroke-dasharray="3 4"/>
+      </g>
+    </svg>
+    <figcaption>Fig. 8 — A diferença que se vê na silhueta. Bump/normal custam quase nada e enganam o shading; displacement custa geometria (subdivisão) e entrega o relevo de verdade. A escolha é sempre custo × ângulo de câmera.</figcaption>
+  </figure>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#7a7ad6"></span><h3>Bump</h3><span class="chip">Vector · relevo por altura</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Matemática:</b> Blinn (1978) — perturbar normais pelo gradiente da altura</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Recebe um mapa de <strong>altura</strong> (qualquer Fac em tons de cinza: um Noise, um Voronoi, uma imagem) e inclina as normais como se a superfície subisse e descesse de verdade. <code>Strength</code> dosa o efeito; <code>Distance</code> define a altura "física" simulada; <code>Invert</code> troca alto-relevo por baixo-relevo. A saída vai no socket <code>Normal</code> de qualquer BSDF.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">N' = normalize( N − Strength·Distance·( ∂h/∂u · T + ∂h/∂v · B ) )</span>
+        <span class="legend">A ideia de Jim Blinn (1978)<sup class="ref"><a href="#r4">[4]</a></sup>: a normal perturbada é a normal original menos o gradiente da altura projetado nas tangentes. O nó estima ∂h por diferenças finitas — ele avalia a árvore de altura <em>três vezes</em> (ponto e vizinhos deslocados); árvores de altura caras triplicam de custo aqui. Por ser derivada, o bump amplifica frequências altas: ruído fino em bump vira "lixa" cintilante rapidamente.</span>
+      </div>
+    </div>
+    <div class="bugs">
+      <h4 class="sub" style="margin-top:0">Erros comuns</h4>
+      <ul>
+        <li><b>Ligar altura direto no socket Normal:</b> altura é float, normal é vetor — sem o nó Bump, a conversão implícita gera lixo.</li>
+        <li><b>Strength 1 + Distance padrão em tudo:</b> relevo de "casca de laranja" genérico; pense em milímetros reais no Distance.</li>
+        <li><b>Encadear bumps errado:</b> para somar dois relevos, ligue a saída do primeiro Bump no input Normal do segundo (eles se acumulam), ou some as alturas antes com Mix (Linear Light).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#7a7ad6"></span><h3>Normal Map</h3><span class="chip">Vector · relevo por vetores assados</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Matemática:</b> tangent space / MikkTSpace (Mikkelsen 2008)</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Decodifica aquelas texturas <strong>lilás</strong>: imagens onde cada pixel guarda, em RGB, a <em>direção</em> da normal em vez de uma altura. Vêm de sculpts "assados" (bake) ou de scans, e carregam detalhe direcional mais rico que um bump. Receita fixa: Image Texture (<code>Non-Color</code>!) → Normal Map → socket Normal do BSDF.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">N_tangente = RGB·2 − 1 &nbsp;→&nbsp; N_mundo = T·x + B·y + N·z</span>
+        <span class="legend">O lilás (0.5, 0.5, 1.0) é o vetor (0,0,1) = "reto para fora". A decodificação depende da base tangente (T, B, N) derivada do UV — padronizada pelo MikkTSpace de Morten Mikkelsen (2008)<sup class="ref"><a href="#r10">[10]</a></sup>, que o Blender segue: bakes feitos em outros softwares MikkTSpace encaixam pixel-perfect. A eterna pegadinha do canal verde: OpenGL (Blender) usa +Y, DirectX usa −Y — normal map "DirectX" no Blender parece relevo invertido; inverta o G (Separate/Invert/Combine) ou re-exporte. Bump × Normal map: altura é mais flexível para procedural; normal map guarda direção por pixel e vence em detalhe assado de sculpt.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#7a7ad6"></span><h3>Displacement</h3><span class="chip">Vector · relevo de verdade</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles (real) · EEVEE (vira bump)</span><span><b>Função:</b> mover a geometria pelo height map</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O único relevo que muda a <strong>silhueta</strong>: o height map empurra os vértices reais para cima/baixo na hora do render. Liga-se no socket <code>Displacement</code> do <em>Material Output</em> (não no BSDF!), e exige dois combos: malha subdividida (de preferência Adaptive Subdivision, no modo Experimental do Cycles) e <code>Settings → Displacement: Displacement Only</code> (ou "Displacement and Bump") no painel do material — sem isso, o Blender silenciosamente usa só bump.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p><code>Midlevel</code> define o "zero" do height map (0.5 para mapas que esculpem para os dois lados; 0 para mapas só-positivos); <code>Scale</code> é a altura em unidades de cena. A Adaptive Subdivision tesselará por tamanho de pixel na tela (dicing rate) — detalhe infinito perto, barato longe, ao custo de memória. O socket aceita também <code>Vector Displacement</code> (mapas RGB que movem em XYZ, capazes de "cogumelos" e dobras que height não representa). Workflow de produção: detalhes grandes em displacement, médios em normal map, micro em roughness — cada frequência no mecanismo mais barato que a vende.</p>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Plano subdividido (ou Adaptive); <code>Noise (Ridged, Scale 3) → Displacement (Scale 0.3) → Output</code>.</li>
+        <li>Material Settings → Displacement: <em>Displacement Only</em>. Renderize: um terreno com silhueta real.</li>
+        <li>Troque para <em>Bump Only</em> e compare a borda do plano — a Fig. 8 ao vivo.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+  <h4 class="sub">Os demais nós de Vector, em uma linha cada</h4>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>Função</th></tr>
+    <tr><td>Mapping</td><td>Translação/rotação/escala de coordenadas (Cap. 2)</td></tr>
+    <tr><td>Vector Rotate</td><td>Rotação de vetores em torno de eixo/centro arbitrários</td></tr>
+    <tr><td>Vector Curves</td><td>Curvas por componente X/Y/Z</td></tr>
+    <tr><td>Vector Transform</td><td>Converter vetores entre espaços World/Object/Camera</td></tr>
+    <tr><td>Normal</td><td>Uma direção fixa + dot product embutido (máscaras direcionais rápidas)</td></tr>
+  </table></div>
+</section>
+
+<hr class="sep">
+<!-- ======================= CONVERTER ======================= -->
+<section id="converter">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Converter — a calculadora do material</h2></div>
+  <p class="sec-sub">Aqui mora a matemática explícita: somar, remapear, separar canais, esculpir rampas. São os nós que transformam "um ruído qualquer" em "exatamente a máscara que eu queria".</p>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Math &amp; Vector Math</h3><span class="chip">Converter · operações</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Função:</b> uma operação por nó, dezenas no dropdown</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Uma calculadora de um botão só: escolha a operação no dropdown (Add, Multiply, Power, Sine, Greater Than...) e ligue os números. Encadeando vários, você escreve qualquer fórmula. Cinco operações respondem por 90% do uso: <code>Multiply</code> (escalar intensidades), <code>Add/Subtract</code> (compor), <code>Power</code> (endurecer/amolecer máscaras), <code>Greater Than</code> (binarizar) e <code>Modulo/Fraction</code> (repetir padrões).</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O <code>Vector Math</code> adiciona o vocabulário de geometria: <code>Dot Product</code> (projeção/ângulo entre direções — toda máscara direcional é um dot), <code>Cross</code>, <code>Length/Distance</code> (campos radiais), <code>Normalize</code>, <code>Snap</code> (pixelizar coordenadas — mosaicos), <code>Reflect/Refract</code>. Vale internalizar três identidades de produção: <em>máscara por direção</em> = dot(Normal, direção)→Ramp; <em>anel/círculo</em> = distance(coord, centro)→Ramp; <em>repetição</em> = fraction(coord·n). O nó <code>Clamp</code> e o <code>Float Curve</code> são os irmãos pequenos: travar faixa e remapear por curva desenhada.</p>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Color Ramp</h3><span class="chip">Converter · o escultor de máscaras</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Função:</b> remapear 0–1 para um gradiente arbitrário</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Se o Mix Color é o nó mais usado, o Color Ramp é o mais <em>importante</em>: ele pega qualquer Fac (um Noise, um Pointiness, uma distância) e o traduz num gradiente que <strong>você desenha</strong> com alças. Aproxime as alças = transição dura (máscara binária); afaste = suave; adicione alças coloridas = paleta inteira dirigida por um único valor. O ciclo fundamental do procedural é: <em>textura gera variação → ramp esculpe significado</em>.</p>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 240" role="img" aria-label="Color Ramp transformando um degradê contínuo em faixas: o gráfico de remapeamento entrada-saída com degraus">
+        <defs>
+          <linearGradient id="cr-in" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0c0d10"/><stop offset="1" stop-color="#e8e6e1"/></linearGradient>
+          <linearGradient id="cr-out" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#1c2433"/><stop offset="0.38" stop-color="#1c2433"/>
+            <stop offset="0.40" stop-color="#7d9a5a"/><stop offset="0.62" stop-color="#7d9a5a"/>
+            <stop offset="0.64" stop-color="#e0cfa0"/><stop offset="1" stop-color="#e0cfa0"/>
+          </linearGradient>
+        </defs>
+        <rect x="60" y="50" width="280" height="34" fill="url(#cr-in)" stroke="#3a3d44"/>
+        <text x="60" y="40" class="svg-lbl">entrada: Fac contínuo (ex.: Noise)</text>
+        <rect x="60" y="150" width="280" height="34" fill="url(#cr-out)" stroke="#3a3d44"/>
+        <text x="60" y="140" class="svg-lbl">saída: o que VOCÊ decidiu que cada faixa significa</text>
+        <g fill="#e9e7e2"><polygon points="166,196 174,196 170,188"/><polygon points="234,196 242,196 238,188"/></g>
+        <text x="148" y="214" class="svg-lbl s">alças: onde as fronteiras caem</text>
+        <line x1="430" y1="200" x2="710" y2="200" stroke="#3a3d44" stroke-width="1.5"/>
+        <line x1="430" y1="200" x2="430" y2="56" stroke="#3a3d44" stroke-width="1.5"/>
+        <text x="434" y="50" class="svg-lbl">saída</text><text x="664" y="222" class="svg-lbl">entrada</text>
+        <path d="M430 196 L536 196 L542 132 L612 132 L618 70 L710 70" fill="none" stroke="#8fc04c" stroke-width="2.5"/>
+        <text x="448" y="116" class="svg-lbl s">interpolação Constant/Linear/Ease</text>
+        <text x="448" y="132" class="svg-lbl s">muda a forma destes degraus</text>
+      </svg>
+      <figcaption>Fig. 9 — O Color Ramp é uma função de remapeamento desenhável: o gradiente de cima vira o de baixo segundo a "escada" da direita. Toon shading, máscaras, paletas — tudo é esta escada com formas diferentes.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Modos de interpolação: <em>Linear</em> (padrão), <em>Constant</em> (degraus duros — cel shading, máscaras binárias), <em>Ease/B-Spline</em> (suaves), <em>Cardinal</em>. O modo <em>Color</em> do gradiente interpola em HSV (atravessa o arco-íris entre duas cores — às vezes desejado, às vezes não). Limitação importante: as posições das alças <strong>não são sockets</strong> — não dá para animá-las por nós; quando precisar de fronteira dirigida por valor, troque o Ramp por <code>Map Range</code> ou <code>Smoothstep</code> (Math), que expõem tudo como input.</p>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Map Range</h3><span class="chip">Converter · régua de conversão</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Função:</b> reescalar uma faixa de valores para outra</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>"O meu Noise só varia entre 0.4 e 0.6 — quero que isso vire 0 a 1." Esse é o trabalho do Map Range: você diz a faixa de entrada (From Min/Max) e a de saída (To Min/Max), ele faz a régua de três. É o melhor amigo de máscaras pálidas e o substituto "animável" do Color Ramp.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <div class="math">
+        <span class="eq">out = ToMin + (x − FromMin)·(ToMax − ToMin)/(FromMax − FromMin)</span>
+        <span class="legend">Modos extras: <em>Stepped</em> (quantiza em N degraus — posterize), <em>Smooth Step / Smoother Step</em> (a clássica 3x²−2x³ com derivada zero nas pontas — transições orgânicas). Inverter To Min/Max (1→0) inverte a máscara de graça. Com Clamp desligado, valores fora da faixa extrapolam — útil para "amplificar" um sinal além do original.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#a1a1a1"></span><h3>Separate/Combine &amp; Shader to RGB</h3><span class="chip">Converter · desmontar e fotografar</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE (Shader to RGB: só EEVEE)</span><span><b>Função:</b> acessar componentes / capturar o shading</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p><code>Separate XYZ/Color</code> quebra um vetor ou cor nos seus três números (e <code>Combine</code> remonta). Parece bobo e é onipresente: pegar só o Z de uma posição (máscara de altura), só o G de um normal map (inverter DirectX), reordenar canais. Já o <code>Shader to RGB</code> é o unicórnio do EEVEE: ele <em>renderiza</em> o resultado de um shader (com luzes e sombras!) e devolve como cor editável — a porta de entrada do NPR: passe um Diffuse por ele, jogue num Color Ramp Constant, e o cel shading clássico aparece.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p><code>Separate Color</code> opera em RGB, HSV ou HSL — extrair o canal V (value) é um conversor de luminância dirigível. O Shader to RGB só existe no EEVEE porque um rasterizador conhece "a cor final do fragmento" num ponto único do pipeline; num path tracer, o resultado de um shader não existe antes da integração de milhares de amostras — pedir Shader to RGB no Cycles seria pedir o render dentro do render. Consequência: árvores NPR com ele não portam para Cycles (lá, o caminho é o Toon BSDF, apostila de BSDFs).</p>
+    </div>
+  </div>
+</div>
+
+  <h4 class="sub">Os demais conversores, em uma linha cada</h4>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>Função</th></tr>
+    <tr><td>Mix (Float/Vector)</td><td>O Mix genérico para números e vetores</td></tr>
+    <tr><td>Clamp</td><td>Trava um valor entre mín/máx</td></tr>
+    <tr><td>Float Curve</td><td>Remapeia um número por curva desenhada</td></tr>
+    <tr><td>RGB to BW</td><td>Cor → luminância explícita</td></tr>
+    <tr><td>Blackbody</td><td>Temperatura (K) → cor física da incandescência (Planck<sup class="ref"><a href="#r14">[14]</a></sup>): 1800 K vela, 6500 K luz do dia — a cor correta de lava, brasa e filamentos</td></tr>
+    <tr><td>Wavelength</td><td>Comprimento de onda (nm) → cor espectral pura</td></tr>
+  </table></div>
+</section>
+
+<!-- ======================= ORGANIZAÇÃO ======================= -->
+<section id="organizacao">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Groups, frames e OSL — engenharia de materiais</h2></div>
+
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Node Groups</h3><span class="chip">Organização · abstração</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Função:</b> empacotar uma árvore num nó reutilizável</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Selecione um pedaço da árvore, <kbd>Ctrl</kbd>+<kbd>G</kbd>: vira um nó único com inputs e outputs que <em>você</em> escolhe expor. É a "função" da programação visual: o seu gerador de ferrugem, o seu triplanar, o seu tecido viram peças de catálogo — editáveis num lugar só (<kbd>Tab</kbd> entra no grupo), reutilizáveis em qualquer material e em qualquer .blend (Append/Asset Browser).</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Grupos são datablocks: instâncias compartilham a definição (editar um edita todos) — o número entre parênteses no nome (ex.: "2") denuncia múltiplos usuários; <em>Make Single User</em> desacopla. Boas práticas de "API": exponha poucos inputs com nomes claros e defaults sensatos, defina min/max e descrição por socket no painel N (viram tooltip!), e marque como Asset com preview para o time arrastar do Asset Browser. Grupos aninhados são o caminho para "linguagens" internas de estúdio — um grupo Wear usando um grupo Triplanar usando um grupo Remap.</p>
+    </div>
+    <div class="lab">
+      <span class="lab-tag">Experimente no Blender</span>
+      <ol>
+        <li>Monte <code>Noise → Color Ramp</code> calibrado como uma boa máscara de manchas; selecione os dois, <kbd>Ctrl</kbd>+<kbd>G</kbd>.</li>
+        <li>Dentro do grupo, exponha Scale (do Noise) e arraste as extremidades do Ramp... não dá — então exponha um <em>Map Range</em> antes dele como "Contrast". Você acaba de sentir na pele a limitação do Ramp e o seu contorno.</li>
+        <li>Nomeie "Mancha_v1", marque como Asset e reuse em outro material.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+  <div class="lvl beg">
+    <span class="tag">Frames, Reroute e o nó Script</span>
+    <p><strong>Frame</strong> (<kbd>Ctrl</kbd>+<kbd>J</kbd>): a "caixa comentada" que agrupa visualmente e ganha rótulo — uma árvore profissional se lê pelos frames antes dos nós. <strong>Reroute</strong> (arraste sobre um fio): um pino de organização que dobra os links sem alterar nada. <strong>Script (OSL)</strong>: para quando os nós acabam — escreva um shader em Open Shading Language<sup class="ref"><a href="#r13">[13]</a></sup> (CPU, ou GPU OptiX em versões recentes) com loops, condicionais e padrões impossíveis de montar visualmente; o arquivo .osl vira um nó com os parâmetros que você declarar.</p>
+  </div>
+</section>
+
+<hr class="sep">
+<!-- ======================= MAPA RÁPIDO ======================= -->
+<section id="tabela">
+  <div class="sec-head"><span class="idx">Cap. 5</span><h2>Mapa rápido dos nós</h2></div>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>Família</th><th>Pergunta que responde</th><th>Combinação clássica</th></tr>
+    <tr><td>Texture Coordinate</td><td>Input</td><td>"Que endereço uso?"</td><td>→ Mapping → qualquer textura</td></tr>
+    <tr><td>Mapping</td><td>Vector</td><td>"Como ajusto o endereço?"</td><td>Entre coordenada e textura</td></tr>
+    <tr><td>Geometry</td><td>Input</td><td>"Como é a superfície aqui?"</td><td>Pointiness → Ramp (desgaste)</td></tr>
+    <tr><td>Light Path</td><td>Input</td><td>"Que raio me avalia?"</td><td>Is Shadow Ray → Mix Shader</td></tr>
+    <tr><td>Fresnel / Layer Weight</td><td>Input</td><td>"Quão de raspão me veem?"</td><td>→ Fac de Mix (two-tone, verniz)</td></tr>
+    <tr><td>Object Info</td><td>Input</td><td>"Quem é meu objeto?"</td><td>Random → Hue/Sat (variação)</td></tr>
+    <tr><td>Attribute</td><td>Input</td><td>"Que dado custom carrego?"</td><td>Vertex color / Geometry Nodes</td></tr>
+    <tr><td>Image Texture</td><td>Texture</td><td>"Qual pixel cai aqui?"</td><td>+ Color Space correto (Cap. 3)</td></tr>
+    <tr><td>Noise</td><td>Texture</td><td>"Variação orgânica aqui?"</td><td>→ Color Ramp (a dupla mãe)</td></tr>
+    <tr><td>Voronoi</td><td>Texture</td><td>"Em que célula estou?"</td><td>Distance/Edge → Ramp</td></tr>
+    <tr><td>Mix Color</td><td>Color</td><td>"A ou B, segundo a máscara?"</td><td>Fac = qualquer máscara</td></tr>
+    <tr><td>Color Ramp</td><td>Converter</td><td>"O que cada valor significa?"</td><td>Depois de toda textura Fac</td></tr>
+    <tr><td>Map Range</td><td>Converter</td><td>"Reescalar esta faixa?"</td><td>Ramp animável / normalizar</td></tr>
+    <tr><td>Math / Vector Math</td><td>Converter</td><td>"Qualquer fórmula"</td><td>dot, distance, power, modulo</td></tr>
+    <tr><td>Bump</td><td>Vector</td><td>"Altura → normais"</td><td>Fac de altura → Normal do BSDF</td></tr>
+    <tr><td>Normal Map</td><td>Vector</td><td>"Decodificar o mapa lilás"</td><td>Image (Non-Color) → BSDF</td></tr>
+    <tr><td>Displacement</td><td>Vector</td><td>"Altura → geometria real"</td><td>→ socket Displacement do Output</td></tr>
+    <tr><td>Separate/Combine</td><td>Converter</td><td>"Só um canal, por favor"</td><td>Z de posição, G de normal map</td></tr>
+    <tr><td>Shader to RGB</td><td>Converter</td><td>"Fotografar o shading" (EEVEE)</td><td>→ Ramp Constant (NPR)</td></tr>
+    <tr><td>Node Group</td><td>Organização</td><td>"Empacotar e reusar"</td><td><kbd>Ctrl</kbd>+<kbd>G</kbd>, Asset Browser</td></tr>
+  </table></div>
+</section>
+
+<!-- ======================= RECEITAS ======================= -->
+<section id="receitas">
+  <div class="sec-head"><span class="idx">Cap. 6</span><h2>Receitas de leitura: os padrões que se repetem</h2></div>
+  <div class="prose">
+    <p>Árvores de nós parecem infinitas, mas a produção inteira gira em torno de meia dúzia de <strong>padrões</strong>. Aprender a reconhecê-los transforma qualquer material alheio em leitura rápida:</p>
+    <p><strong>1 · A espinha dorsal:</strong> <code>Coordenada → Mapping → Textura → Color Ramp → destino</code>. É a frase-modelo da língua; quase toda árvore é variações dela em paralelo.</p>
+    <p><strong>2 · Camadas por máscara:</strong> dois materiais completos entram num <code>Mix Shader</code> (ou as <em>propriedades</em> deles em Mix Color, mais barato), e toda a inteligência mora na máscara do Fac — que é a receita 1 ou um Input esperto (Pointiness, AO, vertex color). Material complexo = pilha de camadas simples + máscaras honestas.</p>
+    <p><strong>3 · O quarteto PBR:</strong> quatro Image Textures (albedo sRGB; roughness, metallic, normal em Non-Color) alimentando o Principled, com Normal Map no caminho do normal. Qualquer texture pack do mundo se liga assim — e o Node Wrangler (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>) monta sozinho.</p>
+    <p><strong>4 · Detalhe multi-frequência:</strong> o mesmo padrão somado em escalas diferentes (um Noise grande + um pequeno via Mix Linear Light; displacement para o macro, bump para o micro) — o princípio do fBm aplicado à mão.</p>
+    <p><strong>5 · Variação por instância:</strong> <code>Object Info → Random</code> dirigindo Hue ou o W de um Noise 4D — um material, mil objetos diferentes.</p>
+    <p><strong>6 · Resposta por contexto:</strong> Inputs que mudam o material conforme quem olha (Light Path), de que ângulo (Fresnel/Layer Weight) ou de que distância (Camera Data) — a família dos truques de produção.</p>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- ======================= LABS ======================= -->
+<section id="labs">
+  <div class="sec-head"><span class="idx">Cap. 7</span><h2>Laboratórios práticos</h2></div>
+  <p class="sec-sub">Quatro materiais completos, do zero, cada um exercitando uma família. Como antes: o objetivo é prever o resultado de cada fio antes de ligá-lo — use o Viewer o tempo todo.</p>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 1 · Madeira procedural (coordenadas + Wave + Noise)</span>
+    <ol>
+      <li>Cubo alongado (uma "tábua"). <code>Texture Coordinate (Object) → Mapping</code>: Scale (1, 1, 12) — anéis esticados no comprimento.</li>
+      <li><code>Wave Texture</code> (Rings, Direction Z) com <code>Distortion</code> alto; ligue um Noise (Scale 2) no input Vector via Mix para entortar os veios.</li>
+      <li><code>→ Color Ramp</code> com 3–4 alças entre dois marrons; saída no Base Color.</li>
+      <li>O mesmo Fac da Wave → <code>Map Range (0.2–0.45)</code> → Roughness (veios mais foscos) e → <code>Bump (Strength 0.1)</code>.</li>
+    </ol>
+    <p class="obs">Critério de domínio: explicar por que mudar o Mapping de Object para Generated faz a madeira "esticar" quando a tábua é escalada.</p>
+  </div>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 2 · Metal desgastado por máscaras (Input + camadas)</span>
+    <ol>
+      <li>Material A: Principled metálico limpo (roughness 0.25). Material B: ferrugem (Diffuse laranja-escuro + bump de Noise forte).</li>
+      <li>Máscara 1: <code>Geometry → Pointiness → Color Ramp agressivo</code> (desgaste de cantos).</li>
+      <li>Máscara 2: <code>Noise (Scale 7) → Ramp</code> (manchas). Combine as duas com <code>Math (Maximum)</code>.</li>
+      <li>Máscara final no Fac de um Mix Shader entre A e B. Bônus: some um terceiro nível com <code>Ambient Occlusion → Ramp</code> escurecendo frestas.</li>
+    </ol>
+    <p class="obs">Critério de domínio: apontar na máscara final qual pixel veio do Pointiness e qual veio do Noise.</p>
+  </div>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 3 · Relevo nas três potências (Vector)</span>
+    <ol>
+      <li>Três planos lado a lado com o mesmo <code>Noise (Ridged)</code> de altura.</li>
+      <li>Plano 1: altura → Bump → Normal do BSDF. Plano 2: asse essa altura num normal map (Bake) e use via Normal Map. Plano 3: altura → Displacement (Adaptive, Displacement Only).</li>
+      <li>Câmera rasante + sol baixo: compare silhueta, sombras internas e sombras <em>projetadas</em> dos três.</li>
+    </ol>
+    <p class="obs">Critério de domínio: dizer, para cada um, o que é "mentira de shading" e o que é geometria — e quanto cada um custou em tempo de render.</p>
+  </div>
+
+  <div class="lab">
+    <span class="lab-tag">Lab 4 · O grupo "Wear" reutilizável (organização)</span>
+    <ol>
+      <li>Pegue a máscara do Lab 2 e converta em Node Group com inputs: Scale (do Noise via Map Range), Edge Amount (multiplicador do Pointiness), Contrast (Map Range pré-saída) e output único Mask.</li>
+      <li>Defina defaults, min/max e descrições por socket (painel N dentro do grupo).</li>
+      <li>Marque como Asset; aplique o grupo num segundo objeto totalmente diferente e calibre só pelos 3 sliders.</li>
+    </ol>
+    <p class="obs">Critério de domínio: outra pessoa conseguir usar seu grupo sem abrir o conteúdo — o teste de toda boa abstração.</p>
+  </div>
+</section>
+
+<!-- ======================= EXERCÍCIOS ======================= -->
+<section id="exercicios">
+  <div class="sec-head"><span class="idx">Cap. 8</span><h2>Exercícios de fixação</h2></div>
+  <p class="sec-sub">Responda antes de expandir o gabarito.</p>
+
+  <details class="exq"><summary><span class="qn">Q1</span>Um colega ligou a saída Color de um Noise direto no Roughness do Principled "e funcionou". O que o Blender fez por baixo dos panos, e qual seria a ligação mais explícita?</summary>
+  <div class="ans"><b>Gabarito:</b> conversão implícita Color → Float: o socket cinza recebeu a <em>luminância</em> da cor. Funciona, mas esconde a intenção; o explícito seria usar a saída Fac do Noise (um único canal) — ou um RGB to BW se a fonte fosse colorida de verdade.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q2</span>Por que um socket Shader (verde) não pode entrar num nó Math?</summary>
+  <div class="ans"><b>Gabarito:</b> porque um Shader não é um número — é uma BSDF/closure, uma <em>função</em> de espalhamento que só será avaliada pelo integrador com direções de luz reais. Antes do render não existe "o valor" dela para somar. As únicas operações válidas são Mix/Add Shader e a entrega ao Output (exceção de mão única: Shader to RGB no EEVEE, que rasteriza o resultado).</div></details>
+
+  <details class="exq"><summary><span class="qn">Q3</span>Sua textura de roughness importada deixou o material todo "lavado e brilhante demais". Diagnóstico em uma linha e correção?</summary>
+  <div class="ans"><b>Gabarito:</b> a imagem está marcada como sRGB: o renderizador decodificou a curva e todos os valores caíram (0.5 → ~0.22 = muito mais liso). Correção: Color Space = <em>Non-Color</em> no Image Texture. Mesma regra para metallic, normal, height e máscaras.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q4</span>Diferencie Texture Coordinate→Object, →Generated e Geometry→Position para um personagem animado com textura procedural na pele.</summary>
+  <div class="ans"><b>Gabarito:</b> <em>Object</em>: gruda no pivô, escala real, não acompanha deformação do esqueleto — a pele "desliza" sob a textura ao dobrar o braço. <em>Generated</em>: acompanha a deformação (estica junto) — geralmente o correto para personagens. <em>Position (Geometry)</em>: espaço de mundo — o personagem "nada" pela textura ao andar pela cena; quase sempre errado aqui, ótimo para água/fumaça presas ao mundo.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q5</span>O que o slider Detail do Noise soma, matematicamente, e por que Detail alto "cintila" em objetos distantes?</summary>
+  <div class="ans"><b>Gabarito:</b> oitavas de fBm: cópias do ruído com frequência multiplicada (lacunarity) e amplitude multiplicada por Roughness a cada passo. Ao longe, as oitavas finas ficam menores que um pixel; sem mipmaps (procedural não tem), cada amostra sorteia um valor diferente → aliasing temporal (cintilação). Soluções: reduzir Detail por distância, mais samples, ou bake para imagem (que ganha mipmaps).</div></details>
+
+  <details class="exq"><summary><span class="qn">Q6</span>Que saída do Voronoi gera, sozinha, uma máscara de "rejunte entre pedras", e qual é a matemática dela?</summary>
+  <div class="ans"><b>Gabarito:</b> <em>Distance to Edge</em>: a distância do ponto à fronteira mais próxima entre células (equivalente a explorar F2 − F1 de Worley). Valores baixos = perto da fronteira = rejunte; um Color Ramp apertado binariza. A saída Color, de quebra, dá uma cor aleatória por pedra.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q7</span>Bump e Normal Map terminam no mesmo socket. Cite duas vantagens de cada um sobre o outro.</summary>
+  <div class="ans"><b>Gabarito:</b> Bump: aceita qualquer altura procedural ao vivo (editável, sem bake) e empilha fácil (encadear nós Bump). Normal Map: guarda <em>direção</em> por pixel (detalhe de sculpt mais rico que uma derivada de altura) e custa uma única leitura de textura (o Bump avalia a árvore de altura 3× para estimar o gradiente). Ambos mentem só para o shading — silhueta lisa nos dois.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q8</span>Você ligou um height map no socket Displacement do Output e nada mudou no render. Os dois suspeitos de sempre?</summary>
+  <div class="ans"><b>Gabarito:</b> (1) Material Settings → Displacement ainda em "Bump Only" (o padrão!) — mude para Displacement Only/and Bump; (2) malha sem geometria para deslocar — adicione Subdivision (idealmente Adaptive, no feature set Experimental do Cycles). Bônus: conferir Midlevel (0.5 vs 0) se o relevo parecer "afundado".</div></details>
+
+  <details class="exq"><summary><span class="qn">Q9</span>Um normal map baixado parece ter o relevo "para dentro" (rebites viram furos). Causa e correção via nós?</summary>
+  <div class="ans"><b>Gabarito:</b> convenção DirectX (−Y) vs OpenGL (+Y do Blender): o canal verde está invertido. Correção: Separate Color → Invert no G → Combine Color → Normal Map (ou re-exportar como OpenGL). É um clássico de texturas de marketplaces.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q10</span>Como fazer um único material dar uma cor levemente diferente a cada uma das 200 cadeiras instanciadas de um auditório?</summary>
+  <div class="ans"><b>Gabarito:</b> <code>Object Info → Random</code> (número fixo por instância) → Hue/Saturation (Hue, com Fac baixo) sobre a Base Color — ou Random no W de um Noise 4D para variar a textura inteira. Zero materiais duplicados, zero texturas extras.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q11</span>(Desafio) Por que o Shader to RGB não existe no Cycles, em termos do modelo de execução do Cap. 4?</summary>
+  <div class="ans"><b>Gabarito:</b> no EEVEE (rasterizador), a cor final de um fragmento é computada num ponto definido do pipeline — dá para "interceptá-la" e reinjetar nos nós. No Cycles, o "resultado do shader" é a integral de Monte Carlo sobre milhares de caminhos de luz: ele só existe quando o render termina. Reinjetar isso na árvore criaria uma dependência circular (o material precisaria do render que precisa do material). O NPR em path tracing usa outro caminho: BSDFs estilizadas (Toon) que participam da integração.</div></details>
+
+  <details class="exq"><summary><span class="qn">Q12</span>(Desafio) Escreva, em nós, uma máscara de "musgo nas faces voltadas para cima, mas só perto do chão". Liste a corrente completa.</summary>
+  <div class="ans"><b>Gabarito (uma solução):</b> Máscara A (para cima): Geometry→Normal → Vector Math (Dot Product com (0,0,1)) → Color Ramp. Máscara B (perto do chão): Geometry→Position → Separate XYZ→Z → Map Range (From: 0–2 m, To: 1–0). Combinar: Math (Multiply) A×B → (opcional) Noise multiplicado para quebrar a uniformidade → Fac do Mix entre material base e musgo. Padrões usados: máscara direcional (dot), máscara de altura (Z) e quebra orgânica (receitas 1, 2 e 6).</div></details>
+</section>
+
+<!-- ======================= GLOSSÁRIO ======================= -->
+<section id="glossario">
+  <div class="sec-head"><span class="idx">Cap. 9</span><h2>Glossário</h2></div>
+  <dl class="gloss">
+    <dt>Atributo</dt><dd>Dado nomeado armazenado na geometria (por vértice, face, instância...), lido no shading pelo nó Attribute; a ponte com o Geometry Nodes.</dd>
+    <dt>Bake (assar)</dt><dd>Pré-calcular um resultado (procedural, AO, normais de sculpt) para uma imagem; troca flexibilidade por velocidade, mipmaps e portabilidade.</dd>
+    <dt>Closure</dt><dd>O que um socket verde transporta: uma BSDF "fechada" com seus parâmetros, aguardando o integrador — não um valor numérico.</dd>
+    <dt>Domain warping</dt><dd>Distorcer as coordenadas de uma textura com outra textura (noise(p + noise(p))); o Distortion do Noise é o caso embutido.</dd>
+    <dt>Fac (factor)</dt><dd>Apelido dos sockets float 0–1 que dosam misturas e efeitos; a "moeda" das máscaras.</dd>
+    <dt>fBm</dt><dd>Fractional Brownian motion: soma de oitavas de ruído com frequência crescente e amplitude decrescente; o motor do slider Detail.</dd>
+    <dt>Height map</dt><dd>Imagem/sinal de altura em tons de cinza; vira relevo via Bump (normais) ou Displacement (geometria).</dd>
+    <dt>Lacunarity</dt><dd>Fator de multiplicação da frequência entre oitavas do fBm (tipicamente 2.0).</dd>
+    <dt>Linear workflow</dt><dd>Decodificar sRGB na entrada, calcular em luz linear, aplicar transformação de exibição (Filmic/AgX) na saída. Cap. 3.</dd>
+    <dt>MikkTSpace</dt><dd>Padrão de cálculo do espaço tangente (Mikkelsen 2008) que garante normal maps idênticos entre softwares.</dd>
+    <dt>Mipmaps</dt><dd>Pirâmide de versões reduzidas de uma imagem, escolhidas por distância — o antialiasing automático das texturas de imagem.</dd>
+    <dt>Non-Color</dt><dd>Marcação de Color Space que diz "estes pixels são números, não cores" — nenhuma curva sRGB é aplicada.</dd>
+    <dt>Octave (oitava)</dt><dd>Cada camada do fBm; o nome vem da música: frequência dobrada.</dd>
+    <dt>OSL</dt><dd>Open Shading Language: shaders escritos em código, com loops e lógica, via nó Script.</dd>
+    <dt>Pointiness</dt><dd>Curvatura aproximada por vértice (côncavo/convexo) exposta pelo nó Geometry; base de máscaras de desgaste (Cycles).</dd>
+    <dt>Seed (semente)</dt><dd>Valor que "sorteia" uma variação de um padrão aleatório; nos nós 4D, o W é uma seed contínua e animável.</dd>
+    <dt>Socket</dt><dd>Ponto de conexão tipado de um nó (float, color, vector, shader); a cor indica o tipo (Cap. 1).</dd>
+    <dt>sRGB</dt><dd>Espaço/curva padrão de imagens para tela (IEC 61966-2-1); deve ser decodificado para cor e <em>nunca</em> aplicado a dados.</dd>
+    <dt>Tangent space</dt><dd>Base local (tangente, bitangente, normal) derivada do UV; onde vivem normal maps e anisotropia.</dd>
+    <dt>Triplanar (Box)</dt><dd>Projeção da textura pelos três eixos, misturada pelas normais; texturiza sem UV (Projection: Box no Image Texture).</dd>
+    <dt>UDIM</dt><dd>Convenção de múltiplos tiles UV numerados (1001, 1002…) para texturas de altíssima resolução por partes.</dd>
+    <dt>UV</dt><dd>Coordenadas 2D (0–1) atribuídas à malha pelo unwrap; o "endereço postal" das texturas de imagem.</dd>
+    <dt>Vertex color</dt><dd>Cor pintada por vértice, lida via Color Attribute; a máscara mais barata que existe.</dd>
+  </dl>
+</section>
+
+<hr class="sep">
+
+<!-- ======================= REFERÊNCIAS ======================= -->
+<section id="referencias">
+  <div class="sec-head"><span class="idx">Cap. 10</span><h2>Referências científicas</h2></div>
+  <ol class="bib">
+    <li id="r1"><b>Cook, R. L.</b> (1984). <span class="where">Shade Trees.</span> SIGGRAPH '84. — A origem dos materiais como grafos de nós.</li>
+    <li id="r2"><b>Catmull, E.</b> (1974). <span class="where">A Subdivision Algorithm for Computer Display of Curved Surfaces.</span> Tese de doutorado, Univ. of Utah. — Introduz o texture mapping por coordenadas paramétricas (UV).</li>
+    <li id="r3"><b>Blinn, J. F.; Newell, M. E.</b> (1976). <span class="where">Texture and Reflection in Computer Generated Images.</span> CACM 19(10). — Environment/reflection mapping (a saída Reflection).</li>
+    <li id="r4"><b>Blinn, J. F.</b> (1978). <span class="where">Simulation of Wrinkled Surfaces.</span> SIGGRAPH '78. — Bump mapping: perturbar normais pelo gradiente da altura.</li>
+    <li id="r5"><b>Perlin, K.</b> (1985). <span class="where">An Image Synthesizer.</span> SIGGRAPH '85. — O gradient noise original (Oscar técnico 1997).</li>
+    <li id="r6"><b>Perlin, K.</b> (2002). <span class="where">Improving Noise.</span> SIGGRAPH 2002. — Interpolação C² e gradientes melhorados, base das implementações modernas.</li>
+    <li id="r7"><b>Worley, S.</b> (1996). <span class="where">A Cellular Texture Basis Function.</span> SIGGRAPH '96. — O Voronoi/F1/F2 das texturas celulares.</li>
+    <li id="r8"><b>Musgrave, F. K.; Kolb, C. E.; Mace, R. S.</b> (1989). <span class="where">The Synthesis and Rendering of Eroded Fractal Terrains.</span> SIGGRAPH '89. — Multifractais (fBm, Ridged, Hybrid) hoje dentro do Noise.</li>
+    <li id="r9"><b>Ebert, D. S. et al.</b> (2003). <span class="where">Texturing &amp; Modeling: A Procedural Approach, 3ª ed.</span> Morgan Kaufmann. — A bíblia do texturizado procedural (Perlin, Worley e Musgrave são coautores).</li>
+    <li id="r10"><b>Mikkelsen, M. S.</b> (2008). <span class="where">Simulation of Wrinkled Surfaces Revisited.</span> Dissertação, Univ. de Copenhague. — O espaço tangente padronizado (MikkTSpace) dos normal maps.</li>
+    <li id="r11"><b>Williams, L.</b> (1983). <span class="where">Pyramidal Parametrics.</span> SIGGRAPH '83. — Mipmapping: a filtragem das texturas de imagem.</li>
+    <li id="r12"><b>IEC</b> (1999). <span class="where">IEC 61966-2-1: Multimedia systems — Colour measurement — sRGB.</span> — A definição formal do espaço/curva sRGB.</li>
+    <li id="r13"><b>Gritz, L. et al.</b> (2010). <span class="where">Open Shading Language.</span> Sony Pictures Imageworks (especificação open source). — O OSL do nó Script (Oscar técnico 2017 para a equipe).</li>
+    <li id="r14"><b>Planck, M.</b> (1900). <span class="where">Zur Theorie des Gesetzes der Energieverteilung im Normalspectrum.</span> Verh. DPG 2. — A radiação de corpo negro por trás do nó Blackbody.</li>
+    <li id="r15"><b>Pharr, M.; Jakob, W.; Humphreys, G.</b> (2023). <span class="where">Physically Based Rendering, 4ª ed.</span> MIT Press (gratuito em pbr-book.org). — Caps. de texturas e antialiasing aprofundam tudo deste material.</li>
+  </ol>
+  <h4 class="sub">Para continuar os estudos</h4>
+  <p style="color:var(--muted);font-size:14.5px;line-height:1.75">Sequência sugerida: (1) o manual do Blender, seção <em>Shader Nodes</em> (docs.blender.org) com esta apostila ao lado; (2) <em>Texturing &amp; Modeling</em><sup class="ref"><a href="#r9">[9]</a></sup> para a teoria procedural com código; (3) o livro de shaders interativo <em>The Book of Shaders</em> (Vivo &amp; Lowe, thebookofshaders.com) — escrever noise/fBm em GLSL consolida cada nó daqui; (4) a apostila irmã de <strong>BSDFs</strong> para o destino final de todos esses fios.</p>
+</section>
+
+<footer>
+  <p>Apostila escrita com base no manual do Blender (série 4.x/5.x — Cycles e EEVEE) e na literatura citada. Nomes de nós e parâmetros referem-se ao Blender 4.2+; mudanças relevantes de versão estão sinalizadas no texto (ex.: Musgrave fundido ao Noise no 4.1). Diagramas são esquemáticos, com proporções exageradas para clareza didática. Companheira da apostila "BSDFs no Blender".</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>
