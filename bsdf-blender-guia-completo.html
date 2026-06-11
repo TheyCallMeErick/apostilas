@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSDFs no Blender — Guia completo: da física à prática</title>
+<meta name="description" content="Guia completo dos shaders BSDF do Blender (Cycles/EEVEE): explicações para iniciantes e avançadas, diagramas de interação da luz, exemplos reais e referências científicas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161719;
+  --panel:#1f2125;
+  --panel-2:#26282d;
+  --line:#33363c;
+  --line-soft:#2b2e33;
+  --ink:#e9e7e2;
+  --muted:#a3a19a;
+  --faint:#74726c;
+  --node-header:#2f5a2f;
+  --node-header-ink:#cfe8c2;
+  --green:#8fc04c;
+  --sock-shader:#63c763;
+  --sock-color:#c7c729;
+  --sock-vector:#7a7ad6;
+  --sock-float:#a1a1a1;
+  --ray-in:#ffd54f;
+  --ray-refl:#ff8a65;
+  --ray-trans:#4fc3f7;
+  --ray-scat:#aed581;
+  --beg:#4fc3f7;
+  --adv:#ce93d8;
+  --radius:10px;
+  --maxw:880px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(circle, #232529 1px, transparent 1px);
+  background-size:26px 26px;
+  color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:16.5px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:#3a5a2a;color:#fff}
+a{color:var(--green);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+code{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:.85em;
+  background:var(--panel-2);
+  border:1px solid var(--line-soft);
+  border-radius:4px;
+  padding:.1em .4em;
+  color:#d7e6c0;
+}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;line-height:1.25;letter-spacing:-.01em}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1240px;margin:0 auto;gap:36px;padding:0 24px}
+main{max-width:var(--maxw);padding-bottom:120px;min-width:0}
+
+/* ---------- sidebar ---------- */
+.toc{
+  position:sticky;top:0;align-self:start;
+  max-height:100vh;overflow-y:auto;
+  padding:32px 0 32px;
+  font-size:13px;
+  scrollbar-width:thin;
+}
+.toc .brand{
+  font-family:'Space Grotesk';font-weight:700;font-size:15px;color:var(--ink);
+  display:flex;align-items:center;gap:8px;margin-bottom:18px;
+}
+.toc .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--sock-shader);box-shadow:0 0 8px #63c76366}
+.toc ol{list-style:none}
+.toc li{margin:1px 0}
+.toc a{
+  display:block;color:var(--muted);padding:4px 10px;border-left:2px solid var(--line-soft);
+  border-radius:0 5px 5px 0;
+}
+.toc a:hover{color:var(--ink);text-decoration:none;background:var(--panel)}
+.toc .grp{
+  margin:16px 0 5px;color:var(--faint);font-family:'JetBrains Mono';font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.14em;padding-left:12px;
+}
+@media (max-width:1020px){
+  .shell{grid-template-columns:1fr}
+  .toc{position:static;max-height:none;border-bottom:1px solid var(--line);margin-bottom:8px;padding-bottom:18px}
+  .toc ol{display:flex;flex-wrap:wrap;gap:2px 6px}
+  .toc a{border-left:none;border:1px solid var(--line-soft);border-radius:99px;padding:3px 11px}
+  .toc .grp{width:100%}
+}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 30px}
+.hero .kicker{
+  font-family:'JetBrains Mono';font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.hero .kicker::before{content:"";display:inline-block;width:26px;height:1px;background:var(--green)}
+.hero h1{font-size:clamp(34px,5.4vw,56px);font-weight:700;letter-spacing:-.025em;margin-bottom:18px}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero p.lead{font-size:18.5px;color:var(--muted);max-width:680px;margin-bottom:8px}
+.hero .meta{
+  display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;font-family:'JetBrains Mono';
+  font-size:12px;color:var(--faint);
+}
+.hero .meta span{display:flex;align-items:center;gap:7px}
+.hero .meta i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+/* ---------- section headings ---------- */
+section{padding-top:34px}
+.sec-head{margin:36px 0 14px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.sec-head .idx{
+  font-family:'JetBrains Mono';font-size:13px;color:var(--faint);
+  border:1px solid var(--line);border-radius:6px;padding:2px 9px;white-space:nowrap;
+}
+.sec-head h2{font-size:clamp(24px,3.4vw,32px)}
+.sec-sub{color:var(--muted);max-width:700px;margin-bottom:10px}
+
+/* ---------- node card (assinatura visual) ---------- */
+.node{
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(180deg,var(--panel) 0%,#1b1d21 100%);
+  margin:30px 0;overflow:hidden;
+  box-shadow:0 14px 40px -18px rgba(0,0,0,.55);
+}
+.node-head{
+  background:var(--node-header);color:var(--node-header-ink);
+  padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.node-head h3{font-size:19px;font-weight:600;color:#eef7e6;letter-spacing:0}
+.node-head .chip{
+  margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;background:#00000033;border:1px solid #ffffff22;
+  border-radius:99px;padding:2px 10px;color:#dfeccf;white-space:nowrap;
+}
+.node-head .sock{width:11px;height:11px;border-radius:50%;background:var(--sock-shader);border:1.5px solid #0c180c;flex:none}
+.node-body{padding:20px 22px 24px}
+.engine{
+  font-family:'JetBrains Mono';font-size:11px;color:var(--faint);
+  display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+}
+.engine b{color:var(--muted);font-weight:500}
+
+/* níveis */
+.lvl{border:1px solid var(--line-soft);border-radius:8px;padding:16px 18px;margin:14px 0;background:#1b1d2055}
+.lvl .tag{
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:7px;margin-bottom:8px;
+}
+.lvl .tag::before{content:"";width:8px;height:8px;border-radius:2px;display:inline-block}
+.lvl.beg .tag{color:var(--beg)} .lvl.beg .tag::before{background:var(--beg)}
+.lvl.adv .tag{color:var(--adv)} .lvl.adv .tag::before{background:var(--adv)}
+.lvl p+p{margin-top:10px}
+.lvl ul{margin:8px 0 0 20px}
+.lvl li{margin:5px 0}
+
+/* figuras SVG */
+figure.diagram{
+  margin:18px 0;border:1px solid var(--line-soft);border-radius:8px;
+  background:#141518;padding:14px 12px 8px;overflow:hidden;
+}
+figure.diagram svg{width:100%;height:auto;display:block}
+figure.diagram figcaption{
+  font-size:12.5px;color:var(--faint);padding:8px 6px 4px;line-height:1.55;
+  font-family:'JetBrains Mono';
+}
+
+/* tabela de inputs / comparativa */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:14px 0}
+.tbl th{
+  text-align:left;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;
+  border-bottom:1px solid var(--line);padding:7px 10px;
+}
+.tbl td{border-bottom:1px solid var(--line-soft);padding:8px 10px;vertical-align:top;color:#d6d4cf}
+.tbl td:first-child{white-space:nowrap;font-weight:500}
+.tbl .sk{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:baseline;border:1px solid #0008}
+.sk.c{background:var(--sock-color)} .sk.f{background:var(--sock-float)} .sk.v{background:var(--sock-vector)} .sk.s{background:var(--sock-shader)}
+.tbl-wrap{overflow-x:auto}
+
+/* exemplos reais */
+.realw{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0 4px;
+}
+.realw .ex{
+  border:1px solid var(--line-soft);border-radius:7px;padding:10px 12px;background:var(--panel-2);
+  font-size:13.5px;line-height:1.45;
+}
+.realw .ex b{display:block;font-weight:600;color:var(--ink);margin-bottom:2px;font-size:13px}
+.realw .ex span{color:var(--muted);font-size:12.5px}
+
+/* callouts */
+.tip{
+  border-left:3px solid var(--green);background:#22301c66;border-radius:0 8px 8px 0;
+  padding:12px 16px;margin:14px 0;font-size:14.5px;color:#d9e5c9;
+}
+.tip b{color:#cfe8a8}
+.warn{
+  border-left:3px solid #e0a83f;background:#33291466;border-radius:0 8px 8px 0;
+  padding:12px 16px;margin:14px 0;font-size:14.5px;color:#e8d9b8;
+}
+.warn b{color:#f0c069}
+
+/* refs */
+sup.ref a{
+  font-family:'JetBrains Mono';font-size:.68em;color:var(--green);
+  border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:2px;
+}
+ol.bib{margin-left:22px;font-size:14px;color:var(--muted)}
+ol.bib li{margin:10px 0;line-height:1.6}
+ol.bib b{color:var(--ink);font-weight:600}
+ol.bib .where{font-style:italic}
+ol.bib code{font-size:.82em}
+
+p+p{margin-top:12px}
+main>section>p, .prose p{color:#d6d4cf}
+hr.sep{border:none;border-top:1px dashed var(--line);margin:46px 0 8px}
+
+footer{
+  border-top:1px solid var(--line);margin-top:70px;padding:26px 0 0;
+  font-size:13px;color:var(--faint);line-height:1.7;
+}
+footer a{color:var(--muted)}
+
+/* svg shared */
+.svg-lbl{font-family:'JetBrains Mono',monospace;font-size:11px;fill:#a3a19a}
+.svg-lbl.s{font-size:10px;fill:#74726c}
+.svg-tit{font-family:'Space Grotesk',sans-serif;font-size:12.5px;fill:#c9c7c1;font-weight:600}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ======================= SIDEBAR ======================= -->
+<nav class="toc" aria-label="Sumário">
+  <div class="brand"><span class="dot"></span>BSDFs no Blender</div>
+  <ol>
+    <li class="grp">Fundamentos</li>
+    <li><a href="#fundamentos">O que é uma BSDF</a></li>
+    <li><a href="#fisica">A física por trás</a></li>
+    <li class="grp">Reflexão</li>
+    <li><a href="#diffuse">Diffuse BSDF</a></li>
+    <li><a href="#glossy">Glossy BSDF</a></li>
+    <li><a href="#metallic">Metallic BSDF</a></li>
+    <li><a href="#sheen">Sheen BSDF</a></li>
+    <li><a href="#toon">Toon BSDF</a></li>
+    <li class="grp">Transmissão</li>
+    <li><a href="#transparent">Transparent BSDF</a></li>
+    <li><a href="#refraction">Refraction BSDF</a></li>
+    <li><a href="#glass">Glass BSDF</a></li>
+    <li><a href="#translucent">Translucent BSDF</a></li>
+    <li class="grp">Espalhamento</li>
+    <li><a href="#sss">Subsurface Scattering</a></li>
+    <li><a href="#hair">Hair &amp; Principled Hair</a></li>
+    <li class="grp">Tudo-em-um &amp; especiais</li>
+    <li><a href="#principled">Principled BSDF</a></li>
+    <li><a href="#rayportal">Ray Portal BSDF</a></li>
+    <li><a href="#companheiros">Nós companheiros</a></li>
+    <li class="grp">Síntese</li>
+    <li><a href="#tabela">Tabela comparativa</a></li>
+    <li><a href="#qual-usar">Qual BSDF usar?</a></li>
+    <li><a href="#referencias">Referências</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ======================= HERO ======================= -->
+<header class="hero">
+  <div class="kicker">Guia de shading · Cycles &amp; EEVEE</div>
+  <h1>BSDFs no Blender: como a luz <em>conversa</em> com cada superfície</h1>
+  <p class="lead">Toda superfície do mundo real responde à luz de um jeito próprio — giz absorve e espalha, espelho devolve, vidro dobra, pele deixa a luz passear por dentro. No Blender, cada uma dessas "personalidades ópticas" é um nó <strong>BSDF</strong>. Este guia explica todos eles em dois níveis (iniciante e avançado), com diagramas de raios de luz, exemplos do mundo real e as referências científicas que deram origem a cada modelo.</p>
+  <div class="meta">
+    <span><i style="background:var(--beg)"></i>Nível iniciante</span>
+    <span><i style="background:var(--adv)"></i>Nível avançado</span>
+    <span><i style="background:var(--ray-in)"></i>Luz incidente</span>
+    <span><i style="background:var(--ray-refl)"></i>Refletida</span>
+    <span><i style="background:var(--ray-trans)"></i>Transmitida</span>
+  </div>
+</header>
+<!-- ======================= FUNDAMENTOS ======================= -->
+<section id="fundamentos">
+  <div class="sec-head"><span class="idx">01</span><h2>O que é uma BSDF, afinal?</h2></div>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p>Imagine que você joga uma bolinha de luz contra uma superfície. O que acontece com ela? Ela pode <strong>quicar de volta</strong> (reflexão), <strong>atravessar</strong> (transmissão) ou <strong>ser engolida</strong> (absorção). Uma BSDF é simplesmente a "regra do jogo" que diz, para cada material, <em>quanta</em> luz vai para cada direção depois de bater na superfície.</p>
+    <p>A sigla vem de <strong>Bidirectional Scattering Distribution Function</strong> — Função de Distribuição de Espalhamento Bidirecional. "Bidirecional" porque ela conecta duas direções: a direção de onde a luz <em>veio</em> e a direção para onde ela <em>vai</em>. No Blender, cada nó verde com "BSDF" no nome é uma dessas regras pronta para usar.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 300" role="img" aria-label="Diagrama: um raio de luz atinge uma superfície e se divide em reflexão (BRDF), transmissão (BTDF) e absorção">
+      <defs>
+        <marker id="ah-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+        <marker id="ah-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff8a65"/></marker>
+        <marker id="ah-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4fc3f7"/></marker>
+        <marker id="ah-s" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#aed581"/></marker>
+        <marker id="ah-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#74726c"/></marker>
+        <pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="8" stroke="#2e3136" stroke-width="2"/></pattern>
+      </defs>
+      <!-- meio superior / inferior -->
+      <rect x="40" y="170" width="680" height="100" fill="url(#hatch)" opacity=".8"/>
+      <line x1="40" y1="170" x2="720" y2="170" stroke="#5a5e66" stroke-width="2"/>
+      <text x="48" y="36" class="svg-tit">Acima da superfície (ar)</text>
+      <text x="48" y="262" class="svg-tit" opacity=".75">Dentro do material</text>
+      <!-- normal -->
+      <line x1="380" y1="170" x2="380" y2="60" stroke="#5a5e66" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <text x="386" y="58" class="svg-lbl">normal (N)</text>
+      <!-- raio incidente -->
+      <line x1="180" y1="60" x2="372" y2="166" stroke="#ffd54f" stroke-width="3" marker-end="url(#ah-in)"/>
+      <text x="150" y="50" class="svg-lbl" fill="#ffd54f">luz incidente (ωi)</text>
+      <!-- reflexão especular -->
+      <line x1="386" y1="164" x2="575" y2="62" stroke="#ff8a65" stroke-width="2.5" marker-end="url(#ah-r)"/>
+      <text x="540" y="50" class="svg-lbl" fill="#ff8a65">reflexão</text>
+      <!-- lobo difuso -->
+      <g stroke="#aed581" stroke-width="1.6" opacity=".9">
+        <line x1="380" y1="166" x2="300" y2="96" marker-end="url(#ah-s)"/>
+        <line x1="380" y1="166" x2="356" y2="84" marker-end="url(#ah-s)"/>
+        <line x1="380" y1="166" x2="430" y2="90" marker-end="url(#ah-s)"/>
+        <line x1="380" y1="166" x2="475" y2="112" marker-end="url(#ah-s)"/>
+        <line x1="380" y1="166" x2="290" y2="140" marker-end="url(#ah-s)"/>
+      </g>
+      <text x="252" y="86" class="svg-lbl" fill="#aed581">espalhamento</text>
+      <!-- transmissão -->
+      <line x1="382" y1="174" x2="470" y2="252" stroke="#4fc3f7" stroke-width="2.5" marker-end="url(#ah-t)"/>
+      <text x="476" y="246" class="svg-lbl" fill="#4fc3f7">transmissão (refração)</text>
+      <!-- absorção -->
+      <line x1="380" y1="174" x2="380" y2="236" stroke="#74726c" stroke-width="2" stroke-dasharray="3 4" marker-end="url(#ah-g)"/>
+      <text x="300" y="252" class="svg-lbl s">absorção (vira calor)</text>
+      <!-- BRDF / BTDF -->
+      <text x="600" y="120" class="svg-lbl s">hemisfério de cima = BRDF</text>
+      <text x="560" y="226" class="svg-lbl s">hemisfério de baixo = BTDF</text>
+    </svg>
+    <figcaption>Fig. 1 — Os quatro destinos possíveis de um raio de luz. A BSDF descreve a probabilidade de cada direção de saída: a parte refletida (hemisfério superior) é a BRDF, a parte transmitida (hemisfério inferior) é a BTDF. BSDF = BRDF + BTDF.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>Formalmente, a BRDF foi definida por Nicodemus em 1977<sup class="ref"><a href="#r1">[1]</a></sup> como a razão entre a radiância refletida em uma direção de saída <code>ωo</code> e a irradiância incidente vinda de uma direção <code>ωi</code>:</p>
+    <p style="text-align:center"><code>f(ωi, ωo) = dL(ωo) / (L(ωi) · cos θi · dωi)</code> &nbsp; [unidade: sr⁻¹]</p>
+    <p>A generalização para a esfera completa (incluindo transmissão) é a BSDF. Renderizadores como o Cycles resolvem a <strong>equação de renderização</strong> de Kajiya (1986)<sup class="ref"><a href="#r2">[2]</a></sup>, que integra a BSDF contra toda a luz que chega ao ponto:</p>
+    <p style="text-align:center"><code>L(x, ωo) = Le(x, ωo) + ∫Ω f(x, ωi, ωo) · L(x, ωi) · (N·ωi) dωi</code></p>
+    <p>Toda BSDF fisicamente plausível obedece três propriedades:</p>
+    <ul>
+      <li><strong>Positividade</strong> — <code>f ≥ 0</code> sempre (não existe "luz negativa").</li>
+      <li><strong>Reciprocidade de Helmholtz</strong> — <code>f(ωi, ωo) = f(ωo, ωi)</code>: trocar a câmera pela lâmpada não muda o resultado. É isso que permite o path tracing funcionar "de trás para frente", traçando raios a partir da câmera.</li>
+      <li><strong>Conservação de energia</strong> — a superfície nunca reflete mais energia do que recebe (a integral da BSDF sobre o hemisfério é ≤ 1). É por isso que o nó <em>Add Shader</em> pode quebrar o realismo: ele literalmente soma energia.</li>
+    </ul>
+    <p>No Cycles, cada nó BSDF também carrega uma estratégia de <em>importance sampling</em>: além de avaliar <code>f</code>, ele sabe sortear direções de saída proporcionais ao seu lobo, o que reduz drasticamente o ruído do Monte Carlo.</p>
+  </div>
+
+  <div class="tip"><b>Tradução prática:</b> quando você liga um nó BSDF no <code>Material Output → Surface</code>, está dizendo ao renderizador: "neste objeto, use <em>esta</em> regra para decidir o destino de cada raio de luz que o atingir".</div>
+</section>
+
+<!-- ======================= FÍSICA ======================= -->
+<section id="fisica">
+  <div class="sec-head"><span class="idx">02</span><h2>A física por trás: Fresnel, IOR e microfacetas</h2></div>
+  <p class="sec-sub">Três conceitos aparecem em quase todos os nós BSDF. Entendê-los uma vez economiza muita confusão depois.</p>
+
+  <div class="lvl beg">
+    <span class="tag">Explicação simples</span>
+    <p><strong>Fresnel:</strong> olhe para um lago ao meio-dia, de cima: você vê o fundo. Agora olhe o mesmo lago de longe, quase rente à água: ela vira um espelho do céu. <em>Todo</em> material não-metálico fica mais reflexivo em ângulos rasantes — esse é o efeito Fresnel, e o Blender o calcula automaticamente nos nós físicos.</p>
+    <p><strong>IOR (índice de refração):</strong> um número que diz o quanto a luz "freia" e dobra ao entrar no material. Ar ≈ 1.0, água ≈ 1.33, vidro ≈ 1.45–1.52, diamante ≈ 2.42. Quanto maior, mais a luz dobra e mais reflexivo o material fica de frente.</p>
+    <p><strong>Microfacetas:</strong> nenhuma superfície real é perfeitamente lisa. Vista no microscópio, ela é um terreno de mini-espelhos apontando para direções levemente diferentes. O controle <em>Roughness</em> dos nós do Blender controla exatamente o quão bagunçados esses mini-espelhos são: 0 = espelho perfeito, 1 = reflexo totalmente borrado.</p>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 280" role="img" aria-label="Diagrama de microfacetas: superfície lisa reflete em uma direção, superfície rugosa espalha o reflexo">
+      <defs>
+        <marker id="ah-r2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff8a65"/></marker>
+        <marker id="ah-i2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+      </defs>
+      <text x="50" y="30" class="svg-tit">Roughness = 0 (lisa)</text>
+      <line x1="50" y1="190" x2="330" y2="190" stroke="#5a5e66" stroke-width="2.5"/>
+      <line x1="80" y1="80" x2="186" y2="186" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#ah-i2)"/>
+      <line x1="194" y1="186" x2="300" y2="80" stroke="#ff8a65" stroke-width="2.5" marker-end="url(#ah-r2)"/>
+      <text x="60" y="220" class="svg-lbl s">um reflexo nítido: espelho</text>
+
+      <text x="420" y="30" class="svg-tit">Roughness alto (rugosa)</text>
+      <!-- superfície serrilhada -->
+      <path d="M420 190 l18 -10 l16 14 l20 -12 l14 10 l22 -14 l16 12 l18 -8 l16 10 l20 -12 l16 10 l20 -10 l18 12 l16 -10 l20 8" fill="none" stroke="#5a5e66" stroke-width="2.5"/>
+      <line x1="450" y1="80" x2="556" y2="178" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#ah-i2)"/>
+      <g stroke="#ff8a65" stroke-width="1.8" opacity=".9">
+        <line x1="562" y1="176" x2="660" y2="92" marker-end="url(#ah-r2)"/>
+        <line x1="562" y1="176" x2="630" y2="74" marker-end="url(#ah-r2)"/>
+        <line x1="562" y1="176" x2="688" y2="124" marker-end="url(#ah-r2)"/>
+        <line x1="562" y1="176" x2="596" y2="70" marker-end="url(#ah-r2)"/>
+        <line x1="562" y1="176" x2="700" y2="158" marker-end="url(#ah-r2)"/>
+      </g>
+      <!-- normais das facetas -->
+      <g stroke="#7a7ad6" stroke-width="1.2" stroke-dasharray="2 3" opacity=".8">
+        <line x1="438" y1="180" x2="430" y2="156"/><line x1="474" y1="182" x2="486" y2="158"/><line x1="510" y1="178" x2="504" y2="154"/>
+      </g>
+      <text x="430" y="146" class="svg-lbl s" fill="#7a7ad6">normais das microfacetas</text>
+      <text x="430" y="226" class="svg-lbl s">muitos micro-reflexos: highlight borrado</text>
+    </svg>
+    <figcaption>Fig. 2 — Teoria de microfacetas (Torrance–Sparrow, 1967; Cook–Torrance, 1982). O parâmetro Roughness descreve a distribuição estatística das normais microscópicas — quanto mais espalhadas, mais difuso o reflexo.</figcaption>
+  </figure>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 270" role="img" aria-label="Curva de Fresnel: refletividade aumenta com o ângulo de visão, dielétrico parte de 4 por cento e metal de valor alto">
+      <line x1="80" y1="220" x2="700" y2="220" stroke="#3a3d44" stroke-width="1.5"/>
+      <line x1="80" y1="220" x2="80" y2="40" stroke="#3a3d44" stroke-width="1.5"/>
+      <text x="84" y="36" class="svg-lbl">refletividade</text>
+      <text x="640" y="244" class="svg-lbl">ângulo →</text>
+      <text x="50" y="224" class="svg-lbl s">0%</text>
+      <text x="36" y="58" class="svg-lbl s">100%</text>
+      <text x="84" y="244" class="svg-lbl s">de frente (0°)</text>
+      <text x="560" y="244" class="svg-lbl s" fill="#74726c">rasante (90°)</text>
+      <!-- dielétrico -->
+      <path d="M80 212 C 300 210, 480 200, 580 140 S 690 56, 700 50" fill="none" stroke="#4fc3f7" stroke-width="2.5"/>
+      <text x="300" y="196" class="svg-lbl" fill="#4fc3f7">dielétrico (vidro, água, plástico) — só ~4% de frente</text>
+      <!-- metal -->
+      <path d="M80 86 C 300 84, 520 76, 700 50" fill="none" stroke="#ffb74d" stroke-width="2.5"/>
+      <text x="300" y="74" class="svg-lbl" fill="#ffb74d">condutor (ouro, cobre) — já reflete muito de frente</text>
+      <line x1="80" y1="50" x2="700" y2="50" stroke="#3a3d44" stroke-width="1" stroke-dasharray="3 5"/>
+    </svg>
+    <figcaption>Fig. 3 — Equações de Fresnel (1823): a refletividade cresce com o ângulo. Dielétricos refletem ~2–5% de frente e ~100% no rasante; metais já partem de 50–98% e podem mudar de cor no caminho. Schlick (1994) propôs a aproximação barata usada em tempo real.</figcaption>
+  </figure>
+
+  <div class="lvl adv">
+    <span class="tag">Explicação avançada</span>
+    <p>Um modelo de microfacetas tem três ingredientes, combinados na fórmula de Cook–Torrance<sup class="ref"><a href="#r4">[4]</a></sup>: <code>f = D·F·G / (4·(N·ωi)·(N·ωo))</code>:</p>
+    <ul>
+      <li><strong>D — distribuição de normais (NDF):</strong> o Blender oferece <em>Beckmann</em> (gaussiana, caudas curtas) e <em>GGX</em> (Trowbridge–Reitz, popularizada por Walter et al. 2007<sup class="ref"><a href="#r5">[5]</a></sup>), cujas caudas longas reproduzem o "halo" suave em volta de highlights reais.</li>
+      <li><strong>F — Fresnel:</strong> fração refletida vs. refratada em cada microfaceta, dependente do IOR (dielétricos) ou do índice complexo <code>n + ik</code> (metais).</li>
+      <li><strong>G — sombreamento/mascaramento geométrico (Smith):</strong> microfacetas bloqueiam umas às outras em ângulos rasantes; sem o termo G a superfície brilharia demais.</li>
+    </ul>
+    <p>Modelos de espalhamento único (single-scattering) ignoram a luz que ricocheteia <em>entre</em> microfacetas, escurecendo materiais rugosos. A opção <strong>Multiscatter GGX</strong> implementa a correção de múltiplo espalhamento de Heitz et al. (2016)<sup class="ref"><a href="#r6">[6]</a></sup>, recuperando a energia perdida — metais rugosos ficam visivelmente mais claros e corretos.</p>
+    <p>Sobre o IOR: a lei de Snell (<code>n₁·sin θ₁ = n₂·sin θ₂</code>) já era conhecida de Ibn Sahl em 984 d.C.<sup class="ref"><a href="#r3">[3]</a></sup> e governa o ângulo de refração; as equações de Fresnel governam <em>quanta</em> luz refrata vs. reflete. Os dois efeitos usam o mesmo número (IOR) — por isso ele aparece tanto em nós de vidro quanto no specular de plásticos.</p>
+  </div>
+</section>
+
+<hr class="sep">
+<!-- ======================= DIFFUSE ======================= -->
+<section id="diffuse">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Diffuse BSDF</h3><span class="chip">Reflexão · fosco</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> Lambert (1760) / Oren–Nayar (1994)</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>É o material <strong>fosco puro</strong>: giz, argila crua, papel sulfite, parede pintada com tinta fosca. A luz bate e se espalha <em>para todos os lados igualmente</em> — por isso não existe highlight, não existe reflexo, e o objeto parece ter a mesma cor de qualquer ângulo que você olhe.</p>
+      <p>O slider <code>Roughness</code> aqui <strong>não</strong> borra reflexo (não há reflexo!). Ele simula superfícies porosas tipo lua, concreto ou barro seco, que ficam um pouco mais "chapadas" e claras nas bordas.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="Reflexão difusa: raio incidente gera espalhamento uniforme em todas as direções do hemisfério, em formato de lobo cosseno">
+        <defs>
+          <marker id="d-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+          <marker id="d-s" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#aed581"/></marker>
+        </defs>
+        <line x1="60" y1="190" x2="700" y2="190" stroke="#5a5e66" stroke-width="2.5"/>
+        <rect x="60" y="192" width="640" height="34" fill="url(#hatch)"/>
+        <!-- lobo cosseno -->
+        <path d="M 380 188 m -120 0 a 120 120 0 0 1 240 0" fill="#aed58118" stroke="#aed58155" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <line x1="170" y1="70" x2="372" y2="184" stroke="#ffd54f" stroke-width="3" marker-end="url(#d-in)"/>
+        <g stroke="#aed581" stroke-width="1.8">
+          <line x1="380" y1="184" x2="380" y2="78" marker-end="url(#d-s)"/>
+          <line x1="380" y1="184" x2="312" y2="98" marker-end="url(#d-s)"/>
+          <line x1="380" y1="184" x2="448" y2="98" marker-end="url(#d-s)"/>
+          <line x1="380" y1="184" x2="282" y2="138" marker-end="url(#d-s)"/>
+          <line x1="380" y1="184" x2="478" y2="138" marker-end="url(#d-s)"/>
+          <line x1="380" y1="184" x2="268" y2="174" marker-end="url(#d-s)"/>
+          <line x1="380" y1="184" x2="492" y2="174" marker-end="url(#d-s)"/>
+        </g>
+        <text x="120" y="58" class="svg-lbl" fill="#ffd54f">venha de onde vier...</text>
+        <text x="470" y="70" class="svg-lbl" fill="#aed581">...sai espalhada em todo o hemisfério</text>
+        <text x="500" y="216" class="svg-lbl s">lobo cosseno: mais energia perto da normal</text>
+      </svg>
+      <figcaption>Fig. 4 — Reflexão lambertiana. A intensidade segue cos θ (lobo tracejado): a direção de saída é independente da direção de entrada — por isso o material parece igual de qualquer ângulo.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Com <code>Roughness = 0</code>, é a BRDF lambertiana ideal: <code>f = albedo/π</code>, constante — formulada a partir da lei do cosseno de Lambert (<em>Photometria</em>, 1760)<sup class="ref"><a href="#r7">[7]</a></sup>. A divisão por π garante conservação de energia ao integrar sobre o hemisfério.</p>
+      <p>Com <code>Roughness &gt; 0</code>, ativa-se o modelo de <strong>Oren–Nayar</strong> (1994)<sup class="ref"><a href="#r8">[8]</a></sup>, que trata a superfície como microfacetas <em>difusas</em> em forma de V. O efeito clássico: retro-reflexão e achatamento do shading — exatamente o motivo de a Lua cheia parecer um disco chapado e uniformemente claro em vez de uma esfera com bordas escuras (o regolito lunar é o exemplo canônico do paper). Desde o Blender 4.3, o Cycles usa a variante <em>energy-preserving Oren–Nayar</em>, que corrige a perda de energia do modelo original.</p>
+      <p>Importante: a Diffuse BSDF <strong>não tem componente Fresnel/especular</strong>. Materiais reais foscos (tinta, plástico fosco) ainda têm ~4% de reflexão especular — para realismo, prefira o Principled BSDF, que põe uma camada especular sobre o difuso.</p>
+    </div>
+
+    <div class="tbl-wrap"><table class="tbl">
+      <tr><th>Input</th><th>O que faz</th></tr>
+      <tr><td><span class="sk c"></span>Color</td><td>Albedo: probabilidade de reflexão por comprimento de onda. Evite preto 0.0 ou branco 1.0 puros — quase nada no mundo real reflete 0% ou 100% (carvão ≈ 4%, neve fresca ≈ 90%).</td></tr>
+      <tr><td><span class="sk f"></span>Roughness</td><td>0 = Lambert puro; valores maiores ativam Oren–Nayar (aspecto "empoeirado/poroso").</td></tr>
+      <tr><td><span class="sk v"></span>Normal</td><td>Entrada para normal/bump maps.</td></tr>
+    </table></div>
+
+    <div class="realw">
+      <div class="ex"><b>Giz e gesso</b><span>roughness 0.3–0.6, albedo alto</span></div>
+      <div class="ex"><b>Lua / regolito</b><span>caso clássico de Oren–Nayar</span></div>
+      <div class="ex"><b>Papel fosco</b><span>roughness baixo, cor quase branca</span></div>
+      <div class="ex"><b>Barro / terracota</b><span>roughness alto, albedo médio</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= GLOSSY ======================= -->
+<section id="glossy">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Glossy BSDF</h3><span class="chip">Reflexão · especular</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> microfacetas GGX / Beckmann / Multiscatter GGX</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>É o nó do <strong>brilho e do espelho</strong>. Com <code>Roughness = 0</code>, você tem um espelho perfeito; subindo o roughness, o reflexo vai ficando borrado como metal escovado, plástico polido sujo ou uma panela usada.</p>
+      <p>Ele também absorveu (desde o Blender 4.0) o antigo <em>Anisotropic BSDF</em>: o controle <code>Anisotropy</code> estica o brilho em uma direção, como no fundo de uma panela de alumínio escovado ou num HD antigo — aqueles reflexos em forma de risco circular.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 260" role="img" aria-label="Três lobos especulares: roughness 0 gera reflexo em linha única, valores maiores geram lobos cada vez mais largos">
+        <defs>
+          <marker id="g-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+          <marker id="g-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff8a65"/></marker>
+        </defs>
+        <g>
+          <line x1="40" y1="200" x2="240" y2="200" stroke="#5a5e66" stroke-width="2.5"/>
+          <line x1="58" y1="92" x2="134" y2="196" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#g-in)"/>
+          <line x1="146" y1="196" x2="222" y2="92" stroke="#ff8a65" stroke-width="2.5" marker-end="url(#g-r)"/>
+          <text x="64" y="232" class="svg-lbl s">roughness 0.0 — espelho</text>
+        </g>
+        <g>
+          <line x1="280" y1="200" x2="480" y2="200" stroke="#5a5e66" stroke-width="2.5"/>
+          <line x1="298" y1="92" x2="374" y2="196" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#g-in)"/>
+          <path d="M380 196 L444 96 L478 130 Z" fill="#ff8a6526" stroke="none"/>
+          <line x1="380" y1="196" x2="452" y2="104" stroke="#ff8a65" stroke-width="2.2" marker-end="url(#g-r)"/>
+          <line x1="380" y1="196" x2="430" y2="92" stroke="#ff8a65" stroke-width="1.4" opacity=".7" marker-end="url(#g-r)"/>
+          <line x1="380" y1="196" x2="470" y2="124" stroke="#ff8a65" stroke-width="1.4" opacity=".7" marker-end="url(#g-r)"/>
+          <text x="306" y="232" class="svg-lbl s">roughness 0.2 — lobo estreito</text>
+        </g>
+        <g>
+          <line x1="520" y1="200" x2="720" y2="200" stroke="#5a5e66" stroke-width="2.5"/>
+          <line x1="538" y1="92" x2="614" y2="196" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#g-in)"/>
+          <path d="M620 196 L600 86 L716 144 Z" fill="#ff8a6520" stroke="none"/>
+          <line x1="620" y1="196" x2="676" y2="98" stroke="#ff8a65" stroke-width="2" marker-end="url(#g-r)"/>
+          <line x1="620" y1="196" x2="628" y2="86" stroke="#ff8a65" stroke-width="1.3" opacity=".6" marker-end="url(#g-r)"/>
+          <line x1="620" y1="196" x2="712" y2="136" stroke="#ff8a65" stroke-width="1.3" opacity=".6" marker-end="url(#g-r)"/>
+          <line x1="620" y1="196" x2="660" y2="88" stroke="#ff8a65" stroke-width="1.3" opacity=".6" marker-end="url(#g-r)"/>
+          <text x="544" y="232" class="svg-lbl s">roughness 0.6 — lobo largo</text>
+        </g>
+      </svg>
+      <figcaption>Fig. 5 — O lobo especular alarga com o roughness. O lobo é centrado na direção de reflexão espelhada e sua forma vem da distribuição de microfacetas (GGX tem caudas mais longas que Beckmann).</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Implementa a BRDF de microfacetas de Cook–Torrance<sup class="ref"><a href="#r4">[4]</a></sup> com três distribuições selecionáveis:</p>
+      <ul>
+        <li><strong>GGX</strong> (Trowbridge–Reitz; Walter et al. 2007<sup class="ref"><a href="#r5">[5]</a></sup>) — padrão da indústria; caudas longas dão highlights com "glow" natural.</li>
+        <li><strong>Beckmann</strong> — distribuição gaussiana de inclinações; highlights mais compactos, útil para comparações com dados de medição antigos.</li>
+        <li><strong>Multiscatter GGX</strong> (Heitz et al. 2016<sup class="ref"><a href="#r6">[6]</a></sup>) — simula estocasticamente os ricochetes entre microfacetas; conserva energia em roughness alto (sem o escurecimento típico do single-scatter), ao custo de um pouco mais de ruído.</li>
+      </ul>
+      <p><strong>Anisotropia:</strong> o parâmetro alonga a NDF ao longo da tangente da superfície (α<sub>x</sub> ≠ α<sub>y</sub>), modelando micro-riscos paralelos — a abordagem remonta ao modelo de Ward (1992)<sup class="ref"><a href="#r9">[9]</a></sup>. <code>Rotation</code> gira a direção dos riscos e <code>Tangent</code> permite controlá-la por UV (essencial para discos/panelas com riscos radiais ou circulares).</p>
+      <p>O nó usa Fresnel implícito de espelho perfeito (tinted), por isso serve bem para metais "estilizados"; para metais com comportamento espectral correto nas bordas, use o <a href="#metallic">Metallic BSDF</a> ou o Principled com Metallic = 1.</p>
+    </div>
+
+    <div class="tbl-wrap"><table class="tbl">
+      <tr><th>Input</th><th>O que faz</th></tr>
+      <tr><td><span class="sk c"></span>Color</td><td>Cor do reflexo (em metais reais, a cor vem da reflexão: ouro ≈ RGB 1.00/0.76/0.34).</td></tr>
+      <tr><td><span class="sk f"></span>Roughness</td><td>Largura do lobo especular (0 = espelho).</td></tr>
+      <tr><td><span class="sk f"></span>Anisotropy</td><td>−1 a 1: estica o highlight ao longo (ou perpendicular) à tangente.</td></tr>
+      <tr><td><span class="sk f"></span>Rotation</td><td>Gira a direção da anisotropia.</td></tr>
+      <tr><td><span class="sk v"></span>Normal / Tangent</td><td>Normal map e direção de escovamento.</td></tr>
+    </table></div>
+
+    <div class="realw">
+      <div class="ex"><b>Espelho</b><span>roughness 0, cor ~0.98</span></div>
+      <div class="ex"><b>Alumínio escovado</b><span>anisotropy ≈ 0.8 + tangente radial</span></div>
+      <div class="ex"><b>Cromo de torneira</b><span>roughness 0.05–0.1</span></div>
+      <div class="ex"><b>Panela usada</b><span>roughness 0.3 + textura de riscos</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= METALLIC ======================= -->
+<section id="metallic">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Metallic BSDF</h3><span class="chip">Reflexão · condutor</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles (Blender 4.3+)</span><span><b>Física:</b> Fresnel de condutor (n + ik) / modelo F82-tint</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Um nó dedicado a <strong>metais de verdade</strong>. A diferença para o Glossy: metais reais mudam sutilmente de cor conforme o ângulo — o ouro fica mais "amarelo-queimado" de frente e quase branco no rasante. Este nó captura isso com dois controles intuitivos: <code>Base Color</code> (a cor de frente) e <code>Edge Tint</code> (a cor perto das bordas).</p>
+      <p>Se você é iniciante: provavelmente nunca vai precisar dele isolado — o slider <em>Metallic</em> do Principled BSDF já faz metal muito bem. Este nó existe para quem quer controle fino ou valores físicos medidos.</p>
+    </div>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Metais são condutores: seu índice de refração é <strong>complexo</strong>, <code>ñ = n + ik</code>, onde k (coeficiente de extinção) descreve a absorção quase imediata da luz transmitida — por isso metal nunca é transparente, nem em lâminas razoavelmente finas. O nó oferece dois modos:</p>
+      <ul>
+        <li><strong>Physical Conductor:</strong> insira n e k por canal RGB, diretamente de bancos de dados de óptica (ex.: refractiveindex.info). Ouro ≈ n(0.18, 0.42, 1.37), k(3.97, 2.38, 1.62) nos comprimentos R/G/B.</li>
+        <li><strong>F82 Tint:</strong> parametrização artística usada no Adobe Standard Material e no OpenPBR<sup class="ref"><a href="#r11">[11]</a></sup>: você dá a refletividade a 0° (Base Color = F0) e o desvio de cor a 82° (Edge Tint = F82), e o modelo reconstrói uma curva de Fresnel plausível. É a evolução da ideia de "Fresnel metálico amigável ao artista" de Gulbrandsen (2014)<sup class="ref"><a href="#r10">[10]</a></sup>.</li>
+      </ul>
+      <p>O ângulo de 82° não é arbitrário: é aproximadamente onde a curva de Fresnel de condutores tem seu "vale" característico antes de subir para 100% a 90° — fixar a cor ali captura o comportamento da curva inteira com um único parâmetro.</p>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Ouro</b><span>F0 (1.00, 0.76, 0.34)</span></div>
+      <div class="ex"><b>Cobre</b><span>F0 (0.95, 0.64, 0.54)</span></div>
+      <div class="ex"><b>Ferro</b><span>F0 (0.56, 0.57, 0.58)</span></div>
+      <div class="ex"><b>Prata</b><span>F0 (0.97, 0.96, 0.92)</span></div>
+    </div>
+    <div class="tip"><b>Regra de ouro (literalmente):</b> em metais, a textura de cor vai no canal de <em>reflexão</em>, não no difuso — metal puro não tem componente difusa. Se seu metal parece "tinta metálica", verifique se não sobrou difuso na mistura.</div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= SHEEN ======================= -->
+<section id="sheen">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Sheen BSDF</h3><span class="chip">Reflexão · microfibras</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles</span><span><b>Física:</b> microflakes/LTC (substituiu o Velvet BSDF no 4.0)</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>É o brilho suave <strong>nas bordas</strong> de tecidos e superfícies cobertas de fibras ou poeira: veludo, camurça, um pêssego, a "penugem" de uma folha, um casaco de lã contra a luz. Fibras microscópicas em pé capturam a luz em ângulos rasantes e criam aquele halo claro no contorno do objeto.</p>
+      <p>Quase nunca se usa sozinho: misture uma pitada dele sobre um Diffuse/Principled para dar vida a tecidos — ou use direto o input <code>Sheen</code> do Principled BSDF, que é este mesmo modelo embutido.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="Fibras verticais sobre uma superfície espalham luz rasante de volta, criando brilho na silhueta">
+        <defs>
+          <marker id="s-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+          <marker id="s-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff8a65"/></marker>
+        </defs>
+        <line x1="60" y1="200" x2="430" y2="200" stroke="#5a5e66" stroke-width="2.5"/>
+        <!-- fibras -->
+        <g stroke="#7d8a6a" stroke-width="2.4" stroke-linecap="round">
+          <line x1="90" y1="200" x2="84" y2="156"/><line x1="120" y1="200" x2="128" y2="152"/>
+          <line x1="150" y1="200" x2="144" y2="150"/><line x1="180" y1="200" x2="188" y2="154"/>
+          <line x1="210" y1="200" x2="206" y2="148"/><line x1="240" y1="200" x2="248" y2="152"/>
+          <line x1="270" y1="200" x2="264" y2="150"/><line x1="300" y1="200" x2="308" y2="154"/>
+          <line x1="330" y1="200" x2="326" y2="150"/><line x1="360" y1="200" x2="368" y2="152"/>
+        </g>
+        <!-- luz rasante -->
+        <line x1="70" y1="120" x2="196" y2="150" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#s-in)"/>
+        <g stroke="#ff8a65" stroke-width="1.7">
+          <line x1="206" y1="150" x2="120" y2="96" marker-end="url(#s-r)"/>
+          <line x1="206" y1="150" x2="170" y2="84" marker-end="url(#s-r)"/>
+          <line x1="252" y1="156" x2="320" y2="92" marker-end="url(#s-r)"/>
+        </g>
+        <text x="66" y="106" class="svg-lbl" fill="#ffd54f">luz rasante</text>
+        <text x="86" y="236" class="svg-lbl s">fibras em pé devolvem a luz que chega de lado</text>
+        <!-- silhueta -->
+        <circle cx="600" cy="140" r="62" fill="#3a3326"/>
+        <circle cx="600" cy="140" r="62" fill="none" stroke="#ffcf8a" stroke-width="6" opacity=".55"/>
+        <circle cx="600" cy="140" r="62" fill="none" stroke="#ffcf8a" stroke-width="2" opacity=".9"/>
+        <text x="540" y="236" class="svg-lbl s">resultado: halo na silhueta</text>
+      </svg>
+      <figcaption>Fig. 6 — O sheen é dominado por retro-espalhamento em ângulos rasantes: por isso o brilho aparece exatamente na silhueta do objeto, onde a superfície fica "de lado" para a câmera.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O Blender 4.0 aposentou o antigo Velvet BSDF e adotou o modelo de Zeltner, Burley &amp; Chiang (2022)<sup class="ref"><a href="#r13">[13]</a></sup>: um volume de <em>microflakes</em> achatado contra a superfície, avaliado eficientemente via <em>Linearly Transformed Cosines</em> (LTC), com múltiplo espalhamento e conservação de energia — uma evolução do sheen "production-friendly" de Conty Estevez &amp; Kulla (2017)<sup class="ref"><a href="#r12">[12]</a></sup>, usado na Sony Imageworks. O modo <em>Ashikhmin</em> (legado) continua disponível para compatibilidade.</p>
+      <p>Diferente de um lobo especular, o lobo do sheen é largo, acromático na física (a cor vem do tint) e concentrado no rasante; ele soma pouco em incidência frontal, então funciona como camada fina sobre o difuso sem "lavar" o material.</p>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Veludo</b><span>sheen forte + difuso escuro</span></div>
+      <div class="ex"><b>Pêssego / pele com penugem</b><span>sheen sutil sobre SSS</span></div>
+      <div class="ex"><b>Sofá de camurça</b><span>roughness médio</span></div>
+      <div class="ex"><b>Superfície empoeirada</b><span>sheen acinzentado leve</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= TOON ======================= -->
+<section id="toon">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Toon BSDF</h3><span class="chip">NPR · estilizado</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles</span><span><b>Física:</b> nenhuma — é não-fotorrealista de propósito</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O único nó desta lista que <strong>quebra a física de propósito</strong>: em vez do degradê suave de luz para sombra, ele cria <strong>faixas chapadas</strong>, como desenho animado ou anime (cel shading). <code>Size</code> controla o tamanho da área iluminada; <code>Smooth</code> suaviza a fronteira entre luz e sombra.</p>
+      <p>Tem dois modos: <em>Diffuse</em> (a faixa de luz principal do personagem) e <em>Glossy</em> (aquele brilho redondo e duro de cabelo de anime).</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 230" role="img" aria-label="Comparação: esfera com degradê físico suave versus esfera toon com duas faixas duras de luz e sombra">
+        <defs>
+          <radialGradient id="smoothsph" cx="38%" cy="32%" r="75%">
+            <stop offset="0%" stop-color="#e8d9a8"/><stop offset="55%" stop-color="#8a7a4d"/><stop offset="100%" stop-color="#2e2a1c"/>
+          </radialGradient>
+        </defs>
+        <circle cx="220" cy="112" r="78" fill="url(#smoothsph)"/>
+        <text x="150" y="218" class="svg-lbl s">shading físico: degradê contínuo</text>
+        <g>
+          <clipPath id="toonclip"><circle cx="540" cy="112" r="78"/></clipPath>
+          <circle cx="540" cy="112" r="78" fill="#2e2a1c"/>
+          <g clip-path="url(#toonclip)">
+            <circle cx="512" cy="86" r="84" fill="#8a7a4d"/>
+            <circle cx="500" cy="74" r="46" fill="#e8d9a8"/>
+          </g>
+        </g>
+        <text x="468" y="218" class="svg-lbl s">Toon BSDF: faixas discretas (cel shading)</text>
+      </svg>
+      <figcaption>Fig. 7 — O Toon BSDF quantiza a resposta à luz em degraus, imitando a pintura chapada da animação 2D tradicional.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>O nó remapeia o lobo (difuso ou especular) para um cone de abertura controlada por <code>Size</code>, com transição de largura <code>Smooth</code> — efetivamente uma função-degrau sobre o ângulo. Não conserva energia nem obedece reciprocidade de forma significativa: é uma ferramenta de <em>non-photorealistic rendering</em> (NPR), tradição formalizada academicamente em trabalhos como o tone shading de Gooch et al. (1998)<sup class="ref"><a href="#r14">[14]</a></sup>.</p>
+      <p>Como reage a luzes reais da cena (diferente de truques com Shader to RGB no EEVEE), funciona com path tracing completo: as faixas aparecem em reflexos, GI e sombras suaves — um híbrido curioso de cartoon com iluminação global.</p>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Anime / cel shading</b><span>size baixo, smooth ≈ 0</span></div>
+      <div class="ex"><b>Ilustração técnica</b><span>2–3 bandas de tom</span></div>
+      <div class="ex"><b>Motion graphics flat</b><span>diffuse toon + cores sólidas</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<hr class="sep">
+<!-- ======================= TRANSPARENT ======================= -->
+<section id="transparent">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Transparent BSDF</h3><span class="chip">Transmissão · sem refração</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> transmissão direta (delta), sem desvio</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Faz a luz <strong>atravessar em linha reta</strong>, como se o objeto não existisse — sem dobrar, sem refletir, sem distorcer. Não é vidro! É a ferramenta para "furar" superfícies: folhas recortadas com textura alpha, cercas de tela, cabelo em cards, decalques, ou para fazer um objeto sumir parcialmente.</p>
+      <p>O truque clássico: misture <code>Transparent + Principled</code> num Mix Shader usando uma textura preto-e-branco como fator — onde a textura é preta, o objeto desaparece (alpha cutout de folha de árvore).</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 220" role="img" aria-label="Comparação: Transparent deixa a luz passar reta; Refraction dobra o raio segundo a lei de Snell">
+        <defs>
+          <marker id="t-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4fc3f7"/></marker>
+          <marker id="t-i" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+        </defs>
+        <!-- transparent -->
+        <rect x="120" y="60" width="120" height="120" fill="#4fc3f712" stroke="#4fc3f744" stroke-width="1.5"/>
+        <line x1="40" y1="80" x2="118" y2="118" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#t-i)"/>
+        <line x1="120" y1="119" x2="320" y2="216" stroke="#4fc3f7" stroke-width="2.5" stroke-dasharray="0" marker-end="url(#t-t)"/>
+        <text x="100" y="40" class="svg-tit">Transparent</text>
+        <text x="58" y="206" class="svg-lbl s">atravessa reto, sem desvio</text>
+        <!-- refraction -->
+        <rect x="520" y="60" width="120" height="120" fill="#4fc3f712" stroke="#4fc3f744" stroke-width="1.5"/>
+        <line x1="440" y1="80" x2="518" y2="118" stroke="#ffd54f" stroke-width="2.5" marker-end="url(#t-i)"/>
+        <line x1="520" y1="119" x2="636" y2="152" stroke="#4fc3f7" stroke-width="2.5"/>
+        <line x1="640" y1="153" x2="724" y2="196" stroke="#4fc3f7" stroke-width="2.5" marker-end="url(#t-t)"/>
+        <line x1="520" y1="119" x2="700" y2="206" stroke="#5a5e66" stroke-width="1.2" stroke-dasharray="3 5"/>
+        <text x="510" y="40" class="svg-tit">Refraction (IOR &gt; 1)</text>
+        <text x="470" y="212" class="svg-lbl s">dobra ao entrar e ao sair (Snell)</text>
+      </svg>
+      <figcaption>Fig. 8 — A diferença essencial: Transparent ignora a óptica (raio segue reto); Refraction aplica a lei de Snell e desvia o raio nas interfaces.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>É uma BTDF delta na direção exata de continuação do raio — no Cycles, o raio que a atravessa nem é contado como "bounce de transmissão" comum, mas como <em>transparent bounce</em> (limite próprio em <code>Light Paths → Transparent</code>). Isso a torna barata e estável para folhagem densa.</p>
+      <p>Com cor ≠ branco, age como um filtro de absorção sem refração (gel de iluminação). No EEVEE, exige configurar o <em>Blend Mode / Raytraced Transmission</em> do material para o alpha funcionar.</p>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Folhas e plantas</b><span>alpha cutout via Mix Shader</span></div>
+      <div class="ex"><b>Tela de cerca</b><span>textura de grade no fator</span></div>
+      <div class="ex"><b>Decalque / sticker</b><span>alpha do PNG no mix</span></div>
+      <div class="ex"><b>Gel de cor em luz</b><span>transparent colorido</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= REFRACTION ======================= -->
+<section id="refraction">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Refraction BSDF</h3><span class="chip">Transmissão · só refração</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> Snell + microfacetas de transmissão (Walter 2007)</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Só a <strong>metade "dobrar a luz"</strong> do vidro, sem o reflexo. É o motivo de o canudo parecer quebrado dentro do copo d'água: a luz muda de velocidade ao trocar de meio e entorta. <code>IOR</code> controla o quanto entorta; <code>Roughness</code> deixa a refração embaçada (vidro jateado, gelo fosco).</p>
+      <p>Sozinho ele parece "errado" (vidro sem nenhum reflexo). Na prática, serve como peça de montagem: junte com um Glossy via Fresnel para construir seu próprio vidro customizado.</p>
+    </div>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Implementa a BTDF de microfacetas de Walter et al. (2007)<sup class="ref"><a href="#r5">[5]</a></sup> — o mesmo paper do GGX — que generaliza Snell para superfícies rugosas refrativas: cada microfaceta refrata individualmente, e o roughness alarga o lobo transmitido.</p>
+      <p>Quando o raio tenta sair de um meio denso para um menos denso acima do <em>ângulo crítico</em> (<code>θc = arcsin(n₂/n₁)</code>; ~48.6° da água para o ar), ocorre <strong>reflexão interna total</strong> (TIR) — toda a luz reflete de volta. É a física da fibra óptica e do fundo "espelhado" da superfície da água vista de baixo; o Cycles simula isso automaticamente.</p>
+      <p>Atenção a normais: refração depende criticamente da orientação das normais e de geometria com espessura. Superfícies de face única produzem resultados estranhos porque o raio "entra" mas nunca "sai".</p>
+    </div>
+
+    <div class="tbl-wrap"><table class="tbl">
+      <tr><th>Material</th><th>IOR</th><th>Material</th><th>IOR</th></tr>
+      <tr><td>Ar</td><td>1.000</td><td>Vidro comum</td><td>1.45–1.52</td></tr>
+      <tr><td>Gelo</td><td>1.31</td><td>Safira</td><td>1.77</td></tr>
+      <tr><td>Água</td><td>1.333</td><td>Diamante</td><td>2.417</td></tr>
+      <tr><td>Álcool</td><td>1.36</td><td>Pele (efetivo)</td><td>~1.4</td></tr>
+    </table></div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= GLASS ======================= -->
+<section id="glass">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Glass BSDF</h3><span class="chip">Transmissão · reflexão + refração</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> Fresnel divide entre reflexão e refração</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O <strong>vidro completo</strong>: combina reflexo (Glossy) e refração (Refraction) e usa a física de Fresnel para decidir automaticamente a proporção de cada um conforme o ângulo. De frente, você vê através; de raspão, vê o reflexo — exatamente como uma vitrine.</p>
+      <p>Para vidro de janela, garrafa, copo, lente: este nó (ou o Transmission do Principled, que é equivalente) com IOR ≈ 1.45–1.52 e roughness 0. Para vidro fosco, suba o roughness.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 290" role="img" aria-label="Raio atinge bloco de vidro: parte reflete pela regra de Fresnel, parte refrata dobrando dentro do bloco e sai do outro lado; inclui reflexão interna total">
+        <defs>
+          <marker id="gl-i" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+          <marker id="gl-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff8a65"/></marker>
+          <marker id="gl-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4fc3f7"/></marker>
+        </defs>
+        <rect x="240" y="70" width="280" height="150" fill="#4fc3f70f" stroke="#4fc3f74d" stroke-width="1.5"/>
+        <text x="250" y="62" class="svg-lbl" fill="#4fc3f7">vidro (IOR 1.5)</text>
+        <!-- incidente -->
+        <line x1="90" y1="40" x2="236" y2="112" stroke="#ffd54f" stroke-width="3" marker-end="url(#gl-i)"/>
+        <text x="70" y="30" class="svg-lbl" fill="#ffd54f">raio incidente</text>
+        <!-- refletido (fresnel) -->
+        <line x1="242" y1="112" x2="368" y2="36" stroke="#ff8a65" stroke-width="2" marker-end="url(#gl-r)"/>
+        <text x="318" y="28" class="svg-lbl" fill="#ff8a65">~4–10% reflete (Fresnel)</text>
+        <!-- refratado dentro -->
+        <line x1="242" y1="114" x2="514" y2="186" stroke="#4fc3f7" stroke-width="2.6"/>
+        <!-- saída refratada -->
+        <line x1="518" y1="187" x2="688" y2="266" stroke="#4fc3f7" stroke-width="2.6" marker-end="url(#gl-t)"/>
+        <text x="560" y="248" class="svg-lbl" fill="#4fc3f7">sai e dobra de novo</text>
+        <!-- TIR interno -->
+        <line x1="518" y1="187" x2="430" y2="218" stroke="#4fc3f7" stroke-width="1.4" opacity=".55" stroke-dasharray="4 4" marker-end="url(#gl-t)"/>
+        <text x="318" y="246" class="svg-lbl s" opacity=".9">parte pode refletir por dentro (TIR)</text>
+        <!-- normal -->
+        <line x1="240" y1="112" x2="170" y2="78" stroke="#5a5e66" stroke-width="1.2" stroke-dasharray="3 4"/>
+      </svg>
+      <figcaption>Fig. 9 — No vidro, cada interface divide o raio: Fresnel decide a fração refletida vs. refratada a cada batida. Em ângulos rasantes a reflexão domina; acima do ângulo crítico (de dentro para fora) ocorre reflexão interna total.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>É a soma fisicamente acoplada da BRDF (Glossy) e BTDF (Refraction) de microfacetas, com pesos dados pelas equações de Fresnel para dielétricos — a divisão é feita por amostragem estocástica a cada interseção: o path tracer "sorteia" se aquele raio reflete ou refrata, com probabilidade proporcional a F.</p>
+      <ul>
+        <li><strong>Cáusticas:</strong> os focos de luz dançantes no fundo da piscina são caminhos luz→vidro→difuso, difíceis para path tracing unidirecional. O Cycles oferece <em>Shadow Caustics</em> (baseado em manifold next-event estimation) e os truques clássicos (luz com raio maior, filter glossy).</li>
+        <li><strong>Volume + superfície:</strong> a cor no input tinge a superfície de forma não-física; para vidro colorido correto, deixe Color branco e use <em>Volume Absorption</em> — a absorção passa a depender da espessura percorrida (lei de Beer–Lambert), como em vidro de garrafa real.</li>
+        <li><strong>Dispersão:</strong> o IOR real varia com o comprimento de onda (por isso o prisma separa o arco-íris). O nó usa um IOR único; dispersão exige truques (3 vidros com IORs por canal RGB) ou o recurso de dispersão espectral quando disponível.</li>
+      </ul>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Copo / garrafa</b><span>IOR 1.5, volume absorption p/ cor</span></div>
+      <div class="ex"><b>Água de piscina</b><span>IOR 1.33 + normais de ondas</span></div>
+      <div class="ex"><b>Vidro jateado</b><span>roughness 0.2–0.4</span></div>
+      <div class="ex"><b>Diamante</b><span>IOR 2.42 — brilho vem do TIR</span></div>
+    </div>
+    <div class="warn"><b>Modelagem importa:</b> vidro fino (janela) pode ser uma casca com espessura mínima ou usar truques "thin"; objetos sólidos (copo, lente) precisam de malha fechada com normais para fora, senão a refração distorce de forma irreal.</div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= TRANSLUCENT ======================= -->
+<section id="translucent">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Translucent BSDF</h3><span class="chip">Transmissão · difusa</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> transmissão lambertiana</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O irmão "do outro lado" do Diffuse: a luz atravessa o objeto, mas sai <strong>espalhada e embaralhada</strong> do lado oposto — você vê o brilho, mas não vê <em>através</em>. É uma folha de árvore contra o sol, papel vegetal, uma cúpula de abajur, a orelha de alguém contra a luz.</p>
+      <p>Receita clássica de folha: <code>Mix Shader</code> entre Diffuse (lado iluminado) e Translucent (luz vazando por trás), com a textura da folha nas duas cores.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 240" role="img" aria-label="Luz atinge uma lâmina fina e sai espalhada em hemisfério do lado oposto">
+        <defs>
+          <marker id="tr-i" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+          <marker id="tr-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#aed581"/></marker>
+        </defs>
+        <rect x="368" y="40" width="22" height="170" fill="#5a7a3a55" stroke="#7d9a5a" stroke-width="1.5"/>
+        <text x="332" y="32" class="svg-lbl" fill="#9bbf72">lâmina fina (folha)</text>
+        <line x1="150" y1="70" x2="364" y2="122" stroke="#ffd54f" stroke-width="3" marker-end="url(#tr-i)"/>
+        <text x="130" y="58" class="svg-lbl" fill="#ffd54f">sol por trás</text>
+        <g stroke="#aed581" stroke-width="1.8">
+          <line x1="392" y1="124" x2="520" y2="64" marker-end="url(#tr-t)"/>
+          <line x1="392" y1="124" x2="560" y2="100" marker-end="url(#tr-t)"/>
+          <line x1="392" y1="124" x2="572" y2="138" marker-end="url(#tr-t)"/>
+          <line x1="392" y1="124" x2="548" y2="176" marker-end="url(#tr-t)"/>
+          <line x1="392" y1="124" x2="500" y2="196" marker-end="url(#tr-t)"/>
+        </g>
+        <text x="492" y="222" class="svg-lbl s">sai difusa do lado oposto — brilho sem imagem</text>
+      </svg>
+      <figcaption>Fig. 10 — Transmissão difusa: o hemisfério de saída fica do lado oposto ao da luz, mas com distribuição lambertiana — a informação direcional se perde (por isso não dá para "ver através").</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>É literalmente <code>f = albedo/π</code> rebatida para o hemisfério inferior — uma BTDF lambertiana. É a aproximação de "lâmina fina" do subsurface scattering: assume que o material é fino o bastante para a luz atravessar com um único evento de espalhamento agregado, sem simular o caminho interno.</p>
+      <p>Quando usar Translucent vs. SSS: se o objeto é <em>fino</em> (folha, papel, cortina, abajur), Translucent é mais barato e visualmente idêntico; se é <em>volumoso</em> (pele, cera, mármore), a luz percorre distâncias internas variáveis e só o SSS captura o gradiente de profundidade.</p>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Folha contra o sol</b><span>diffuse + translucent mix</span></div>
+      <div class="ex"><b>Papel / lampshade</b><span>translucent quase puro</span></div>
+      <div class="ex"><b>Cortina fina</b><span>mix com transparent</span></div>
+      <div class="ex"><b>Pétala de flor</b><span>translucent saturado</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<hr class="sep">
+<!-- ======================= SSS ======================= -->
+<section id="sss">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Subsurface Scattering (SSS)</h3><span class="chip">Espalhamento · volume raso</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> BSSRDF — difusão / random walk dentro do material</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Em materiais como <strong>pele, cera, leite, mármore e uvas</strong>, a luz não para na superfície: ela <em>entra</em>, ricocheteia por dentro e sai em outro ponto, alguns milímetros adiante. É por isso que seus dedos ficam vermelhos quando você cobre uma lanterna com a mão — a luz atravessou a carne e saiu tingida de sangue.</p>
+      <p>O resultado visual: sombras "macias" e quentes, bordas que parecem brilhar, e aquela sensação de material orgânico/vivo. Sem SSS, pele parece plástico ou gesso.</p>
+      <p>O controle principal é o <code>Radius</code>: a distância média (em metros!) que a luz viaja por dentro, separada por canal R/G/B. Para pele, o vermelho viaja mais longe que o verde e o azul — o padrão (1.0, 0.2, 0.1) imita isso.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 280" role="img" aria-label="Random walk: o raio entra no material, ricocheteia várias vezes por dentro e sai em um ponto diferente da superfície">
+        <defs>
+          <marker id="ss-i" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+          <marker id="ss-o" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ef9a9a"/></marker>
+        </defs>
+        <line x1="60" y1="120" x2="700" y2="120" stroke="#5a5e66" stroke-width="2.5"/>
+        <rect x="60" y="122" width="640" height="130" fill="#7a3a3a14"/>
+        <text x="66" y="110" class="svg-tit">superfície (pele)</text>
+        <text x="66" y="246" class="svg-lbl s">interior: a luz é espalhada e absorvida a cada passo</text>
+        <!-- entrada -->
+        <line x1="170" y1="40" x2="296" y2="116" stroke="#ffd54f" stroke-width="3" marker-end="url(#ss-i)"/>
+        <text x="140" y="32" class="svg-lbl" fill="#ffd54f">luz entra aqui</text>
+        <!-- caminho aleatório -->
+        <polyline points="300,120 330,168 372,148 392,196 446,178 462,216 510,188 528,150 562,170 578,126" fill="none" stroke="#ef9a9a" stroke-width="2.2" stroke-linejoin="round" opacity=".95"/>
+        <g fill="#ef9a9a">
+          <circle cx="330" cy="168" r="3"/><circle cx="372" cy="148" r="3"/><circle cx="392" cy="196" r="3"/>
+          <circle cx="446" cy="178" r="3"/><circle cx="462" cy="216" r="3"/><circle cx="510" cy="188" r="3"/>
+          <circle cx="528" cy="150" r="3"/><circle cx="562" cy="170" r="3"/>
+        </g>
+        <!-- saída -->
+        <line x1="578" y1="120" x2="652" y2="44" stroke="#ef9a9a" stroke-width="2.6" marker-end="url(#ss-o)"/>
+        <text x="586" y="34" class="svg-lbl" fill="#ef9a9a">...e sai aqui, mais fraca e tingida</text>
+        <!-- raio -->
+        <line x1="300" y1="120" x2="578" y2="120" stroke="#5a5e66" stroke-width="1" stroke-dasharray="3 5"/>
+        <text x="380" y="106" class="svg-lbl s">distância entrada→saída ~ Radius</text>
+      </svg>
+      <figcaption>Fig. 11 — Random walk: cada segmento é um voo livre até o próximo evento de espalhamento; a cada passo parte da energia é absorvida (Beer–Lambert). Canais R/G/B percorrem distâncias diferentes — daí o tom avermelhado da luz que sai da pele.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Tecnicamente isto não é uma BSDF, e sim uma <strong>BSSRDF</strong> (Bidirectional Scattering-Surface Reflectance Distribution Function): a função depende de <em>dois pontos</em> da superfície (entrada e saída), não só de duas direções. Os métodos no Blender:</p>
+      <ul>
+        <li><strong>Christensen–Burley:</strong> perfil de difusão analítico aproximado (Disney/Pixar, 2015)<sup class="ref"><a href="#r16">[16]</a></sup>, herdeiro do modelo dipolo de Jensen et al. (2001)<sup class="ref"><a href="#r15">[15]</a></sup> — o paper que tornou pele digital viável (Oscar técnico em 2004). Rápido, mas assume superfície localmente plana e semi-infinita.</li>
+        <li><strong>Random Walk:</strong> path tracing volumétrico real por dentro da malha (na linha de Wrenninge et al., Pixar 2017<sup class="ref"><a href="#r17">[17]</a></sup>): respeita geometria fina, cantos e contra-luz corretamente. Padrão atual no Cycles.</li>
+        <li><strong>Random Walk (Skin):</strong> variante com entrada/saída modeladas para o IOR da pele e melhor comportamento em raios rasantes.</li>
+      </ul>
+      <p>Parâmetros físicos por trás: coeficiente de espalhamento σs, de absorção σa e anisotropia de fase g (Henyey–Greenstein<sup class="ref"><a href="#r22">[22]</a></sup>; o input <em>Anisotropy</em> do nó). O <code>Radius</code> do nó equivale ao livre caminho médio efetivo por canal. <code>Scale</code> multiplica o radius — ajuste-o à escala real da cena (SSS é dos poucos shaders sensíveis a unidades!).</p>
+    </div>
+
+    <div class="tbl-wrap"><table class="tbl">
+      <tr><th>Material real</th><th>Radius R/G/B aproximado (m)</th></tr>
+      <tr><td>Pele clara</td><td>0.0048 / 0.0017 / 0.0010 (≈ preset 1.0/0.2/0.1 com scale ~0.005)</td></tr>
+      <tr><td>Leite integral</td><td>~0.009 / 0.011 / 0.012 — espalha muito e quase não absorve (por isso é branco)</td></tr>
+      <tr><td>Mármore</td><td>~0.008 / 0.008 / 0.006</td></tr>
+      <tr><td>Cera de vela</td><td>radius alto e uniforme — brilho profundo amarelado</td></tr>
+    </table></div>
+
+    <div class="tip"><b>Diagnóstico rápido:</b> personagem parecendo boneco de cera? Radius grande demais para a escala. Pele parecendo gesso? SSS de menos ou cena fora de escala real (verifique se o modelo tem o tamanho certo em metros).</div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= HAIR ======================= -->
+<section id="hair">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Hair BSDF &amp; Principled Hair BSDF</h3><span class="chip">Espalhamento · fibras</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles</span><span><b>Física:</b> Marschner R/TT/TRT · Chiang 2016 · Huang 2022</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Cabelo não é uma "superfície" — é um <strong>cilindro transparente</strong> minúsculo, cheio de pigmento e coberto de escaminhas (cutículas). A luz pode quicar na casca, atravessar o fio, ou ricochetear por dentro e voltar. Esses caminhos criam os dois brilhos distintos do cabelo real: um highlight branco e nítido, e um segundo brilho mais baixo, colorido e suave.</p>
+      <p>Na prática, use o <strong>Principled Hair BSDF</strong>: ele permite colorir o cabelo do jeito que a natureza faz — por quantidade de <code>Melanin</code> (0 = loiro platinado/branco, 0.2–0.5 = loiro a castanho, 0.8–1 = preto) e <code>Melanin Redness</code> (ruivo). O Hair BSDF antigo é um componente isolado (só reflexo ou só transmissão) para montagens manuais.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 280" role="img" aria-label="Seção transversal de um fio de cabelo com os três caminhos de luz: R reflexão na casca, TT atravessa, TRT reflete por dentro e volta">
+        <defs>
+          <marker id="h-i" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd54f"/></marker>
+          <marker id="h-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff8a65"/></marker>
+          <marker id="h-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4fc3f7"/></marker>
+          <marker id="h-q" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ce93d8"/></marker>
+        </defs>
+        <circle cx="380" cy="150" r="100" fill="#6b4a2a33" stroke="#8a6a44" stroke-width="3"/>
+        <circle cx="380" cy="150" r="100" fill="none" stroke="#a8845c" stroke-width="1" stroke-dasharray="6 5" opacity=".7"/>
+        <text x="330" y="150" class="svg-lbl" fill="#c9a87a">córtex com</text>
+        <text x="334" y="166" class="svg-lbl" fill="#c9a87a">melanina</text>
+        <!-- incidente -->
+        <line x1="100" y1="50" x2="298" y2="116" stroke="#ffd54f" stroke-width="3" marker-end="url(#h-i)"/>
+        <text x="86" y="40" class="svg-lbl" fill="#ffd54f">luz</text>
+        <!-- R -->
+        <line x1="304" y1="114" x2="430" y2="20" stroke="#ff8a65" stroke-width="2.4" marker-end="url(#h-r)"/>
+        <text x="438" y="22" class="svg-lbl" fill="#ff8a65">R — reflexo na cutícula (highlight branco)</text>
+        <!-- TT -->
+        <line x1="304" y1="118" x2="466" y2="178" stroke="#4fc3f7" stroke-width="2.2"/>
+        <line x1="470" y1="180" x2="600" y2="236" stroke="#4fc3f7" stroke-width="2.2" marker-end="url(#h-t)"/>
+        <text x="560" y="258" class="svg-lbl" fill="#4fc3f7">TT — atravessa (brilho de contraluz)</text>
+        <!-- TRT -->
+        <line x1="466" y1="178" x2="408" y2="246" stroke="#ce93d8" stroke-width="2" opacity=".9"/>
+        <line x1="406" y1="246" x2="282" y2="226" stroke="#ce93d8" stroke-width="2" opacity=".9"/>
+        <line x1="280" y1="225" x2="180" y2="262" stroke="#ce93d8" stroke-width="2.2" marker-end="url(#h-q)"/>
+        <text x="64" y="278" class="svg-lbl" fill="#ce93d8">TRT — ricocheteia por dentro e volta (brilho colorido)</text>
+      </svg>
+      <figcaption>Fig. 12 — Os modos de Marschner (2003): R (reflexão), TT (transmissão dupla) e TRT (transmissão–reflexão interna–transmissão). O TRT é tingido pela melanina — é o brilho secundário, colorido e deslocado, do cabelo real.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>A base é Marschner et al. (2003)<sup class="ref"><a href="#r18">[18]</a></sup>, que mediu fios reais e decompôs o espalhamento nos modos R/TT/TRT, incluindo o deslocamento angular dos highlights causado pela inclinação (~2–3°) das escamas da cutícula — por isso os dois brilhos não coincidem no fio real. O Principled Hair oferece dois modelos:</p>
+      <ul>
+        <li><strong>Chiang et al. (2016)</strong><sup class="ref"><a href="#r19">[19]</a></sup> — o modelo da Disney (Zootopia): energia-conservante, com importance sampling exato e a reparametrização intuitiva de roughness/azimuthal roughness usada nos sliders.</li>
+        <li><strong>Huang et al. (2022)</strong><sup class="ref"><a href="#r20">[20]</a></sup> — modelo de microfacetas com seção transversal <strong>elíptica</strong>: cabelo humano real não é um cilindro perfeito (a elipticidade é o que diferencia cabelo liso de cacheado e muda o brilho), disponível no Blender 4.x para curvas.</li>
+      </ul>
+      <p>A coloração por melanina segue as concentrações de eumelanina (marrom/preto) e feomelanina (avermelhada) convertidas em coeficientes de absorção — d'Eon et al. (2011)<sup class="ref"><a href="#r21">[21]</a></sup> tabularam essa conversão. <code>Random Color/Roughness</code> variam fios individualmente (cabelo real nunca é uniforme), e <code>Coat</code> simula a camada extra de cutícula de pelos de animais.</p>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Loiro platinado</b><span>melanin ≈ 0.05</span></div>
+      <div class="ex"><b>Ruivo</b><span>melanin 0.3 + redness 0.9</span></div>
+      <div class="ex"><b>Preto azulado</b><span>melanin ≈ 1.0, tint frio</span></div>
+      <div class="ex"><b>Pelo de animal</b><span>coat alto + random color</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<hr class="sep">
+<!-- ======================= PRINCIPLED ======================= -->
+<section id="principled">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Principled BSDF</h3><span class="chip">Tudo-em-um · PBR</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles + EEVEE</span><span><b>Física:</b> "über-shader" baseado no OpenPBR / modelo Disney</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O <strong>canivete suíço</strong> — e o nó padrão de todo material novo. Ele empilha quase todos os outros BSDFs deste guia em camadas pré-conectadas e fisicamente coerentes, controladas por sliders simples. Para ~95% dos materiais, é o único nó de shader que você precisa.</p>
+      <p>Mapa mental dos sliders principais:</p>
+      <ul>
+        <li><code>Base Color</code> — a cor do material (a textura albedo entra aqui).</li>
+        <li><code>Metallic</code> — 0 = dielétrico (plástico, madeira, pele), 1 = metal. Quase sempre use só 0 ou 1; valores intermediários representam mistura de pixels metal/não-metal em texturas.</li>
+        <li><code>Roughness</code> — polido (0) ↔ fosco (1). O slider mais importante do realismo.</li>
+        <li><code>IOR</code> — controla a força do reflexo dielétrico e a refração (1.45 padrão ≈ plástico/vidro).</li>
+        <li><code>Transmission</code> — 1 transforma o material em vidro.</li>
+        <li><code>Alpha</code> — transparência tipo "recorte" (ligado à textura alpha).</li>
+        <li>Grupos: <code>Subsurface</code> (pele/cera), <code>Coat</code> (verniz de pintura de carro), <code>Sheen</code> (tecido), <code>Emission</code> (telas/neon), <code>Thin Film</code> (iridescência de bolha de sabão).</li>
+      </ul>
+      <p>O fluxo de trabalho PBR de texturas (Substance Painter, Quixel, ambientCG…) mapeia 1:1: Base Color → Base Color, Roughness → Roughness, Metallic → Metallic, Normal → Normal (via nó Normal Map).</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 760 300" role="img" aria-label="Diagrama de camadas do Principled BSDF: base difusa ou metal ou vidro, camada especular, sheen, coat e emissão empilhadas">
+        <g font-family="'JetBrains Mono',monospace" font-size="11.5">
+          <rect x="120" y="226" width="520" height="40" rx="6" fill="#4a3a2a" stroke="#6a5a44"/>
+          <text x="138" y="250" fill="#e0cfb0">BASE — mistura: difuso+SSS (dielétrico) · metal · transmissão (vidro)</text>
+          <rect x="140" y="180" width="480" height="36" rx="6" fill="#27405a" stroke="#3a5878"/>
+          <text x="158" y="203" fill="#b9d4ee">ESPECULAR dielétrico — Fresnel pelo IOR (sobre o difuso/SSS)</text>
+          <rect x="160" y="136" width="440" height="34" rx="6" fill="#3a4a2a" stroke="#56683f"/>
+          <text x="178" y="158" fill="#cfe2b3">SHEEN — microfibras/poeira (rasante)</text>
+          <rect x="180" y="92" width="400" height="34" rx="6" fill="#4a2a3f" stroke="#6a4259"/>
+          <text x="198" y="114" fill="#e6bcd4">COAT — verniz transparente com IOR próprio</text>
+          <rect x="200" y="48" width="360" height="34" rx="6" fill="#5a4a1f" stroke="#7c6a35"/>
+          <text x="218" y="70" fill="#f0dfa0">EMISSION — luz própria, somada por cima</text>
+        </g>
+        <g class="svg-lbl s">
+          <text x="120" y="290">↑ cada camada filtra e cobre a de baixo de forma fisicamente coerente (conservação de energia entre camadas)</text>
+        </g>
+      </svg>
+      <figcaption>Fig. 13 — O Principled é um shader em camadas: a luz atravessa coat → sheen → especular antes de chegar à base, e o modelo desconta a energia consumida em cada etapa.</figcaption>
+    </figure>
+
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>A linhagem: Burley (2012)<sup class="ref"><a href="#r23">[23]</a></sup> apresentou o "Disney principled shader" — <em>principled</em> porque seguiu princípios de design (parâmetros perceptuais de 0 a 1, poucos e robustos, fisicamente plausíveis) em vez de expor a matemática crua aos artistas. O Blender adotou a ideia em 2017 e, a partir do 4.x, realinhou o nó ao <strong>OpenPBR Surface</strong><sup class="ref"><a href="#r11">[11]</a></sup>, a especificação aberta (Academy Software Foundation/Adobe/Autodesk) que padroniza o über-shader entre softwares — por isso os parâmetros hoje batem com os de outros renderizadores.</p>
+      <ul>
+        <li><strong>Estrutura interna:</strong> a base é um mix estatístico entre três componentes (metal condutor F82, dielétrico difuso/Oren–Nayar + SSS random walk, e transmissão microfacetada tipo Glass), coberto por slabs de especular GGX Multiscatter, sheen LTC e coat com absorção própria.</li>
+        <li><strong>Specular IOR Level:</strong> reparametrização do F0 dielétrico (0.5 ↔ IOR efetivo do slider IOR); valores de textura "specular" do fluxo PBR antigo entram aqui.</li>
+        <li><strong>Thin Film:</strong> interferência de filme fino (espessura em nm + IOR do filme) para iridescência física de bolhas, óleo sobre água e revestimentos — fenômeno de interferência de ondas que BSDFs clássicas não capturam.</li>
+        <li><strong>Coat físico:</strong> além de adicionar um lobo especular, escurece e satura a base (absorção de Beer–Lambert no verniz) — comportamento de tinta automotiva real.</li>
+      </ul>
+    </div>
+
+    <div class="realw">
+      <div class="ex"><b>Plástico</b><span>metallic 0, roughness 0.2–0.5</span></div>
+      <div class="ex"><b>Pintura de carro</b><span>base metálica + coat 1.0</span></div>
+      <div class="ex"><b>Pele</b><span>subsurface weight + radius de pele</span></div>
+      <div class="ex"><b>Bolha de sabão</b><span>transmission 1 + thin film</span></div>
+    </div>
+
+    <div class="tip"><b>Princípio PBR nº 1:</b> realismo mora nas <em>variações de roughness</em>. Materiais reais nunca têm roughness uniforme — impressões digitais, poeira, desgaste. Uma textura de roughness (mesmo um simples noise sutil) faz mais pelo realismo do que qualquer outro ajuste.</div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= RAY PORTAL ======================= -->
+<section id="rayportal">
+<div class="node">
+  <div class="node-head"><span class="sock"></span><h3>Ray Portal BSDF</h3><span class="chip">Especial · não-físico</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Motores:</b> Cycles (Blender 4.2+)</span><span><b>Física:</b> nenhuma — teletransporte de raios</span></div>
+
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>O nó mais "mágico" da lista: quando um raio toca a superfície, ele é <strong>teletransportado</strong> para outra posição e direção da cena, que você fornece nos inputs. É literalmente um portal estilo o jogo <em>Portal</em>: olhe por um anel e veja o que está do outro lado da cena — com reflexos, sombras e GI funcionando através dele.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Os inputs <code>Position</code> e <code>Direction</code> (tipicamente alimentados por Texture Coordinate/Mapping de um objeto-alvo) redefinem a origem e direção do raio em coordenadas de mundo. Usos de produção: portais/wormholes, renderizar "através" de paredes, efeitos de não-euclidianidade, periscópios e composições impossíveis. Como subverte a geometria do transporte de luz, não conserva energia nem reciprocidade — é uma ferramenta de direção de arte, não de física.</p>
+    </div>
+    <div class="realw">
+      <div class="ex"><b>Portais de VFX</b><span>par de aros conectados</span></div>
+      <div class="ex"><b>Espaço impossível</b><span>corredores não-euclidianos</span></div>
+      <div class="ex"><b>Espelho "mentiroso"</b><span>reflexo de outra cena</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= COMPANHEIROS ======================= -->
+<section id="companheiros">
+  <div class="sec-head"><span class="idx">03</span><h2>Nós companheiros (que não são BSDFs)</h2></div>
+  <p class="sec-sub">Aparecem no mesmo menu <code>Add → Shader</code>, mas descrevem outras coisas que não a resposta direcional de uma superfície:</p>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Nó</th><th>O que é de verdade</th><th>Uso típico</th></tr>
+    <tr><td>Emission</td><td>Fonte de luz, não espalhamento — é o termo Le da equação de renderização.</td><td>Neon, telas, lâmpadas, lava.</td></tr>
+    <tr><td>Mix Shader</td><td>Interpolação estatística entre duas BSDFs (cada raio sorteia uma).</td><td>Misturar molhado/seco, alpha cutout.</td></tr>
+    <tr><td>Add Shader</td><td>Soma de BSDFs — pode <em>violar conservação de energia</em>; use com critério.</td><td>Efeitos estilizados, emissão + superfície.</td></tr>
+    <tr><td>Holdout</td><td>"Buraco" no render: alpha 0 para composição.</td><td>Recortar área para inserir filmagem real.</td></tr>
+    <tr><td>Volume Scatter / Absorption / Principled Volume</td><td>Funções de fase (VDF) para participação volumétrica — espalhamento <em>dentro</em> de um volume, governado por Henyey–Greenstein<sup class="ref"><a href="#r22">[22]</a></sup>, não em uma superfície.</td><td>Névoa, fumaça, god rays, vidro colorido espesso.</td></tr>
+  </table></div>
+</section>
+
+<hr class="sep">
+
+<!-- ======================= TABELA ======================= -->
+<section id="tabela">
+  <div class="sec-head"><span class="idx">04</span><h2>Tabela comparativa</h2></div>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>BSDF</th><th>Destino da luz</th><th>Modelo físico</th><th>Exemplo real</th><th>Motor</th></tr>
+    <tr><td>Diffuse</td><td>Reflete espalhado uniforme</td><td>Lambert / Oren–Nayar</td><td>Giz, argila, Lua</td><td>C + E</td></tr>
+    <tr><td>Glossy</td><td>Reflete em lobo especular</td><td>Microfacetas GGX/Beckmann</td><td>Espelho, metal escovado</td><td>C + E</td></tr>
+    <tr><td>Metallic</td><td>Reflete com Fresnel de condutor</td><td>n+ik / F82-tint</td><td>Ouro, cobre, prata</td><td>C (4.3+)</td></tr>
+    <tr><td>Sheen</td><td>Retro-reflete no rasante</td><td>Microflakes/LTC (Zeltner 2022)</td><td>Veludo, pêssego, poeira</td><td>C</td></tr>
+    <tr><td>Toon</td><td>Reflete em faixas discretas</td><td>NPR (não-físico)</td><td>Anime, cel shading</td><td>C</td></tr>
+    <tr><td>Transparent</td><td>Atravessa reto</td><td>Delta (não refrata)</td><td>Recorte alpha de folha</td><td>C + E</td></tr>
+    <tr><td>Refraction</td><td>Atravessa dobrando</td><td>Snell + Walter 2007</td><td>Canudo "quebrado" no copo</td><td>C + E</td></tr>
+    <tr><td>Glass</td><td>Divide: reflete + refrata</td><td>Fresnel dielétrico completo</td><td>Copo, janela, diamante</td><td>C + E</td></tr>
+    <tr><td>Translucent</td><td>Atravessa e sai difusa</td><td>BTDF lambertiana</td><td>Folha contra o sol, papel</td><td>C + E</td></tr>
+    <tr><td>Subsurface</td><td>Entra, passeia, sai adiante</td><td>BSSRDF / random walk</td><td>Pele, cera, leite, mármore</td><td>C + E</td></tr>
+    <tr><td>Hair / Princ. Hair</td><td>R / TT / TRT em fibra</td><td>Marschner · Chiang · Huang</td><td>Cabelo, pelo, fibras</td><td>C</td></tr>
+    <tr><td>Principled</td><td>Todos acima, em camadas</td><td>OpenPBR / Disney</td><td>~95% dos materiais</td><td>C + E</td></tr>
+    <tr><td>Ray Portal</td><td>Teletransporta o raio</td><td>Nenhum (direção de arte)</td><td>Portais, VFX</td><td>C (4.2+)</td></tr>
+  </table></div>
+</section>
+
+<!-- ======================= QUAL USAR ======================= -->
+<section id="qual-usar">
+  <div class="sec-head"><span class="idx">05</span><h2>Na dúvida, qual usar?</h2></div>
+  <div class="prose">
+    <p><strong>Comece sempre pelo Principled BSDF.</strong> Ele cobre plástico, metal, vidro, pele, tecido, madeira e tudo entre eles, com física correta e compatibilidade com texturas PBR. Os nós individuais entram em cena por três motivos:</p>
+    <p><strong>1 · Performance:</strong> em cenas pesadas (folhagem, multidões), um Diffuse ou Translucent simples renderiza mais rápido que um Principled completo. <strong>2 · Controle artístico:</strong> montar seu próprio vidro (Refraction + Glossy + Fresnel), um tecido em camadas, ou efeitos NPR com Toon exige as peças soltas. <strong>3 · Recursos exclusivos:</strong> cabelo (Principled Hair), portais (Ray Portal) e cel shading (Toon) não existem dentro do Principled.</p>
+    <p>Uma heurística de observação que vale mais do que decorar nós: olhe para o material real e pergunte — <em>a luz para na superfície ou entra?</em> Se para: é jogo de difuso + especular (roughness é tudo). Se entra e sai do outro lado: transmissão (fina → Translucent; com imagem → Glass). Se entra e sai <em>do mesmo lado, deslocada</em>: subsurface. Se é fibra: hair. Treine esse olhar no mundo real — caneca, vela, cortina, anel — e os parâmetros do Blender viram descrição, não chute.</p>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- ======================= REFERÊNCIAS ======================= -->
+<section id="referencias">
+  <div class="sec-head"><span class="idx">06</span><h2>Referências científicas</h2></div>
+  <ol class="bib">
+    <li id="r1"><b>Nicodemus, F. E. et al.</b> (1977). <span class="where">Geometrical Considerations and Nomenclature for Reflectance.</span> NBS Monograph 160, National Bureau of Standards. — Definição formal da BRDF.</li>
+    <li id="r2"><b>Kajiya, J. T.</b> (1986). <span class="where">The Rendering Equation.</span> SIGGRAPH '86. — A equação integral que todo path tracer resolve.</li>
+    <li id="r3"><b>Rashed, R.</b> (1990). <span class="where">A Pioneer in Anaclastics: Ibn Sahl on Burning Mirrors and Lenses.</span> Isis, 81(3). — A "lei de Snell" registrada em 984 d.C.</li>
+    <li id="r4"><b>Cook, R. L.; Torrance, K. E.</b> (1982). <span class="where">A Reflectance Model for Computer Graphics.</span> ACM TOG 1(1). — A BRDF de microfacetas D·F·G; base de Torrance &amp; Sparrow (1967, JOSA).</li>
+    <li id="r5"><b>Walter, B.; Marschner, S.; Li, H.; Torrance, K.</b> (2007). <span class="where">Microfacet Models for Refraction through Rough Surfaces.</span> EGSR 2007. — Popularizou o GGX e definiu a BTDF rugosa do Refraction/Glass.</li>
+    <li id="r6"><b>Heitz, E.; Hanika, J.; d'Eon, E.; Dachsbacher, C.</b> (2016). <span class="where">Multiple-Scattering Microfacet BSDFs with the Smith Model.</span> ACM TOG 35(4). — Base do Multiscatter GGX.</li>
+    <li id="r7"><b>Lambert, J. H.</b> (1760). <span class="where">Photometria, sive de mensura et gradibus luminis, colorum et umbrae.</span> — A lei do cosseno da reflexão difusa.</li>
+    <li id="r8"><b>Oren, M.; Nayar, S. K.</b> (1994). <span class="where">Generalization of Lambert's Reflectance Model.</span> SIGGRAPH '94. — Difuso rugoso; explica o aspecto chapado da Lua cheia.</li>
+    <li id="r9"><b>Ward, G. J.</b> (1992). <span class="where">Measuring and Modeling Anisotropic Reflection.</span> SIGGRAPH '92. — Reflexão anisotrópica (metais escovados).</li>
+    <li id="r10"><b>Gulbrandsen, O.</b> (2014). <span class="where">Artist Friendly Metallic Fresnel.</span> Journal of Computer Graphics Techniques, 3(4). — Parametrização artística do Fresnel de condutores.</li>
+    <li id="r11"><b>Andersson, Z. et al.</b> (2024). <span class="where">OpenPBR Surface Specification.</span> Academy Software Foundation / Adobe / Autodesk. — A especificação por trás do Principled BSDF do Blender 4.x+ (inclui o modelo F82-tint de Kutz, Hašan &amp; Edmondson).</li>
+    <li id="r12"><b>Conty Estevez, A.; Kulla, C.</b> (2017). <span class="where">Production Friendly Microfacet Sheen BRDF.</span> SIGGRAPH 2017 Talks (Sony Imageworks).</li>
+    <li id="r13"><b>Zeltner, T.; Burley, B.; Chiang, M. J.-Y.</b> (2022). <span class="where">Practical Multiple-Scattering Sheen Using Linearly Transformed Cosines.</span> SIGGRAPH 2022 Talks (Disney). — O modelo do Sheen BSDF atual.</li>
+    <li id="r14"><b>Gooch, A. et al.</b> (1998). <span class="where">A Non-Photorealistic Lighting Model for Automatic Technical Illustration.</span> SIGGRAPH '98. — Fundamento acadêmico do tone/cel shading.</li>
+    <li id="r15"><b>Jensen, H. W.; Marschner, S.; Levoy, M.; Hanrahan, P.</b> (2001). <span class="where">A Practical Model for Subsurface Light Transport.</span> SIGGRAPH 2001. — O modelo dipolo de SSS (Oscar técnico 2004).</li>
+    <li id="r16"><b>Christensen, P. H.; Burley, B.</b> (2015). <span class="where">Approximate Reflectance Profiles for Efficient Subsurface Scattering.</span> Pixar Technical Memo 15-04.</li>
+    <li id="r17"><b>Wrenninge, M.; Villemin, R.; Hery, C.</b> (2017). <span class="where">Path Traced Subsurface Scattering using Anisotropic Phase Functions and Non-Exponential Free Flights.</span> Pixar Technical Memo 17-07. — A família "random walk".</li>
+    <li id="r18"><b>Marschner, S. et al.</b> (2003). <span class="where">Light Scattering from Human Hair Fibers.</span> ACM TOG 22(3). — Os modos R/TT/TRT do cabelo.</li>
+    <li id="r19"><b>Chiang, M. J.-Y. et al.</b> (2016). <span class="where">A Practical and Controllable Hair and Fur Model for Production Path Tracing.</span> Computer Graphics Forum 35(2) (Disney).</li>
+    <li id="r20"><b>Huang, W.; Hullin, M. B.; Hanika, J.</b> (2022). <span class="where">A Microfacet-based Hair Scattering Model.</span> Computer Graphics Forum 41(4). — Fibras elípticas; modelo "Huang" do Blender 4.x.</li>
+    <li id="r21"><b>d'Eon, E. et al.</b> (2011). <span class="where">An Energy-Conserving Hair Reflectance Model.</span> EGSR 2011. — Inclui a parametrização por melanina.</li>
+    <li id="r22"><b>Henyey, L. G.; Greenstein, J. L.</b> (1941). <span class="where">Diffuse Radiation in the Galaxy.</span> Astrophysical Journal 93. — A função de fase usada em volumes e na anisotropia do SSS.</li>
+    <li id="r23"><b>Burley, B.</b> (2012). <span class="where">Physically-Based Shading at Disney.</span> SIGGRAPH 2012 Course: Practical Physically Based Shading. — O shader "principled" original.</li>
+  </ol>
+  <p style="margin-top:18px;color:var(--muted);font-size:14px">Documentação oficial: <a href="https://docs.blender.org/manual/en/latest/render/shader_nodes/shader/index.html">Blender Manual — Shader Nodes</a> · <a href="https://academysoftwarefoundation.github.io/OpenPBR/">OpenPBR Specification</a> · dados ópticos de metais em <a href="https://refractiveindex.info">refractiveindex.info</a>.</p>
+</section>
+
+<footer>
+  <p>Guia escrito com base no manual do Blender (série 4.x/5.x — Cycles e EEVEE) e na literatura citada. Os nomes de nós e parâmetros referem-se ao Blender 4.2+; versões antigas podem ter nós hoje aposentados (Velvet → Sheen; Anisotropic → Glossy). Os diagramas são esquemáticos: ângulos e proporções foram exagerados para clareza didática.</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>
