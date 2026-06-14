@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apostila de Rigging no Blender 5.x — do zero ao avançado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F6F4EE;
+  --tinta:#1C1B18;
+  --tinta-suave:#52504A;
+  --laranja:#E87D0D;       /* laranja Blender — seleção ativa */
+  --laranja-escuro:#B85F04;
+  --osso:#8FA8C8;          /* azul-osso do viewport */
+  --osso-escuro:#3D5A80;
+  --ik:#D9A404;            /* amarelo de cadeia IK em Pose Mode */
+  --verde:#4E7C3A;
+  --vermelho:#B3402E;
+  --linha:#D9D4C7;
+  --cartao:#FFFFFF;
+  --code-bg:#26241F;
+  --code-fg:#EDE9DD;
+  --sombra:0 1px 3px rgba(28,27,24,.08), 0 8px 24px rgba(28,27,24,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{
+  background:var(--papel);
+  color:var(--tinta);
+  font-family:"Source Serif 4", Georgia, serif;
+  font-size:17px;
+  line-height:1.65;
+}
+::selection{background:var(--laranja);color:#fff}
+
+/* ===== layout geral: sidebar + conteúdo ===== */
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+.sidebar{
+  border-right:1px solid var(--linha);
+  background:linear-gradient(180deg,#F1EEE6,#F6F4EE 240px);
+  padding:28px 22px 48px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.sidebar h2{
+  font-family:"Archivo",sans-serif;font-stretch:90%;
+  font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tinta-suave);margin:26px 0 10px;
+}
+.sidebar nav a{
+  display:block;text-decoration:none;color:var(--tinta-suave);
+  font-family:"Archivo",sans-serif;font-size:.84rem;line-height:1.35;
+  padding:5px 8px 5px 14px;border-left:2px solid transparent;border-radius:0 6px 6px 0;
+}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(232,125,13,.07);border-left-color:var(--laranja)}
+.sidebar nav a .n{color:var(--laranja);font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px}
+.logo-bone{display:flex;align-items:center;gap:10px}
+.logo-bone svg{flex:0 0 auto}
+.logo-bone .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.02rem;line-height:1.1;font-stretch:105%}
+.logo-bone .t2{font-family:"JetBrains Mono",monospace;font-size:.68rem;color:var(--laranja-escuro)}
+
+main{padding:0 0 120px}
+.miolo{max-width:780px;margin:0 auto;padding:0 36px}
+
+/* ===== capa ===== */
+.capa{
+  background:
+    radial-gradient(1100px 420px at 85% -10%, rgba(232,125,13,.16), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(143,168,200,.22), transparent 60%),
+    var(--tinta);
+  color:#F3EFE6;
+  padding:84px 36px 72px;
+  position:relative;overflow:hidden;
+}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;
+  color:var(--laranja);border:1px solid rgba(232,125,13,.5);border-radius:999px;
+  padding:6px 14px;margin-bottom:26px;
+}
+.capa h1{
+  font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:880;
+  font-size:clamp(2.3rem,5.4vw,3.6rem);line-height:1.02;letter-spacing:-.015em;
+  max-width:14ch;margin-bottom:20px;
+}
+.capa h1 em{font-style:normal;color:var(--laranja)}
+.capa p.sub{font-size:1.08rem;max-width:56ch;color:#CFC9BC;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{
+  font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;
+  border:1px solid rgba(243,239,230,.25);border-radius:6px;padding:6px 12px;color:#D8D2C4;
+}
+.capa-bones{position:absolute;right:-30px;top:50%;transform:translateY(-50%);opacity:.5;z-index:1}
+
+/* ===== capítulos ===== */
+section.cap{padding-top:72px}
+.cap-tag{
+  display:flex;align-items:center;gap:14px;margin-bottom:14px;
+}
+.cap-tag .kf{width:13px;height:13px;background:var(--laranja);transform:rotate(45deg);flex:0 0 auto}
+.cap-tag .num{
+  font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--laranja-escuro);letter-spacing:.12em;
+}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{
+  font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;
+  font-size:clamp(1.7rem,3.4vw,2.35rem);line-height:1.08;letter-spacing:-.01em;
+  margin-bottom:22px;
+}
+h3{
+  font-family:"Archivo",sans-serif;font-weight:740;font-size:1.22rem;
+  margin:42px 0 12px;letter-spacing:-.005em;
+}
+h4{
+  font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:30px 0 8px;
+}
+p{margin:0 0 16px}
+p.lead{font-size:1.12rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+a.ext{color:var(--laranja-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:8px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+
+/* ===== teclas e código ===== */
+kbd{
+  font-family:"JetBrains Mono",monospace;font-size:.78em;
+  background:#fff;border:1px solid #C9C3B4;border-bottom-width:2.5px;border-radius:5px;
+  padding:1.5px 7px;white-space:nowrap;color:var(--tinta);
+}
+code{
+  font-family:"JetBrains Mono",monospace;font-size:.84em;
+  background:#ECE8DD;border-radius:4px;padding:1.5px 6px;
+}
+pre{
+  background:var(--code-bg);color:var(--code-fg);
+  font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;
+  border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px;
+}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{
+  font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--osso-escuro);
+}
+
+/* ===== caixas ===== */
+.caixa{border-radius:12px;padding:20px 22px;margin:24px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{
+  display:flex;align-items:center;gap:8px;
+  font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;
+  letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;
+}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.fisica{border-left:4px solid var(--osso-escuro)}
+.caixa.fisica .rot{color:var(--osso-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--laranja)}
+.caixa.exercicio .rot{color:var(--laranja-escuro)}
+.caixa.v5{border-left:4px solid var(--ik)}
+.caixa.v5 .rot{color:#8A6A02}
+
+/* ===== passo a passo ===== */
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{
+  counter-increment:passo;position:relative;
+  padding:0 0 18px 52px;margin:0;
+}
+ol.passos>li::before{
+  content:counter(passo);
+  position:absolute;left:0;top:1px;
+  width:32px;height:32px;border-radius:50%;
+  background:var(--tinta);color:var(--papel);
+  font-family:"Archivo",sans-serif;font-weight:800;font-size:.88rem;
+  display:flex;align-items:center;justify-content:center;
+}
+ol.passos>li::after{
+  content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha);
+}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:2px 0 6px}
+
+/* ===== tabelas ===== */
+table{width:100%;border-collapse:collapse;margin:20px 0 26px;font-size:.94rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{
+  font-family:"Archivo",sans-serif;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;
+  text-align:left;background:var(--tinta);color:var(--papel);padding:10px 14px;
+}
+td{padding:10px 14px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FBFAF6}
+
+/* ===== figuras SVG ===== */
+figure{margin:28px 0;background:var(--cartao);border:1px solid var(--linha);border-radius:12px;padding:22px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{
+  font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave);
+  margin-top:14px;padding-top:12px;border-top:1px dashed var(--linha);
+}
+figcaption b{color:var(--tinta)}
+.svg-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:var(--tinta)}
+.svg-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--tinta-suave)}
+.svg-bone{fill:#C9D6E6;stroke:var(--osso-escuro);stroke-width:1.6;stroke-linejoin:round}
+.svg-bone-ik{fill:#F2DE9E;stroke:#8A6A02;stroke-width:1.6;stroke-linejoin:round}
+.svg-joint{fill:#fff;stroke:var(--osso-escuro);stroke-width:1.6}
+.svg-target{fill:none;stroke:var(--laranja);stroke-width:2.4}
+.svg-dash{stroke:var(--tinta-suave);stroke-width:1.2;stroke-dasharray:5 4;fill:none}
+.svg-arrow{stroke:var(--vermelho);stroke-width:2;fill:none}
+.svg-mesh{fill:rgba(143,168,200,.18);stroke:#9AA8BC;stroke-width:1.2}
+
+/* ===== sumário em grade na capa interna ===== */
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;margin:26px 0 10px}
+.sumario a{
+  display:flex;gap:12px;align-items:baseline;text-decoration:none;color:var(--tinta);
+  font-family:"Archivo",sans-serif;font-size:.92rem;padding:9px 12px;border-radius:8px;
+  border:1px solid transparent;
+}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--laranja-escuro);font-size:.8rem}
+
+/* ===== rodapé ===== */
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;
+  font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+
+/* ===== responsivo ===== */
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}
+  .sumario{grid-template-columns:1fr}
+  .capa-bones{display:none}
+  .miolo{padding:0 20px}
+  .capa{padding:64px 20px 56px}
+}
+@media print{
+  .sidebar{display:none}
+  .layout{display:block}
+  .capa{background:#fff;color:#000}
+  .capa h1 em{color:#000}
+  figure,.caixa,table{box-shadow:none}
+  section.cap{page-break-before:always}
+}
+:focus-visible{outline:3px solid var(--laranja);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar">
+  <div class="logo-bone">
+    <svg width="34" height="46" viewBox="0 0 34 46" aria-hidden="true">
+      <polygon points="17,2 25,13 17,44 9,13" class="svg-bone"/>
+      <circle cx="17" cy="2" r="3.2" class="svg-joint"/>
+      <circle cx="17" cy="44" r="3.2" class="svg-joint"/>
+    </svg>
+    <div>
+      <div class="t1">Apostila de<br>Rigging</div>
+      <div class="t2">Blender 5.x</div>
+    </div>
+  </div>
+
+  <h2>Fundamentos</h2>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é rigging</a>
+    <a href="#cap2"><span class="n">02</span>Armatures e bones</a>
+    <a href="#cap3"><span class="n">03</span>Skinning e pesos</a>
+  </nav>
+
+  <h2>Cinemática</h2>
+  <nav>
+    <a href="#cap4"><span class="n">04</span>FK — cinemática direta</a>
+    <a href="#cap5"><span class="n">05</span>IK — cinemática inversa</a>
+    <a href="#cap6"><span class="n">06</span>Constraints essenciais</a>
+  </nav>
+
+  <h2>Projetos guiados</h2>
+  <nav>
+    <a href="#cap7"><span class="n">07</span>Projeto: a luminária</a>
+    <a href="#cap8"><span class="n">08</span>Controles profissionais</a>
+    <a href="#cap9"><span class="n">09</span>Drivers e propriedades</a>
+    <a href="#cap10"><span class="n">10</span>Bendy Bones</a>
+    <a href="#cap11"><span class="n">11</span>Projeto: braço e perna</a>
+  </nav>
+
+  <h2>Avançado</h2>
+  <nav>
+    <a href="#cap12"><span class="n">12</span>Rigify</a>
+    <a href="#cap13"><span class="n">13</span>Rigging facial</a>
+    <a href="#cap14"><span class="n">14</span>Boas práticas</a>
+    <a href="#cap15"><span class="n">15</span>Glossário e atalhos</a>
+  </nav>
+</aside>
+
+<!-- ============ CONTEÚDO ============ -->
+<main>
+
+<div class="capa">
+  <svg class="capa-bones" width="420" height="520" viewBox="0 0 420 520" aria-hidden="true">
+    <g stroke="#8FA8C8" fill="none" stroke-width="2">
+      <polygon points="210,470 250,380 230,200 190,380" fill="rgba(143,168,200,.15)"/>
+      <polygon points="230,200 268,140 330,60 252,128" fill="rgba(143,168,200,.15)"/>
+      <circle cx="210" cy="470" r="9"/><circle cx="230" cy="200" r="9"/><circle cx="330" cy="60" r="9"/>
+      <line x1="330" y1="60" x2="392" y2="92" stroke-dasharray="6 5"/>
+      <path d="M384 76 l16 16 M400 76 l-16 16" stroke="#E87D0D" stroke-width="3"/>
+    </g>
+  </svg>
+  <div class="miolo">
+    <span class="selo">◆ APOSTILA COMPLETA · TEORIA + PRÁTICA</span>
+    <h1>Rigging no Blender <em>do osso ao rig</em></h1>
+    <p class="sub">Um guia de estudo completo para o Blender 5.x: anatomia de bones, skinning, cinemática direta e inversa explicadas com física e exemplos do dia a dia, constraints, drivers — e dois projetos guiados, incluindo a clássica luminária animável.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>15 capítulos</span>
+      <span>2 projetos passo a passo</span>
+      <span>Nível: iniciante → avançado</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><div class="kf"></div><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como esta apostila funciona</h2>
+  <p class="lead">Os capítulos 1 a 6 constroem a base teórica — leia em ordem. Os capítulos 7 e 11 são projetos práticos completos. Os demais aprofundam ferramentas específicas e podem ser consultados conforme a necessidade.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é rigging e onde ele vive no pipeline</a>
+    <a href="#cap2"><span class="n">02</span>Armatures e bones: a anatomia do esqueleto digital</a>
+    <a href="#cap3"><span class="n">03</span>Skinning: ligando malha ao esqueleto</a>
+    <a href="#cap4"><span class="n">04</span>FK: cinemática direta, do ombro à ponta do dedo</a>
+    <a href="#cap5"><span class="n">05</span>IK: cinemática inversa, física e intuição</a>
+    <a href="#cap6"><span class="n">06</span>Constraints: as regras físicas do rig</a>
+    <a href="#cap7"><span class="n">07</span>Projeto guiado: rig completo de uma luminária</a>
+    <a href="#cap8"><span class="n">08</span>Controles profissionais e custom shapes</a>
+    <a href="#cap9"><span class="n">09</span>Drivers, propriedades custom e chave IK/FK</a>
+    <a href="#cap10"><span class="n">10</span>Bendy Bones: curvatura orgânica</a>
+    <a href="#cap11"><span class="n">11</span>Projeto guiado: braço IK/FK e pé reverso</a>
+    <a href="#cap12"><span class="n">12</span>Rigify: rigs automáticos de personagem</a>
+    <a href="#cap13"><span class="n">13</span>Rigging facial com shape keys e drivers</a>
+    <a href="#cap14"><span class="n">14</span>Boas práticas, organização e troubleshooting</a>
+    <a href="#cap15"><span class="n">15</span>Glossário, atalhos e novidades do 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">◆ Sobre a versão</div>
+    <p>Esta apostila foi escrita para a série <strong>Blender 5.x</strong>. Quase tudo também vale para o 4.x — as diferenças relevantes (bone collections, gizmos em custom shapes, slotted actions, novos operadores de armature) estão destacadas em caixas amarelas como esta ao longo do texto e resumidas no Capítulo 15.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 1 ================= -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é rigging e onde ele vive no pipeline</h2>
+
+  <p class="lead">Rigging é a disciplina de construir o <strong>mecanismo interno</strong> que permite animar um modelo 3D. Se a modelagem cria a escultura, o rigging instala as articulações, alavancas e botões que a fazem se mover.</p>
+
+  <p>A palavra vem do inglês <em>rig</em> — aparelhagem, equipamento. Em marionetes de teatro, o "rig" são os fios e a cruzeta de madeira; em um carro, é o conjunto de direção, suspensão e pedais. Em 3D, o rig é um sistema de <strong>bones (ossos)</strong>, <strong>constraints (restrições)</strong> e <strong>controles</strong> que transforma um amontoado estático de vértices em um personagem, máquina ou objeto animável.</p>
+
+  <h3>O pipeline de produção</h3>
+  <p>Em um estúdio, o rigging fica exatamente no meio do fluxo de trabalho:</p>
+  <ol>
+    <li><strong>Modelagem</strong> — o artista cria a malha (mesh): vértices, arestas e faces.</li>
+    <li><strong>Rigging</strong> — o rigger constrói o esqueleto, liga a malha a ele (skinning) e cria controles amigáveis.</li>
+    <li><strong>Animação</strong> — o animador manipula apenas os controles do rig, inserindo keyframes.</li>
+    <li><strong>Simulação, iluminação e render</strong> — etapas finais.</li>
+  </ol>
+  <p>Isso significa que o rigger tem dois clientes: a <strong>malha</strong> (que precisa deformar bem) e o <strong>animador</strong> (que precisa de controles claros, previsíveis e à prova de erro). Um bom rig é julgado pelos dois critérios.</p>
+
+  <h3>Os três pilares de um rig</h3>
+  <table>
+    <tr><th>Pilar</th><th>O que é</th><th>Analogia do mundo real</th></tr>
+    <tr><td><strong>Esqueleto</strong></td><td>Hierarquia de bones dentro de um objeto Armature</td><td>Os ossos do seu corpo: estrutura rígida e articulada</td></tr>
+    <tr><td><strong>Skinning</strong></td><td>Mapa de influência de cada bone sobre cada vértice da malha</td><td>Músculos e pele presos aos ossos: quando o osso gira, a carne acompanha</td></tr>
+    <tr><td><strong>Controles</strong></td><td>Bones especiais, constraints e drivers que o animador manipula</td><td>O volante do carro: você não gira as rodas com as mãos, gira o volante</td></tr>
+  </table>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>Todo rig é, no fundo, um <strong>sistema de corpos rígidos articulados</strong> — o mesmo objeto de estudo da mecânica clássica chamado <em>cadeia cinemática</em>. Uma escavadeira, um braço humano, um pantógrafo de desenho e a luminária da sua mesa são todos cadeias cinemáticas: segmentos rígidos (elos) conectados por juntas que permitem rotação. Os capítulos 4 e 5 exploram a matemática disso de forma intuitiva.</p>
+  </div>
+
+  <h3>O que você precisa saber antes de começar</h3>
+  <p>Esta apostila assume apenas o básico de navegação no Blender: orbitar a câmera (botão do meio do mouse), selecionar (clique esquerdo), mover/rotacionar/escalar (<kbd>G</kbd>/<kbd>R</kbd>/<kbd>S</kbd>), confirmar com clique e cancelar com <kbd>Esc</kbd>, e alternar modos pelo menu no canto superior esquerdo do viewport ou com <kbd>Tab</kbd>. Se isso é confortável, você está pronto.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Dica</div>
+    <p>Ative as sobreposições de eixos e nomes ao estudar: selecione a armature, vá em <span class="menupath">Properties ▸ Object Data (ícone de boneco) ▸ Viewport Display</span> e marque <strong>Names</strong> e <strong>Axes</strong>. Ver o nome e a orientação de cada bone elimina metade da confusão de quem está começando.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 2 ================= -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">Armatures e bones: a anatomia do esqueleto digital</h2>
+
+  <p class="lead">No Blender, o esqueleto é um tipo de objeto chamado <strong>Armature</strong>. Dentro dele vivem os <strong>bones</strong>, as unidades básicas de todo rig.</p>
+
+  <h3>2.1 — Criando a primeira armature</h3>
+  <p>No Object Mode, pressione <kbd>Shift</kbd>+<kbd>A</kbd> e escolha <span class="menupath">Armature</span>. Surge um único bone em forma de octaedro apontando para cima. Esse formato não é decorativo — cada parte tem nome e função:</p>
+
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-label="Anatomia de um bone do Blender">
+      <!-- bone deitado -->
+      <polygon points="140,150 215,108 560,150 215,192" class="svg-bone"/>
+      <circle cx="140" cy="150" r="13" class="svg-joint"/>
+      <circle cx="560" cy="150" r="13" class="svg-joint"/>
+      <!-- roll arrow -->
+      <path d="M 350 95 A 38 38 0 1 1 312 120" class="svg-arrow" marker-end="url(#seta)"/>
+      <defs>
+        <marker id="seta" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#B3402E"/>
+        </marker>
+      </defs>
+      <!-- labels -->
+      <line x1="140" y1="170" x2="140" y2="225" class="svg-dash"/>
+      <text x="140" y="245" text-anchor="middle" class="svg-lbl">HEAD (raiz)</text>
+      <text x="140" y="262" text-anchor="middle" class="svg-sub">pivô da rotação</text>
+      <line x1="560" y1="170" x2="560" y2="225" class="svg-dash"/>
+      <text x="560" y="245" text-anchor="middle" class="svg-lbl">TAIL (ponta)</text>
+      <text x="560" y="262" text-anchor="middle" class="svg-sub">eixo Y local aponta p/ cá</text>
+      <line x1="350" y1="150" x2="350" y2="210" class="svg-dash"/>
+      <text x="350" y="230" text-anchor="middle" class="svg-lbl">BODY (corpo)</text>
+      <text x="350" y="247" text-anchor="middle" class="svg-sub">comprimento do elo rígido</text>
+      <text x="392" y="72" class="svg-lbl">ROLL</text>
+      <text x="392" y="88" class="svg-sub">giro em torno do próprio eixo</text>
+    </svg>
+    <figcaption><b>Figura 2.1 — Anatomia do bone.</b> Head é a base e o pivô; tail é a ponta; o eixo Y local sempre corre do head ao tail; o roll define para onde apontam os eixos X e Z.</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>Head</strong> — a base, a "raiz" do bone. É o ponto em torno do qual o bone gira, como a articulação do seu ombro.</li>
+    <li><strong>Tail</strong> — a ponta. O eixo <strong>Y local</strong> do bone sempre aponta do head para o tail.</li>
+    <li><strong>Body</strong> — o segmento rígido entre os dois. Seu comprimento nunca muda durante a rotação (a menos que você use escala ou constraints de esticamento).</li>
+    <li><strong>Roll</strong> — a rotação do bone em torno do próprio eixo Y. Define para onde apontam X e Z, o que se torna crucial quando usamos IK e limites de rotação.</li>
+  </ul>
+
+  <h3>2.2 — Os três modos de trabalho</h3>
+  <p>Uma armature tem três modos, e entender a diferença é a fundação de tudo:</p>
+  <table>
+    <tr><th>Modo</th><th>Atalho</th><th>O que você faz nele</th><th>Analogia</th></tr>
+    <tr><td><strong>Object Mode</strong></td><td><kbd>Tab</kbd></td><td>Move a armature inteira como um único objeto</td><td>Carregar o esqueleto de plástico inteiro pela sala</td></tr>
+    <tr><td><strong>Edit Mode</strong></td><td><kbd>Tab</kbd></td><td>Constrói o esqueleto: cria, posiciona e conecta bones. Define a <em>rest pose</em> (pose de descanso)</td><td>Montar o esqueleto na bancada da fábrica</td></tr>
+    <tr><td><strong>Pose Mode</strong></td><td><kbd>Ctrl</kbd>+<kbd>Tab</kbd></td><td>Posa e anima os bones; aplica constraints</td><td>Articular o boneco já pronto</td></tr>
+  </table>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Atenção</div>
+    <p>O erro mais comum de iniciantes: editar a estrutura no <strong>Pose Mode</strong> ou tentar posar no <strong>Edit Mode</strong>. Regra de ouro: <strong>Edit Mode define como o esqueleto É; Pose Mode define como ele ESTÁ.</strong> Tudo que você faz no Pose Mode é um desvio temporário em relação à rest pose — e pode ser zerado a qualquer momento com <kbd>Alt</kbd>+<kbd>G</kbd> (posição), <kbd>Alt</kbd>+<kbd>R</kbd> (rotação) e <kbd>Alt</kbd>+<kbd>S</kbd> (escala).</p>
+  </div>
+
+  <h3>2.3 — Construindo cadeias: extrusão e parentesco</h3>
+  <p>No Edit Mode, selecione o <strong>tail</strong> de um bone e pressione <kbd>E</kbd> para extrudar um novo bone a partir dali. O novo bone nasce automaticamente como <strong>filho conectado</strong> do anterior: seu head está soldado ao tail do pai. É assim que se constrói uma cadeia — braço, coluna, cauda, o braço da luminária.</p>
+  <p>O parentesco entre bones tem duas variações, configuráveis em <span class="menupath">Properties ▸ Bone ▸ Relations</span>:</p>
+  <ul>
+    <li><strong>Connected (conectado)</strong> — o head do filho está colado ao tail do pai e não pode se afastar. Como o seu antebraço: não há como ele se separar do cotovelo. Filhos conectados só podem <em>girar</em> em relação ao pai.</li>
+    <li><strong>Keep Offset (desconectado)</strong> — o filho segue o pai mantendo uma distância fixa, mas seu head é livre. É a relação entre a sua mandíbula e o crânio, ou entre um chaveiro e o cinto: acompanha, mas tem folga própria. Parenteie bones com <kbd>Ctrl</kbd>+<kbd>P</kbd> e desparenteie com <kbd>Alt</kbd>+<kbd>P</kbd>.</li>
+  </ul>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>O parentesco implementa a regra mais básica da mecânica articulada: <strong>transformações se propagam do pai para o filho, nunca o contrário</strong>. Gire seu ombro e a mão inteira viaja junto; gire o pulso e o ombro nem fica sabendo. Em termos físicos, cada junta define um novo <em>referencial</em>: a posição da mão é medida em relação ao antebraço, que é medida em relação ao braço, que é medida em relação ao tronco. Essa composição de referenciais é exatamente o que o Capítulo 4 chama de cinemática direta.</p>
+  </div>
+
+  <h3>2.4 — Nomenclatura: o hábito que salva projetos</h3>
+  <p>Renomeie cada bone imediatamente após criá-lo (<kbd>F2</kbd> ou painel <span class="menupath">Properties ▸ Bone</span>). O Blender tem convenções poderosas embutidas:</p>
+  <ul>
+    <li>Use nomes descritivos com sufixo de lado: <code>braco.L</code> / <code>braco.R</code>, <code>perna.L</code> / <code>perna.R</code>.</li>
+    <li>Com os sufixos <code>.L</code>/<code>.R</code>, a ferramenta <span class="menupath">Armature ▸ Symmetrize</span> espelha metade do esqueleto automaticamente, e o <strong>X-Axis Mirror</strong> permite editar os dois lados ao mesmo tempo.</li>
+    <li>No Pose Mode, <span class="menupath">Pose ▸ Copy Pose</span> + <span class="menupath">Paste Pose Flipped</span> espelha poses inteiras — só funciona com a nomenclatura correta.</li>
+    <li>Prefixos por função ajudam em rigs grandes: <code>DEF-</code> para bones que deformam, <code>CTRL-</code> para controles, <code>MCH-</code> para mecanismos internos (convenção herdada do Rigify, Capítulo 12).</li>
+  </ul>
+
+  <h3>2.5 — Bone Collections: organizando o esqueleto</h3>
+  <p>Rigs reais têm dezenas ou centenas de bones, e o animador só precisa ver os controles. As <strong>Bone Collections</strong> (em <span class="menupath">Properties ▸ Object Data ▸ Bone Collections</span>) agrupam bones em conjuntos nomeados e hierárquicos que podem ser exibidos ou ocultados com um clique — por exemplo: <em>Controles</em>, <em>Deformação</em>, <em>Mecanismo</em>. Atribua os bones selecionados a uma coleção com <kbd>M</kbd>.</p>
+
+  <div class="caixa v5">
+    <div class="rot">◆ Blender 4.0+ / 5.x</div>
+    <p>As Bone Collections substituíram os antigos "Armature Layers" (as 32 caixinhas anônimas) e os "Bone Groups" das versões 3.x. Agora coleções têm nome, hierarquia e cores por bone. Tutoriais antigos que mencionam "layers" estão se referindo a este recurso. No 5.x, a visibilidade e a seleção de bones deixaram de ser compartilhadas entre instâncias da mesma armature, facilitando cenas com vários personagens linkados.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 2</div>
+    <ol>
+      <li>Crie uma armature e, no Edit Mode, extrude uma cadeia de 4 bones na vertical (uma "coluna").</li>
+      <li>Nomeie-os <code>coluna.001</code> a <code>coluna.004</code> e ative <strong>Names</strong> no Viewport Display.</li>
+      <li>No Pose Mode, gire o bone da base e observe a propagação para os filhos. Depois gire só o último e confirme que os pais não se movem.</li>
+      <li>Zere tudo com <kbd>A</kbd> (selecionar todos) + <kbd>Alt</kbd>+<kbd>R</kbd>.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= CAP 3 ================= -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">Skinning: ligando a malha ao esqueleto</h2>
+
+  <p class="lead">Um esqueleto sozinho não move nada. <strong>Skinning</strong> (ou <em>binding</em>) é o processo de dizer ao Blender quanto cada bone influencia cada vértice da malha.</p>
+
+  <h3>3.1 — Como a mágica funciona: vertex groups e pesos</h3>
+  <p>Quando você parenteia uma malha a uma armature, o Blender adiciona à malha um <strong>Armature Modifier</strong> e cria um <strong>vertex group</strong> (grupo de vértices) para cada bone deformador, com o mesmo nome do bone. Cada vértice recebe, em cada grupo, um <strong>peso</strong> entre 0.0 e 1.0:</p>
+  <ul>
+    <li><strong>Peso 1.0</strong> — o vértice segue o bone rigidamente, como um parafuso preso na peça.</li>
+    <li><strong>Peso 0.0</strong> — o bone é invisível para aquele vértice.</li>
+    <li><strong>Pesos intermediários</strong> — o vértice segue uma <em>média ponderada</em> dos bones que o influenciam. É isso que cria a dobra suave do cotovelo: os vértices da junta obedecem 50% ao braço e 50% ao antebraço.</li>
+  </ul>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>Pense na pele do seu próprio cotovelo: ela não pertence nem só ao úmero nem só ao rádio — está <em>esticada entre os dois</em> e se acomoda numa posição intermediária quando você dobra o braço. O skinning por pesos (tecnicamente <em>linear blend skinning</em>) faz exatamente isso: a posição final de cada vértice é a média das posições que cada osso "gostaria" que ele tivesse, ponderada pelos pesos. Por ser uma média linear, ela tem um defeito físico conhecido: em dobras extremas o volume "murcha" (efeito canudo dobrado). A opção <strong>Preserve Volume</strong> do Armature Modifier troca o método por <em>dual quaternion</em>, que preserva melhor o volume em torções.</p>
+  </div>
+
+  <h3>3.2 — Parenteando com pesos automáticos</h3>
+  <ol class="passos">
+    <li><h4>Selecione na ordem certa</h4><p>No Object Mode, selecione <strong>primeiro a malha</strong>, depois <kbd>Shift</kbd>+clique na <strong>armature</strong> (ela vira o objeto ativo, com contorno mais claro).</p></li>
+    <li><h4>Parenteie</h4><p>Pressione <kbd>Ctrl</kbd>+<kbd>P</kbd> e escolha <span class="menupath">Armature Deform ▸ With Automatic Weights</span>. O Blender calcula pesos iniciais com base na proximidade e na "visibilidade" de cada bone através do volume da malha (heat mapping).</p></li>
+    <li><h4>Teste imediatamente</h4><p>Entre no Pose Mode e gire alguns bones. Procure vértices que ficam para trás, regiões que se movem junto sem deveriam (a coxa puxando a barriga, por exemplo) e dobras feias.</p></li>
+  </ol>
+
+  <table>
+    <tr><th>Opção de parent</th><th>Quando usar</th></tr>
+    <tr><td><strong>With Automatic Weights</strong></td><td>Ponto de partida padrão para personagens orgânicos. Bom em 80% dos casos, exige refino manual.</td></tr>
+    <tr><td><strong>With Empty Groups</strong></td><td>Cria os grupos vazios para você pintar tudo do zero — ideal para objetos mecânicos e <strong>peças rígidas</strong>.</td></tr>
+    <tr><td><strong>With Envelope Weights</strong></td><td>Usa os "envelopes" (raios de influência) de cada bone. Útil para esboços rápidos; raramente usado em produção.</td></tr>
+    <tr><td><strong>Bone (parent direto)</strong></td><td>Para peças 100% rígidas (um capacete, a cúpula da luminária): parenteia o objeto inteiro a um único bone, sem deformação nenhuma. Selecione o bone no Pose Mode e use <kbd>Ctrl</kbd>+<kbd>P</kbd> ▸ Bone.</td></tr>
+  </table>
+
+  <h3>3.3 — Weight Painting: refinando à mão</h3>
+  <p>Selecione a armature, depois <kbd>Shift</kbd>+clique na malha e entre no <strong>Weight Paint Mode</strong>. A malha aparece num mapa de calor: <span style="color:#1c50c8;font-weight:700">azul = 0.0</span>, <span style="color:#1f9e3d;font-weight:700">verde = 0.5</span>, <span style="color:#c0392b;font-weight:700">vermelho = 1.0</span>. Com <kbd>Ctrl</kbd>+clique você seleciona o bone cujos pesos quer ver e pintar.</p>
+  <ul>
+    <li><strong>Draw</strong> com <em>weight</em> 1.0 adiciona influência; com 0.0, remove.</li>
+    <li><strong>Blur</strong> suaviza transições — seu melhor amigo nas juntas.</li>
+    <li><strong>Gradient</strong> (<kbd>Shift</kbd>+<kbd>A</kbd>… arrastando) cria transições lineares perfeitas em tubos e braços.</li>
+    <li>Ative <span class="menupath">Tool ▸ Options ▸ Auto Normalize</span>: garante que os pesos de cada vértice somem 1.0 — sem isso, vértices podem reagir de forma imprevisível.</li>
+  </ul>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Problemas clássicos de skinning</div>
+    <ul>
+      <li><strong>Vértice abandonado</strong> (fica parado no ar quando tudo se move): peso total zero. Pinte-o com o bone mais próximo.</li>
+      <li><strong>Influência fantasma</strong> (o pé mexe e a canela do outro lado treme): pesos automáticos vazaram. Selecione o bone, pinte 0.0 na região errada — ou use <span class="menupath">Weights ▸ Limit Total</span> para limitar a 4 influências por vértice.</li>
+      <li><strong>Malha não segue nada</strong>: confira se o Armature Modifier aponta para a armature certa e se os nomes dos vertex groups batem com os nomes dos bones (renomear bone renomeia o grupo automaticamente, mas só se a malha estiver ligada).</li>
+      <li><strong>Bone de controle deformando a malha</strong>: desligue <span class="menupath">Properties ▸ Bone ▸ Deform</span> em todos os bones que não devem influenciar vértices. Só bones com Deform ativo entram no Automatic Weights.</li>
+    </ul>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 3</div>
+    <p>Crie um cilindro alto com ~12 cortes horizontais (loop cuts). Construa dentro dele uma cadeia de 3 bones, parenteie com Automatic Weights e dobre a cadeia no Pose Mode. Depois entre no Weight Paint, examine os gradientes de cada bone e use o pincel Blur para melhorar a dobra. Esse cilindro é, na prática, um braço, um tentáculo e o cabo da luminária — o mesmo princípio serve para tudo.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 4 ================= -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">FK — Cinemática direta: do ombro à ponta do dedo</h2>
+
+  <p class="lead"><strong>Cinemática</strong> é o ramo da física que descreve o movimento sem se preocupar com as forças que o causam — só posições, ângulos e velocidades. <strong>Cinemática direta (Forward Kinematics, FK)</strong> responde à pergunta: <em>"dado o ângulo de cada junta, onde a ponta da cadeia termina?"</em></p>
+
+  <h3>4.1 — A intuição física</h3>
+  <p>Estique o braço e aponte para a parede. Agora gire só o ombro 10° para cima: a mão sobe um bom palmo, porque está longe do pivô. Gire só o pulso 10°: a mão quase não sai do lugar. Isso é FK na prática — <strong>a posição da ponta é o resultado acumulado de todas as rotações da cadeia, da raiz à extremidade</strong>, e cada junta contribui proporcionalmente à distância que falta até a ponta.</p>
+  <p>Exemplos cotidianos de FK puro:</p>
+  <ul>
+    <li><strong>Ponteiros de relógio</strong> — cada ponteiro gira em torno do próprio pivô; a posição da ponta é consequência direta do ângulo.</li>
+    <li><strong>Guindaste de torre</strong> — o operador comanda cada junta separadamente (girar a torre, inclinar a lança) e a posição do gancho é o resultado.</li>
+    <li><strong>Chute de futebol e braçada de natação</strong> — movimentos em arco, "de dentro para fora": o quadril lidera, o joelho segue, o pé chega por último. Animadores usam FK justamente para esses movimentos pendulares e soltos.</li>
+  </ul>
+
+  <figure>
+    <svg viewBox="0 0 720 270" role="img" aria-label="Cadeia FK de três bones">
+      <defs>
+        <marker id="seta2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#B3402E"/>
+        </marker>
+      </defs>
+      <!-- chao -->
+      <line x1="40" y1="225" x2="300" y2="225" stroke="#9AA8BC" stroke-width="2"/>
+      <!-- cadeia -->
+      <polygon points="120,220 138,168 160,90 110,172" class="svg-bone"/>
+      <polygon points="160,90 215,72 320,60 208,96" class="svg-bone"/>
+      <polygon points="320,60 372,76 460,120 366,52" class="svg-bone"/>
+      <circle cx="120" cy="220" r="11" class="svg-joint"/>
+      <circle cx="160" cy="90" r="11" class="svg-joint"/>
+      <circle cx="320" cy="60" r="11" class="svg-joint"/>
+      <circle cx="460" cy="120" r="8" fill="#B3402E" stroke="#7a2418" stroke-width="1.6"/>
+      <!-- arcos -->
+      <path d="M 120 175 A 45 45 0 0 1 158 152" class="svg-arrow" marker-end="url(#seta2)"/>
+      <path d="M 200 78 A 40 40 0 0 1 226 100" class="svg-arrow" marker-end="url(#seta2)"/>
+      <path d="M 356 50 A 38 38 0 0 1 386 62" class="svg-arrow" marker-end="url(#seta2)"/>
+      <text x="92" y="180" class="svg-sub">θ₁</text>
+      <text x="232" y="118" class="svg-sub">θ₂</text>
+      <text x="392" y="84" class="svg-sub">θ₃</text>
+      <text x="478" y="124" class="svg-lbl">ponta</text>
+      <text x="478" y="141" class="svg-sub">consequência</text>
+      <!-- texto -->
+      <text x="540" y="180" class="svg-lbl">FK: você define θ₁, θ₂, θ₃…</text>
+      <text x="540" y="200" class="svg-sub">…a posição da ponta</text>
+      <text x="540" y="216" class="svg-sub">é apenas o resultado.</text>
+      <text x="120" y="252" class="svg-sub">raiz (pivô fixo)</text>
+    </svg>
+    <figcaption><b>Figura 4.1 — Cinemática direta.</b> O animador gira cada junta na ordem raiz → ponta. A informação flui em um único sentido pela hierarquia.</figcaption>
+  </figure>
+
+  <h3>4.2 — A matemática, sem dor</h3>
+  <p>Para uma cadeia plana de dois elos com comprimentos <code>a</code> e <code>b</code> e ângulos <code>θ₁</code> (no ombro) e <code>θ₂</code> (no cotovelo), a posição da mão é:</p>
+  <pre><code>x = a·cos(θ₁) + b·cos(θ₁ + θ₂)
+y = a·sin(θ₁) + b·sin(θ₁ + θ₂)</code></pre>
+  <p>Repare em dois fatos importantes escondidos nessa fórmula:</p>
+  <ul>
+    <li>O ângulo do segundo elo é <code>θ₁ + θ₂</code> — as rotações <strong>se acumulam</strong> pela hierarquia. É exatamente o parentesco do Capítulo 2 em forma de equação.</li>
+    <li>Dados os ângulos, existe <strong>uma única resposta</strong>. FK é um problema direto, sem ambiguidade — por isso o computador o resolve instantaneamente e o resultado é 100% previsível.</li>
+  </ul>
+
+  <h3>4.3 — FK no Blender</h3>
+  <p>A boa notícia: <strong>você já sabe fazer FK</strong>. Toda cadeia de bones parenteados é, por padrão, uma cadeia FK. No Pose Mode, selecione um bone e gire com <kbd>R</kbd>; os filhos seguem. Para animar, insira keyframes de rotação (<kbd>I</kbd> ▸ Rotation) em cada junta.</p>
+
+  <table>
+    <tr><th></th><th>FK</th><th>IK (próximo capítulo)</th></tr>
+    <tr><td><strong>Você controla</strong></td><td>O ângulo de cada junta</td><td>A posição da ponta</td></tr>
+    <tr><td><strong>O computador calcula</strong></td><td>Onde a ponta termina</td><td>Os ângulos das juntas</td></tr>
+    <tr><td><strong>Arcos de movimento</strong></td><td>Naturais e fáceis (pêndulos, balanços)</td><td>Exigem mais keyframes para ficarem orgânicos</td></tr>
+    <tr><td><strong>Fixar a ponta num lugar</strong></td><td>Quase impossível à mão</td><td>Trivial — é a função do IK</td></tr>
+    <tr><td><strong>Usos típicos</strong></td><td>Braços soltos ao caminhar, caudas, antenas, cabelos, ponteiros</td><td>Pés no chão, mãos apoiadas, luminárias, pistões</td></tr>
+  </table>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>Por que braços ao caminhar pedem FK? Porque fisicamente eles se comportam como <strong>pêndulos acoplados</strong>: o ombro balança, o cotovelo segue com um pequeno atraso, a mão chega por último — um efeito chamado <em>drag</em> (arrasto) na animação e <em>sobreposição de fases</em> na física de pêndulos. Animar isso por ângulos (FK) reproduz a física naturalmente. Já o pé durante a caminhada precisa ficar <em>pregado no chão</em> enquanto o corpo passa por cima — uma restrição de posição, tarefa para o IK.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 4</div>
+    <p>Com a cadeia de 4 bones do Exercício 2, anime um balanço de pêndulo de 48 frames: keyframe da pose à esquerda no frame 1, à direita no frame 24, e copie a pose do frame 1 no frame 48. Em seguida, atrase a rotação de cada bone filho em 2 frames no Graph Editor (selecione os keyframes e arraste). O resultado é o "chicote" característico de caudas e galhos — FK + defasagem é a receita clássica de movimento orgânico.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 5 ================= -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">IK — Cinemática inversa: física, intuição e prática</h2>
+
+  <p class="lead">A <strong>cinemática inversa (Inverse Kinematics, IK)</strong> inverte a pergunta da FK: <em>"quero a ponta da cadeia NESTE ponto — quais ângulos as juntas precisam assumir?"</em> É o conceito mais importante de toda a apostila.</p>
+
+  <h3>5.1 — Você resolve IK o dia inteiro sem perceber</h3>
+  <p>Pegue uma xícara na mesa. Em nenhum momento você pensou <em>"ombro a 38°, cotovelo a 95°, pulso a 12°"</em> — você pensou apenas <em>"mão na xícara"</em>, e seu cérebro e medula calcularam os ângulos sozinhos, em tempo real. O cérebro humano é um solver de IK extraordinário. Outros exemplos cotidianos:</p>
+  <ul>
+    <li><strong>Subir uma escada</strong> — você escolhe <em>onde</em> o pé pisa (o degrau); quadril, joelho e tornozelo se ajustam por conta própria.</li>
+    <li><strong>Escavadeira hidráulica</strong> — o operador moderno comanda a posição da caçamba; o sistema calcula quanto cada pistão deve estender. Versões antigas eram "FK": uma alavanca por junta, exigindo enorme habilidade.</li>
+    <li><strong>Braço robótico de fábrica</strong> — o programador informa as coordenadas do ponto de solda; o controlador resolve a IK para os seis motores. É literalmente o mesmo algoritmo dos softwares 3D.</li>
+    <li><strong>A luminária articulada da sua mesa</strong> — você simplesmente puxa a cúpula para onde quer luz, e os braços se acomodam. Quem "resolve a IK" ali são as molas, que buscam o equilíbrio de torques. É por isso que a luminária é O exercício clássico de IK — e o nosso projeto do Capítulo 7.</li>
+  </ul>
+
+  <h3>5.2 — A física do problema: por que IK é mais difícil que FK</h3>
+  <p>FK tem sempre uma única resposta. IK, não — e entender os três cenários abaixo explica todo o comportamento (e as "manhas") do IK no Blender:</p>
+
+  <h4>① Múltiplas soluções — a ambiguidade do cotovelo</h4>
+  <p>Encoste a mão na mesa. Mantendo-a exatamente no mesmo lugar, você consegue girar o cotovelo para fora e para dentro: <strong>infinitas configurações do braço resolvem a mesma posição da mão</strong>. Para uma cadeia plana de 2 elos já existem duas soluções espelhadas ("cotovelo para cima" e "cotovelo para baixo"); em 3D, o cotovelo pode varrer um círculo inteiro. O solver precisa que <em>alguém</em> desempate — e é exatamente para isso que existe o <strong>pole target</strong> (seção 5.4).</p>
+
+  <h4>② Alvo fora de alcance — o limite da geometria</h4>
+  <p>Nenhuma cadeia alcança além da soma dos comprimentos dos seus elos: com braço <code>a</code> e antebraço <code>b</code>, o raio máximo é <code>a + b</code>, com o braço totalmente esticado. Se o alvo foge desse raio, o solver faz o melhor possível: estica a cadeia inteira apontando para o alvo. Na animação isso aparece como o "joelho estalado" — a perna trava reta de forma robótica quando o pé é puxado longe demais.</p>
+
+  <h4>③ A solução exata de 2 elos — lei dos cossenos</h4>
+  <p>Para duas juntas, a física resolve em fórmula fechada. Se <code>d</code> é a distância da raiz ao alvo, o ângulo interno do cotovelo <code>θ</code> sai diretamente da <strong>lei dos cossenos</strong>:</p>
+  <pre><code>d² = a² + b² − 2ab·cos(θ)   →   θ = arccos( (a² + b² − d²) / 2ab )</code></pre>
+  <p>Leia a fórmula como física: alvo perto (d pequeno) → cotovelo muito dobrado; alvo longe (d ≈ a+b) → cotovelo quase esticado. O ângulo do cotovelo depende <em>só da distância ao alvo</em> — a direção do alvo gira o conjunto, e o pole target gira o plano do cotovelo. Para cadeias com mais de duas juntas não existe fórmula fechada: o Blender usa um <strong>solver iterativo</strong>, que aproxima a ponta do alvo em pequenos passos sucessivos a cada frame — parecido com você tateando um interruptor no escuro, corrigindo a mão a cada toque.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-label="Cadeia IK com alvo e pole target">
+      <!-- alvo -->
+      <g class="svg-target">
+        <line x1="470" y1="196" x2="498" y2="224"/><line x1="498" y1="196" x2="470" y2="224"/>
+        <circle cx="484" cy="210" r="20"/>
+      </g>
+      <text x="516" y="208" class="svg-lbl">IK target</text>
+      <text x="516" y="225" class="svg-sub">você move SÓ isto</text>
+      <!-- pole -->
+      <circle cx="300" cy="40" r="9" fill="#E87D0D" stroke="#B85F04" stroke-width="2"/>
+      <text x="318" y="38" class="svg-lbl">Pole target</text>
+      <text x="318" y="55" class="svg-sub">desempata o "cotovelo"</text>
+      <line x1="300" y1="52" x2="300" y2="100" class="svg-dash"/>
+      <!-- cadeia IK (amarela) -->
+      <polygon points="150,250 192,196 300,108 168,182" class="svg-bone-ik"/>
+      <polygon points="300,108 352,140 484,210 340,168" class="svg-bone-ik"/>
+      <circle cx="150" cy="250" r="11" class="svg-joint"/>
+      <circle cx="300" cy="108" r="11" class="svg-joint"/>
+      <circle cx="484" cy="210" r="7" fill="#8A6A02"/>
+      <text x="108" y="278" class="svg-sub">raiz fixa</text>
+      <text x="236" y="120" class="svg-sub">"cotovelo"</text>
+      <!-- solucao alternativa fantasma -->
+      <g opacity=".38">
+        <polygon points="150,250 222,268 334,288 214,252" class="svg-bone"/>
+        <polygon points="334,288 380,268 484,210 372,252" class="svg-bone"/>
+        <circle cx="334" cy="288" r="9" class="svg-joint"/>
+      </g>
+      <text x="338" y="282" class="svg-sub" opacity=".7">solução espelhada (descartada pelo pole)</text>
+      <!-- legenda -->
+      <text x="40" y="40" class="svg-lbl">IK: você define a ponta…</text>
+      <text x="40" y="58" class="svg-sub">…o solver calcula os ângulos.</text>
+    </svg>
+    <figcaption><b>Figura 5.1 — Cinemática inversa.</b> O mesmo alvo pode ser alcançado com o "cotovelo" para cima ou para baixo (versão fantasma). O pole target escolhe para qual lado a junta do meio aponta, eliminando a ambiguidade.</figcaption>
+  </figure>
+
+  <h3>5.3 — Montando IK no Blender: o jeito certo</h3>
+  <p>Existe um atalho rápido (<kbd>Shift</kbd>+<kbd>I</kbd> no Pose Mode), mas o método explícito abaixo é o que você usará em rigs de verdade:</p>
+  <ol class="passos">
+    <li><h4>Crie o bone-alvo (target)</h4>
+      <p>No Edit Mode, selecione o tail do último bone da cadeia (ex.: o tail do antebraço) e duplique um bone ali (<kbd>E</kbd> para extrudar e depois <kbd>Alt</kbd>+<kbd>P</kbd> ▸ <em>Clear Parent</em>, ou <kbd>Shift</kbd>+<kbd>A</kbd> e posicione). O essencial: <strong>o alvo NÃO pode ser filho de nenhum bone da cadeia</strong>, senão a cadeia perseguiria um alvo que se move com ela — um cachorro correndo atrás do próprio rabo, criando dependência cíclica. Nomeie-o <code>alvo-mao</code>.</p></li>
+    <li><h4>Crie o bone-polo (pole)</h4>
+      <p>Adicione outro bone solto à frente do "cotovelo" da cadeia (para um braço, atrás; para um joelho, à frente), a uma boa distância (0,5 a 1 unidade). Nomeie-o <code>polo-cotovelo</code>. Também não pode ser filho da cadeia.</p></li>
+    <li><h4>Adicione a constraint</h4>
+      <p>No Pose Mode, selecione o <strong>último bone da cadeia</strong> (o antebraço) e em <span class="menupath">Properties ▸ Bone Constraints (ícone de osso com chave)</span> adicione <strong>Inverse Kinematics</strong>. Em <em>Target</em>, escolha a armature e o bone <code>alvo-mao</code>.</p></li>
+    <li><h4>Limite a cadeia</h4>
+      <p>Defina <strong>Chain Length = 2</strong> (ou o nº de bones que devem participar). Com 0, a IK sobe a hierarquia até a raiz e o ombro/tronco inteiro persegue o alvo — quase nunca é o que você quer.</p></li>
+    <li><h4>Configure o polo</h4>
+      <p>Na mesma constraint, em <em>Pole Target</em>, aponte para <code>polo-cotovelo</code>. Se a cadeia "pular" ao ativar o polo, ajuste o <strong>Pole Angle</strong> (tipicamente −90° ou 90°) até a cadeia voltar à rest pose. Esse pulo acontece porque o solver mede o plano do cotovelo a partir do eixo X do primeiro bone — e o roll dele (Capítulo 2) define onde esse eixo aponta.</p></li>
+    <li><h4>Teste</h4>
+      <p>Mova <code>alvo-mao</code> com <kbd>G</kbd>. A cadeia (agora desenhada em amarelo no viewport) o persegue. Mova o polo e veja o cotovelo apontar para ele. Puxe o alvo para longe e observe o estiramento máximo da seção 5.2.</p></li>
+  </ol>
+
+  <h3>5.4 — Propriedades importantes da constraint IK</h3>
+  <table>
+    <tr><th>Propriedade</th><th>O que faz</th><th>Intuição física</th></tr>
+    <tr><td><code>Chain Length</code></td><td>Quantos bones, contando do fim para o começo, participam do solve</td><td>Define onde a "máquina" termina e o resto do corpo começa</td></tr>
+    <tr><td><code>Influence</code></td><td>Mistura entre o resultado IK (1.0) e a pose FK por baixo (0.0)</td><td>Um dimmer entre os dois mundos — é a base da chave IK/FK do Cap. 9</td></tr>
+    <tr><td><code>Iterations</code></td><td>Máximo de passos do solver por frame (padrão 500)</td><td>Quantas "tentativas de tatear" o solver pode dar; raramente precisa mudar</td></tr>
+    <tr><td><code>Use Tail</code></td><td>Se a ponta perseguida é o tail (padrão) ou o head do último bone</td><td>Perseguir com a ponta dos dedos ou com o pulso</td></tr>
+    <tr><td><code>Stretch</code></td><td>Permite a cadeia esticar além do comprimento físico</td><td>Quebra a rigidez dos elos — ótimo para rigs cartoon de braços elásticos</td></tr>
+  </table>
+
+  <h3>5.5 — Limites de junta: ensinando anatomia ao solver</h3>
+  <p>Seu joelho não dobra para frente nem gira de lado — as superfícies ósseas e os ligamentos restringem os <em>graus de liberdade</em> da junta. O solver do Blender não sabe disso até você contar. Com um bone da cadeia selecionado no Pose Mode, abra <span class="menupath">Properties ▸ Bone ▸ Inverse Kinematics</span>:</p>
+  <ul>
+    <li><strong>Lock X / Y / Z</strong> — proíbe rotação no eixo. Um joelho ou cotovelo realista trava tudo exceto um eixo (vire-o numa <em>dobradiça</em>, como a de uma porta).</li>
+    <li><strong>Limit + Min/Max</strong> — restringe a faixa angular. Joelho humano: ~0° a 150° em um único eixo; ele nunca hiperestende para trás.</li>
+    <li><strong>Stiffness (rigidez)</strong> — de 0 a 1, torna a junta "mais dura": o solver prefere dobrar as outras. É a diferença entre a sua lombar (rígida, gira pouco) e o pescoço (solto). Em cadeias longas como tentáculos, variar o stiffness ao longo da cadeia muda completamente o caráter do movimento.</li>
+  </ul>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Atenção</div>
+    <p>Esses limites de IK (painel <em>Bone</em>) valem <strong>apenas para o solver IK</strong>. Eles não impedem o animador de girar o bone à mão no modo FK. Para limites que valem sempre, use a constraint <strong>Limit Rotation</strong> (Capítulo 6). Muitos rigs usam os dois.</p>
+  </div>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia — por que o roll dos bones importa tanto no IK</div>
+    <p>Uma dobradiça só funciona porque seu eixo de rotação está perfeitamente alinhado com a porta. Se um joelho-dobradiça do seu rig tem o eixo X local torto (roll errado), o solver dobra a perna num plano inclinado e o joelho "vaza" para o lado. Antes de aplicar IK numa cadeia, alinhe os rolls: no Edit Mode, selecione os bones e use <span class="menupath">Armature ▸ Bone Roll ▸ Recalculate Roll ▸ Global +Z / −Z</span> (ou <kbd>Shift</kbd>+<kbd>N</kbd>). Verifique com a sobreposição <strong>Axes</strong> ligada: todos os eixos X das juntas de uma mesma "dobradiça" devem apontar para o mesmo lado. E dê à cadeia uma <strong>leve pré-dobra na rest pose</strong> (joelho um pouco flexionado): uma cadeia perfeitamente reta é um caso degenerado — o solver não sabe para que lado dobrar, exatamente como você não consegue prever para que lado uma régua perfeitamente vertical vai tombar.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 5</div>
+    <ol>
+      <li>Construa uma cadeia de 2 bones ("coxa" e "canela") com leve pré-dobra, e monte IK completo com alvo e pole seguindo a seção 5.3.</li>
+      <li>Trave a "canela" como dobradiça: Lock Y e Z no painel IK do bone, e Limit X de 0° a 150°.</li>
+      <li>Anime o alvo descrevendo um círculo (4 keyframes) e observe a perna "pedalar" sozinha.</li>
+      <li>Repita o círculo com o alvo longe demais e observe o travamento por alcance máximo.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= CAP 6 ================= -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Constraints: as regras físicas do rig</h2>
+
+  <p class="lead">Uma <strong>constraint (restrição)</strong> é uma regra que calcula parte da transformação de um bone automaticamente. A IK do capítulo anterior é só uma de uma família inteira. Constraints são adicionadas no Pose Mode, no painel <span class="menupath">Bone Constraints</span> (ícone de osso com chave inglesa — não confunda com o painel Object Constraints, da corrente).</p>
+
+  <h3>6.1 — As constraints que você usará o tempo todo</h3>
+  <table>
+    <tr><th>Constraint</th><th>O que faz</th><th>Analogia / uso típico</th></tr>
+    <tr><td><strong>Copy Transforms</strong></td><td>Copia posição+rotação+escala de outro bone/objeto</td><td>Solda invisível. Base de chaves IK/FK e de troca de "mão segurando objeto"</td></tr>
+    <tr><td><strong>Copy Location / Rotation / Scale</strong></td><td>Copia só um canal, por eixo se quiser</td><td>Engrenagens (Copy Rotation com Influence 0.5 = redução 2:1), olhos que acompanham juntos</td></tr>
+    <tr><td><strong>Limit Rotation / Location / Scale</strong></td><td>Trava canais em faixas mín/máx</td><td>Batente mecânico: a porta abre só até 110°. Anatomia de juntas em modo FK</td></tr>
+    <tr><td><strong>Damped Track</strong></td><td>Aponta o eixo Y do bone para um alvo, pelo caminho mais curto</td><td>Girassol seguindo o sol; olhos mirando um alvo; a cabeça da luminária mirando a cena</td></tr>
+    <tr><td><strong>Track To</strong></td><td>Também aponta para o alvo, mas mantém um eixo "para cima" estável</td><td>Câmera em tripé: mira o ator sem rolar de lado</td></tr>
+    <tr><td><strong>Stretch To</strong></td><td>Estica o bone até tocar o alvo, com preservação de volume</td><td>Elástico, pistão hidráulico, músculos, rigs cartoon</td></tr>
+    <tr><td><strong>Child Of</strong></td><td>Parentesco "ligável/desligável" com influência animável</td><td>Pegar e largar objetos: a caneca é filha da mesa, vira filha da mão, volta a ser da mesa</td></tr>
+    <tr><td><strong>Inverse Kinematics</strong></td><td>O solver do Capítulo 5</td><td>—</td></tr>
+    <tr><td><strong>Action</strong></td><td>Reproduz uma animação pronta controlada pela transformação de outro bone</td><td>Um "botão analógico": deslizar um controle de 0 a 1 executa a ação de fechar a mão</td></tr>
+    <tr><td><strong>Floor</strong></td><td>Impede o bone de atravessar um plano/objeto</td><td>O chão de verdade: pés que não afundam no piso</td></tr>
+  </table>
+
+  <h3>6.2 — Conceitos que valem para todas</h3>
+  <ul>
+    <li><strong>Influence</strong> — todo constraint tem um slider de 0 a 1 que mistura o resultado com a transformação original. E ele é <em>animável</em>: a maioria dos truques avançados de rig é "animar a influence na hora certa".</li>
+    <li><strong>Ordem importa</strong> — constraints são avaliadas de cima para baixo na pilha, cada uma agindo sobre o resultado da anterior, como uma linha de montagem.</li>
+    <li><strong>Espaços (Target/Owner Space)</strong> — definem em qual referencial a cópia acontece: <em>World Space</em> (coordenadas do mundo) ou <em>Local Space</em> (em relação ao próprio pai). Copiar rotação em Local Space é como dizer "gire em relação ao seu pai o mesmo tanto que ele gira em relação ao dele" — essencial quando os dois bones têm orientações diferentes.</li>
+  </ul>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>Na mecânica, todo mecanismo é definido pelos seus <strong>vínculos</strong>: a dobradiça remove dois eixos de rotação e três de translação de uma porta, sobrando 1 grau de liberdade. Constraints fazem o mesmo no rig: cada uma remove ou redireciona graus de liberdade. Um bom rigger pensa como projetista de máquinas — "quantos graus de liberdade este controle deve ter, e quem decide o resto?"</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Dica — depurando constraints</div>
+    <p>Quando um bone se comportar de forma estranha: (1) zere a pose com <kbd>Alt</kbd>+<kbd>G</kbd>/<kbd>R</kbd>/<kbd>S</kbd>; (2) desligue todas as constraints dele pelo "olhinho" e reative uma a uma; (3) confira os espaços Target/Owner; (4) procure <em>dependência cíclica</em> (A depende de B que depende de A) — o Blender avisa no console e o rig "treme". Ciclos quase sempre nascem de um alvo IK parenteado dentro da própria cadeia.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 6</div>
+    <p>Monte duas "engrenagens": dois bones lado a lado, e no segundo adicione <strong>Copy Rotation</strong> apontando para o primeiro, com <em>Invert Y</em> ligado e Influence 0.5. Gire o primeiro e veja o segundo girar ao contrário com metade da velocidade — você acabou de criar uma transmissão com relação 2:1, só com constraint.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 7 ================= -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 07 · PROJETO GUIADO</div><div class="fio"></div></div>
+  <h2 class="titulo">Projeto: rig completo de uma luminária articulada</h2>
+
+  <p class="lead">A luminária de mesa é o exercício clássico de rigging por uma razão: ela é uma cadeia cinemática pura, sem deformação orgânica para complicar — o problema fica 100% concentrado em hierarquia, IK e controles. Vamos montar uma do zero, animável como a famosa luminária saltitante.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 360" role="img" aria-label="Esquema do rig da luminária">
+      <!-- chao -->
+      <line x1="60" y1="320" x2="660" y2="320" stroke="#9AA8BC" stroke-width="2"/>
+      <!-- base mesh -->
+      <ellipse cx="220" cy="316" rx="90" ry="14" class="svg-mesh"/>
+      <!-- bracos mesh -->
+      <line x1="220" y1="310" x2="300" y2="160" stroke="#9AA8BC" stroke-width="9" stroke-linecap="round" opacity=".45"/>
+      <line x1="300" y1="160" x2="470" y2="120" stroke="#9AA8BC" stroke-width="9" stroke-linecap="round" opacity=".45"/>
+      <!-- cupula mesh -->
+      <path d="M455 96 L515 78 L545 140 L485 158 Z" class="svg-mesh"/>
+      <path d="M545 140 L585 196 L520 215 L485 158 Z" fill="rgba(217,164,4,.25)" stroke="#D9A404" stroke-width="1.4"/>
+      <!-- bones -->
+      <polygon points="220,310 252,250 300,160 232,242" class="svg-bone-ik"/>
+      <polygon points="300,160 352,138 470,120 348,158" class="svg-bone-ik"/>
+      <polygon points="470,120 500,138 520,180 482,148" class="svg-bone"/>
+      <circle cx="220" cy="310" r="11" class="svg-joint"/>
+      <circle cx="300" cy="160" r="11" class="svg-joint"/>
+      <circle cx="470" cy="120" r="11" class="svg-joint"/>
+      <!-- root -->
+      <circle cx="220" cy="316" r="32" fill="none" stroke="#4E7C3A" stroke-width="2.4" stroke-dasharray="7 5"/>
+      <text x="124" y="352" class="svg-lbl">CTRL-raiz</text>
+      <!-- alvo -->
+      <g class="svg-target">
+        <circle cx="470" cy="120" r="22"/>
+        <line x1="455" y1="105" x2="485" y2="135"/><line x1="485" y1="105" x2="455" y2="135"/>
+      </g>
+      <text x="430" y="74" class="svg-lbl">CTRL-cabeca (alvo IK)</text>
+      <!-- pole -->
+      <circle cx="208" cy="92" r="9" fill="#E87D0D" stroke="#B85F04" stroke-width="2"/>
+      <line x1="216" y1="98" x2="294" y2="154" class="svg-dash"/>
+      <text x="92" y="86" class="svg-lbl">CTRL-polo</text>
+      <text x="74" y="103" class="svg-sub">o "cotovelo" mira aqui</text>
+      <!-- labels -->
+      <text x="200" y="232" class="svg-sub" transform="rotate(-60 200 232)">braco-inferior</text>
+      <text x="356" y="128" class="svg-sub">braco-superior</text>
+      <text x="528" y="178" class="svg-sub">cabeca</text>
+      <text x="588" y="232" class="svg-sub">luz</text>
+    </svg>
+    <figcaption><b>Figura 7.1 — O plano do rig.</b> Dois bones em cadeia IK (amarelos), um bone de cabeça fora da IK, um alvo, um polo e um controle-raiz que carrega tudo.</figcaption>
+  </figure>
+
+  <h3>7.1 — Modelo rápido (10 minutos)</h3>
+  <p>Se você já tem uma luminária modelada, pule. Senão, monte um <em>mock-up</em> com primitivas — para estudar rigging, caixas bastam:</p>
+  <ol class="passos">
+    <li><h4>Base</h4><p><kbd>Shift</kbd>+<kbd>A</kbd> ▸ Mesh ▸ Cylinder, achatado (S, Z, 0.1) com raio ~0.8, apoiado no chão. Nomeie <code>base</code>.</p></li>
+    <li><h4>Braços</h4><p>Dois cilindros finos e compridos (~1.6 de comprimento cada). Posicione o primeiro saindo da base inclinado para cima/frente, e o segundo a partir da ponta do primeiro, formando um "&gt;" deitado — <strong>essa pré-dobra é proposital</strong> (lembra da seção 5.5?). Nomeie <code>braco-inferior</code> e <code>braco-superior</code>.</p></li>
+    <li><h4>Cúpula</h4><p>Um cone aberto (ou esfera cortada) na ponta do braço superior, apontando para frente/baixo. Nomeie <code>cupula</code>.</p></li>
+    <li><h4>Higiene</h4><p>Para cada peça: <kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms no Object Mode e origem bem posicionada. Transformações não aplicadas são fonte clássica de rigs tortos.</p></li>
+  </ol>
+
+  <h3>7.2 — O esqueleto</h3>
+  <ol class="passos">
+    <li><h4>Armature na junta da base</h4>
+      <p>Posicione o cursor 3D no topo da base (selecione a face/vértice no Edit Mode da base e use <kbd>Shift</kbd>+<kbd>S</kbd> ▸ <em>Cursor to Selected</em>). No Object Mode: <kbd>Shift</kbd>+<kbd>A</kbd> ▸ Armature. Em <span class="menupath">Object Data ▸ Viewport Display</span>, ative <strong>In Front</strong> e <strong>Names</strong> para ver os bones através da malha.</p></li>
+    <li><h4>Cadeia dos braços</h4>
+      <p>No Edit Mode da armature, posicione o head do primeiro bone na junta da base e o tail exatamente na junta do "cotovelo" da luminária (use <kbd>G</kbd> com snap a vértice se quiser precisão). Selecione o tail e extrude (<kbd>E</kbd>) até a junta da cúpula. Nomeie <code>braco-inferior</code> e <code>braco-superior</code>.</p></li>
+    <li><h4>Bone da cabeça</h4>
+      <p>Do tail do braço superior, extrude mais um bone curto entrando na cúpula. Nomeie <code>cabeca</code>. Em <span class="menupath">Bone ▸ Relations</span>, <strong>desmarque Connected</strong> deste bone — queremos que a cabeça acompanhe o braço, mas gire livre na "rótula".</p></li>
+    <li><h4>Alvo e polo</h4>
+      <p>Ainda no Edit Mode: duplique (<kbd>Shift</kbd>+<kbd>D</kbd>) o bone <code>cabeca</code>, afaste-o um pouco e limpe o parent (<kbd>Alt</kbd>+<kbd>P</kbd> ▸ Clear Parent). Nomeie <code>CTRL-cabeca</code> — será o alvo IK <em>e</em> o controle que o animador segura. Crie outro bone solto à frente do cotovelo (afastado ~1 unidade na direção da dobra) chamado <code>CTRL-polo</code>.</p></li>
+    <li><h4>Raiz</h4>
+      <p>Crie um bone deitado no chão, sob a base, chamado <code>CTRL-raiz</code>. Parenteie a ele (Keep Offset): <code>braco-inferior</code>, <code>CTRL-cabeca</code> e <code>CTRL-polo</code>. Agora mover a raiz carrega a luminária inteira — alvo e polo juntos, sem a pose desmontar.</p></li>
+    <li><h4>Rolls e eixos</h4>
+      <p>Selecione todos os bones e <kbd>Shift</kbd>+<kbd>N</kbd> ▸ <em>Global +Z</em> (ou o eixo que deixar os X locais das juntas paralelos entre si, apontando para o lado). Ligue a sobreposição <strong>Axes</strong> e confira: a dobradiça do cotovelo precisa de eixos coerentes.</p></li>
+  </ol>
+
+  <h3>7.3 — A cinemática</h3>
+  <ol class="passos">
+    <li><h4>IK no braço superior</h4>
+      <p>Pose Mode ▸ selecione <code>braco-superior</code> ▸ <span class="menupath">Bone Constraints ▸ Inverse Kinematics</span>. Target: a armature, bone <code>CTRL-cabeca</code>. <strong>Chain Length: 2</strong>. Pole Target: <code>CTRL-polo</code>; ajuste o <em>Pole Angle</em> até a cadeia repousar sem pulo (teste −90°/90°).</p></li>
+    <li><h4>Dobradiça no cotovelo</h4>
+      <p>Com <code>braco-superior</code> selecionado, painel <span class="menupath">Bone ▸ Inverse Kinematics</span>: trave (Lock) os eixos Y e Z, deixando só X livre — luminárias reais dobram num único plano. Se quiser fidelidade total, limite X a algo como −5° a 140°.</p></li>
+    <li><h4>Cabeça com mira própria</h4>
+      <p>O bone <code>cabeca</code> ficou <em>fora</em> da cadeia IK (Chain Length 2 cobre só os braços) — de propósito. Adicione a ele uma constraint <strong>Copy Rotation</strong> com alvo <code>CTRL-cabeca</code>: agora girar o controle no ar gira a cúpula, e o animador aponta a luz para onde quiser, independentemente da dobra dos braços. (Alternativa: uma <strong>Damped Track</strong> mirando um segundo controle <code>CTRL-mira</code> no chão — escolha o que preferir.)</p></li>
+    <li><h4>Teste de bancada</h4>
+      <p>Mova <code>CTRL-cabeca</code>: os braços dobram sozinhos, exatamente como puxar a luminária real pela cúpula. Mova <code>CTRL-polo</code>: o cotovelo muda de plano. Mova <code>CTRL-raiz</code>: tudo viaja junto. Se algo torcer estranho, revise rolls e Pole Angle.</p></li>
+  </ol>
+
+  <h3>7.4 — Ligando as malhas (sem skinning!)</h3>
+  <p>Luminária é máquina: cada peça é rígida, então usamos parent direto a bone — sem weight painting nenhum:</p>
+  <ol class="passos">
+    <li><h4>Por peça</h4><p>No Object Mode selecione a malha (ex.: <code>braco-inferior</code>), <kbd>Shift</kbd>+clique na armature, entre no Pose Mode, clique no bone correspondente e pressione <kbd>Ctrl</kbd>+<kbd>P</kbd> ▸ <strong>Bone</strong>.</p></li>
+    <li><h4>Mapa de parentesco</h4>
+      <p><code>base</code> → <code>CTRL-raiz</code> · <code>braco-inferior</code> → <code>braco-inferior</code> · <code>braco-superior</code> → <code>braco-superior</code> · <code>cupula</code> → <code>cabeca</code>.</p></li>
+    <li><h4>A lâmpada acende</h4><p>Adicione uma luz Spot dentro da cúpula e parenteie-a ao bone <code>cabeca</code> também — a iluminação da cena passa a ser animável pelo rig.</p></li>
+  </ol>
+
+  <h3>7.5 — Acabamento de rig profissional</h3>
+  <ul>
+    <li><strong>Esconda a mecânica:</strong> mova <code>braco-inferior</code>, <code>braco-superior</code> e <code>cabeca</code> para uma Bone Collection "Mecanismo" e oculte-a; deixe visível só a coleção "Controles" com os três CTRL.</li>
+    <li><strong>Custom shapes:</strong> dê formas legíveis aos controles (Capítulo 8): um círculo no chão para a raiz, uma esfera/cruz para o alvo, um pino para o polo.</li>
+    <li><strong>Desligue Deform</strong> em todos os bones (nenhum deforma malha neste rig), evitando acidentes futuros.</li>
+  </ul>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia — animando o pulo da luminária</div>
+    <p>Para a luminária "saltar" como no curta clássico, pense nela como um sistema <strong>massa–mola</strong>: (1) <em>antecipação</em> — ela se comprime (alvo desce, cotovelo fecha), armazenando energia como uma mola; (2) <em>impulso</em> — estende-se rápido, e a raiz deixa o chão; (3) <em>voo</em> — o corpo segue uma parábola (gravidade!), enquanto os braços, livres de carga, se esticam; (4) <em>aterrissagem</em> — comprime de novo para absorver o impacto, e a cúpula, por inércia, ainda afunda um pouco depois que a base já parou (<em>follow-through</em>). Todo o pulo é animado com apenas três controles — é exatamente para isso que o rig existe.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 7 — desafio</div>
+    <p>Anime um ciclo de 60 frames da luminária dando um pulo no lugar usando o roteiro físico acima. Critérios: a base nunca atravessa o chão, a cúpula tem follow-through de 2–4 frames na aterrissagem, e a trajetória do ar é uma parábola limpa no Graph Editor (curva suave em Z, linear em X).</p>
+  </div>
+</section>
+
+<!-- ================= CAP 8 ================= -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Controles profissionais e custom shapes</h2>
+
+  <p class="lead">A diferença entre um rig amador e um profissional raramente está no esqueleto — está na <strong>interface</strong>. O animador deve entender o rig em cinco segundos, sem manual.</p>
+
+  <h3>8.1 — Custom shapes: bones que parecem controles</h3>
+  <ol class="passos">
+    <li><h4>Modele os widgets</h4><p>Crie malhas simples — círculos, setas, cubos vazados — em uma collection chamada <code>WGT</code> (widgets). Só as arestas importam: bones com custom shape são desenhados em wireframe.</p></li>
+    <li><h4>Atribua</h4><p>No Pose Mode, selecione o bone e em <span class="menupath">Properties ▸ Bone ▸ Viewport Display ▸ Custom Shape</span> escolha a malha. Ajuste <em>Scale</em>, <em>Translation</em> e <em>Rotation</em> do shape, ou aponte <em>Override Transform</em> para outro bone.</p></li>
+    <li><h4>Esconda os widgets</h4><p>Desabilite a collection <code>WGT</code> no Outliner — os shapes continuam aparecendo nos bones.</p></li>
+  </ol>
+  <p>Convenções de leitura imediatas: <strong>círculo no chão</strong> = raiz/movimento global; <strong>cubo ou cruz</strong> = alvo IK; <strong>pino/esfera pequena</strong> = pole; <strong>círculo em volta do membro</strong> = controle FK de rotação.</p>
+
+  <div class="caixa v5">
+    <div class="rot">◆ Blender 5.x</div>
+    <p>Bones com custom shape agora podem ter o <strong>gizmo e o pivô exibidos na posição do shape</strong>, e não na origem real do bone (opção no painel Viewport Display). Isso deixa rigs faciais — cheios de controles deslocados — muito mais confortáveis de manipular. Também há cor por bone via Bone Collections/Bone Color, substituindo os antigos Bone Groups.</p>
+  </div>
+
+  <h3>8.2 — Hierarquia de controles e o bone-raiz</h3>
+  <p>Todo rig sério tem um <strong>root</strong> no chão do qual tudo descende — inclusive alvos IK e poles. Regras de arquitetura:</p>
+  <ul>
+    <li><strong>Root</strong> ▸ move o personagem/objeto inteiro pela cena (posicionamento de plano).</li>
+    <li><strong>COG/hips (centro de gravidade)</strong>, filho do root ▸ o tronco rebola, agacha e pula sem arrastar os alvos IK dos pés — é isso que mantém os pés pregados no chão quando o corpo desce.</li>
+    <li><strong>Controles nunca são bones de deformação.</strong> Separe as camadas: CTRL (o que o animador toca) ▸ MCH (mecanismo: IK, constraints) ▸ DEF (o que deforma a malha, geralmente via Copy Transforms dos MCH).</li>
+    <li><strong>Trave o que não deve ser tocado:</strong> no painel N (item Transform), clique nos cadeados dos canais irrelevantes — um pole target, por exemplo, só precisa de localização; tranque rotação e escala.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Dica</div>
+    <p>Teste de qualidade de interface: entregue o rig a alguém (ou finja ser o animador amanhã de manhã) e peça uma pose em 60 segundos, sem explicações. Cada hesitação aponta um controle mal nomeado, mal posicionado ou com forma ambígua.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 9 ================= -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Drivers, propriedades custom e a chave IK/FK</h2>
+
+  <p class="lead">Constraints conectam transformações a transformações. <strong>Drivers</strong> conectam <em>qualquer valor a qualquer valor</em> — inclusive com matemática no meio. São o sistema nervoso do rig.</p>
+
+  <h3>9.1 — O que é um driver</h3>
+  <p>Um driver é uma pequena expressão que calcula uma propriedade a partir de outra, avaliada a cada frame. Exemplos: a rotação de uma roda dirigida pela posição X do carro (<code>x / raio</code> — rolamento sem deslizar, física pura); a abertura de uma persiana dirigida por um slider; a influência de uma constraint dirigida por uma propriedade no controle.</p>
+  <ol class="passos">
+    <li><h4>Crie uma custom property</h4><p>Selecione o bone de controle, painel N ▸ aba Item ▸ <span class="menupath">Properties ▸ New</span>. Edite-a: nome <code>ik_fk</code>, tipo Float, min 0.0, max 1.0. Essa propriedade vira um slider visível no painel sempre que o bone está selecionado.</p></li>
+    <li><h4>Conecte com um driver</h4><p>Clique com o botão direito na propriedade-destino (ex.: o slider <em>Influence</em> da constraint IK) ▸ <strong>Add Driver</strong>. No popover: tipo <em>Averaged Value</em>, variável do tipo <em>Single Property</em>, apontando para a armature e o caminho <code>pose.bones["CTRL-mao"]["ik_fk"]</code>.</p></li>
+    <li><h4>Teste</h4><p>Arraste o slider do bone e veja a influência acompanhar. Se precisar de matemática, troque o tipo para <em>Scripted Expression</em> e escreva, por exemplo, <code>1 - var</code> ou <code>var * 2.5</code>.</p></li>
+  </ol>
+
+  <h3>9.2 — A chave IK/FK completa</h3>
+  <p>Membros profissionais têm <em>duas cadeias paralelas invisíveis</em> — uma FK, uma IK — e uma terceira cadeia de deformação que escolhe quem seguir:</p>
+  <ul>
+    <li>Cadeias <code>MCH-braco-fk</code> e <code>MCH-braco-ik</code> duplicadas da mesma rest pose (a IK com a constraint do Capítulo 5; a FK com controles e custom shapes).</li>
+    <li>Na cadeia <code>DEF</code>, cada bone recebe <strong>duas Copy Transforms</strong>: a primeira mira o bone FK correspondente; a segunda, o bone IK.</li>
+    <li>A influence da segunda (IK) é dirigida pela propriedade <code>ik_fk</code> do controle. Em 0, vence a FK por baixo; em 1, a IK por cima; valores intermediários misturam.</li>
+  </ul>
+  <p>Resultado: o animador alterna braço-solto-pendular (FK, andando) e mão-pregada-na-mesa (IK) com um slider — e pode até animar a transição.</p>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>Drivers são <em>funções de transferência</em>, o mesmo conceito de engenharia de controle: entrada → função → saída. O pedal do acelerador não injeta gasolina; ele envia um valor que uma função transforma em abertura de válvula. Quando você escreve <code>1 - var</code> num driver, está projetando a alavanca de câmbio do seu rig.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 9</div>
+    <p>Na luminária do Capítulo 7, crie no <code>CTRL-raiz</code> uma propriedade <code>abrir</code> (0–1) e dirija com ela a rotação X do bone <code>cabeca</code> (expressão <code>var * 0.8</code>, em radianos ≈ 45°). Você terá um "botão de abrir a cúpula" — um controle de máquina dentro do rig.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 10 ================= -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Bendy Bones: curvatura orgânica</h2>
+
+  <p class="lead">Nem tudo no mundo é feito de elos rígidos: colunas, caudas, mangueiras e personagens cartoon dobram em <em>curvas contínuas</em>. Os <strong>Bendy Bones (B-Bones)</strong> transformam um único bone em uma fita flexível de vários segmentos.</p>
+
+  <h3>10.1 — Ativando</h3>
+  <ol class="passos">
+    <li><h4>Modo de exibição</h4><p>Em <span class="menupath">Object Data ▸ Viewport Display ▸ Display As</span>, troque para <strong>B-Bone</strong>.</p></li>
+    <li><h4>Segmentos</h4><p>Selecione o bone e em <span class="menupath">Bone ▸ Bendy Bones</span> aumente <em>Segments</em> (6–12). O bone agora se subdivide internamente — e o skinning distribui a deformação ao longo da curva.</p></li>
+    <li><h4>Curve handles</h4><p>Defina <em>Start Handle</em> e <em>End Handle</em> como bones vizinhos ou controles dedicados: o B-Bone passa a se curvar como uma curva Bézier cujas alças são esses bones. Dois ou três controles dobram uma coluna inteira suavemente.</p></li>
+  </ol>
+  <p>Propriedades animáveis no Pose Mode (painel Bendy Bones): <em>Curve In/Out</em>, <em>Roll In/Out</em>, <em>Scale In/Out</em> e <em>Ease</em> — dá para afinar, torcer e inflar o bone ao longo do comprimento, base de muitos rigs cartoon de squash &amp; stretch.</p>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>O B-Bone modela o regime de <strong>flexão de vigas</strong>: enquanto uma cadeia de elos rígidos concentra toda a rotação nas juntas (como uma corrente de bicicleta), um material contínuo distribui a curvatura ao longo do comprimento (como uma régua flexionada ou uma mangueira de jardim). Sua coluna vertebral fica no meio-termo: 24 vértebras quase contínuas — por isso rigs de tronco com 1–2 B-Bones parecem mais naturais que 5 bones rígidos.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 10</div>
+    <p>Refaça o cilindro do Exercício 3 com um único B-Bone de 10 segmentos e dois controles (start/end handle). Compare a dobra com a versão de 3 bones rígidos — repare como o gradiente de pesos importa muito menos quando o próprio bone é curvo.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 11 ================= -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 11 · PROJETO GUIADO</div><div class="fio"></div></div>
+  <h2 class="titulo">Projeto: braço IK/FK e perna com pé reverso</h2>
+
+  <p class="lead">Este projeto aplica tudo até aqui no problema mais comum do rigging de personagens: membros. O braço recebe a chave IK/FK; a perna recebe o lendário <strong>reverse foot</strong>, o mecanismo que faz o pé rolar do calcanhar à ponta como num passo de verdade.</p>
+
+  <h3>11.1 — O braço (resumo de montagem)</h3>
+  <ol class="passos">
+    <li><h4>Cadeia base</h4><p>Edit Mode: bones <code>braco</code>, <code>antebraco</code> (conectados, com leve pré-dobra no cotovelo apontando para trás) e <code>mao</code> (Keep Offset). Rolls recalculados, eixo X das juntas alinhado.</p></li>
+    <li><h4>Triplique</h4><p>Duplique a cadeia duas vezes (<kbd>Shift</kbd>+<kbd>D</kbd>): renomeie para <code>FK-braco/antebraco/mao</code> e <code>IK-braco/antebraco</code> + <code>CTRL-mao-ik</code>. A original vira <code>DEF-…</code>. Use <span class="menupath">Armature ▸ Names ▸ Duplicate and Rename</span> se sua versão tiver (5.2+) para evitar os sufixos .001.</p></li>
+    <li><h4>IK</h4><p>Na cadeia IK: constraint Inverse Kinematics no <code>IK-antebraco</code>, alvo <code>CTRL-mao-ik</code>, Chain Length 2, pole <code>CTRL-polo-cotovelo</code> atrás do cotovelo. Trave Y/Z do antebraço (dobradiça).</p></li>
+    <li><h4>Mistura</h4><p>Em cada bone <code>DEF</code>: Copy Transforms ▸ alvo FK; segunda Copy Transforms ▸ alvo IK, com a influence dirigida pela propriedade <code>ik_fk</code> criada em um controle de propriedades (Capítulo 9).</p></li>
+    <li><h4>Skinning</h4><p>Só a cadeia DEF tem <em>Deform</em> ligado. Parenteie a malha do braço com Automatic Weights e refine.</p></li>
+  </ol>
+
+  <h3>11.2 — A perna e o problema do pé</h3>
+  <p>Um IK simples de perna prende o <em>tornozelo</em> ao alvo — mas um passo humano não gira em torno do tornozelo. Observe-se andando: o pé toca o chão pelo <strong>calcanhar</strong>, rola sobre a <strong>planta</strong>, e a impulsão final gira sobre a <strong>ponta dos dedos</strong> enquanto o calcanhar sobe. São três pivôs diferentes em meio segundo. O reverse foot resolve isso com uma hierarquia invertida de pivôs:</p>
+
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-label="Mecanismo de pé reverso">
+      <line x1="60" y1="250" x2="660" y2="250" stroke="#9AA8BC" stroke-width="2"/>
+      <!-- perna -->
+      <polygon points="240,60 268,118 300,180 256,124" class="svg-bone-ik"/>
+      <polygon points="300,180 318,208 330,238 304,212" class="svg-bone-ik"/>
+      <circle cx="240" cy="60" r="10" class="svg-joint"/>
+      <circle cx="300" cy="180" r="10" class="svg-joint"/>
+      <text x="180" y="118" class="svg-sub">coxa</text>
+      <text x="332" y="206" class="svg-sub">canela</text>
+      <!-- pe -->
+      <polygon points="330,238 372,232 430,246 376,250" class="svg-bone"/>
+      <polygon points="430,246 458,242 492,248 460,252" class="svg-bone"/>
+      <text x="360" y="226" class="svg-sub">pe</text>
+      <text x="448" y="232" class="svg-sub">dedos</text>
+      <!-- reverse chain -->
+      <g>
+        <circle cx="318" cy="250" r="8" fill="#E87D0D" stroke="#B85F04" stroke-width="2"/>
+        <circle cx="492" cy="250" r="8" fill="#E87D0D" stroke="#B85F04" stroke-width="2"/>
+        <circle cx="430" cy="250" r="8" fill="#E87D0D" stroke="#B85F04" stroke-width="2"/>
+        <path d="M318 268 C 360 292, 460 292, 492 268" class="svg-dash"/>
+        <path d="M492 264 C 470 280, 444 280, 430 264" class="svg-dash"/>
+      </g>
+      <text x="262" y="284" class="svg-lbl">pivô calcanhar</text>
+      <text x="512" y="246" class="svg-lbl">pivô ponta</text>
+      <text x="398" y="290" class="svg-lbl">pivô bola do pé</text>
+      <!-- legenda -->
+      <text x="60" y="46" class="svg-lbl">Cadeia "reversa": ponta → bola → calcanhar</text>
+      <text x="60" y="64" class="svg-sub">hierarquia invertida em relação à anatomia,</text>
+      <text x="60" y="80" class="svg-sub">cada bone é um pivô de rolagem do passo</text>
+    </svg>
+    <figcaption><b>Figura 11.1 — Reverse foot.</b> Três pivôs no chão (calcanhar, bola, ponta) encadeados ao contrário da anatomia. Girar cada um reproduz uma fase do passo, e o alvo IK do tornozelo viaja junto.</figcaption>
+  </figure>
+
+  <ol class="passos">
+    <li><h4>Cadeia anatômica</h4><p><code>coxa</code> → <code>canela</code> (conectados, joelho pré-dobrado para frente) → <code>pe</code> → <code>dedos</code>. IK na canela (Chain Length 2) e pole na frente do joelho.</p></li>
+    <li><h4>Cadeia reversa</h4><p>Crie bones soltos no chão: <code>CTRL-pe</code> (o controle-mestre, sob o pé inteiro) ▸ filho dele <code>MCH-ponta</code> com head na ponta dos dedos ▸ filho <code>MCH-bola</code> com head na bola do pé ▸ filho <code>MCH-calcanhar-rolagem</code>... a ordem exata varia entre escolas de rig; o essencial é: <strong>o alvo IK do tornozelo e o bone que controla os dedos são os últimos elos dessa corrente invertida</strong>.</p></li>
+    <li><h4>Conexões</h4><p>Parenteie o alvo IK do tornozelo ao último elo da cadeia reversa; adicione no bone <code>dedos</code> uma Copy Rotation do pivô da bola. O bone <code>pe</code> recebe Copy Rotation (ou Damped Track) do controle, para o peito do pé acompanhar a rolagem.</p></li>
+    <li><h4>Foot roll com driver</h4><p>Crie em <code>CTRL-pe</code> uma propriedade <code>rolagem</code> de −1 a 1 e dirija: valores negativos giram o pivô do calcanhar (pé aterrissando), positivos giram bola e depois ponta (pé impulsionando). Expressões como <code>max(var,0)*1.2</code> e <code>min(var,0)*1.2</code> separam os regimes. Um único slider passa a executar o passo inteiro.</p></li>
+    <li><h4>Teste de caminhada</h4><p>Pose chave: contato (calcanhar no chão, rolagem −1) → apoio (0) → impulsão (+1). Se os três pivôs giram nos lugares certos, o mecanismo está correto.</p></li>
+  </ol>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>O passo humano é um <strong>pêndulo invertido com rolagem</strong>: o corpo "tomba" para frente sobre o pé de apoio, e o pé transfere o pivô do calcanhar para a ponta para suavizar essa queda — biomecânicos chamam os três pivôs de <em>rockers</em> do passo. O reverse foot existe porque animar essa troca de pivôs à mão, com um único pivô no tornozelo, é praticamente impossível.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 11 — desafio final</div>
+    <p>Monte um boneco simples (cilindros bastam) com: tronco de B-Bone, dois braços com chave IK/FK e duas pernas com reverse foot. Anime um ciclo de caminhada de 24 frames no lugar. Critérios: pés sem deslizar (IK), braços pendulares com drag (FK), e quadril descendo levemente no momento de contato — física de pêndulo invertido.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 12 ================= -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">Rigify: rigs automáticos de personagem</h2>
+
+  <p class="lead">Depois de entender como tudo funciona por dentro, você ganha o direito de automatizar. O <strong>Rigify</strong> é o add-on oficial do Blender que gera rigs de produção completos — com IK/FK, pé reverso, dedos, face — a partir de um meta-esqueleto que você posiciona.</p>
+
+  <ol class="passos">
+    <li><h4>Ative</h4><p><span class="menupath">Edit ▸ Preferences ▸ Add-ons</span> ▸ busque <strong>Rigify</strong> ▸ marque.</p></li>
+    <li><h4>Meta-rig</h4><p><kbd>Shift</kbd>+<kbd>A</kbd> ▸ <span class="menupath">Armature ▸ Human (Meta-Rig)</span>. Surge um esqueleto humanoide simples.</p></li>
+    <li><h4>Ajuste ao personagem</h4><p>No Edit Mode, mova as juntas do meta-rig para dentro do seu modelo: ombros nos ombros, joelhos nos joelhos (com a pré-dobra natural do modelo!), dedos nos dedos. Use X-Axis Mirror para editar os dois lados de uma vez. Esta etapa define toda a qualidade do resultado.</p></li>
+    <li><h4>Gere</h4><p>Object Mode ▸ <span class="menupath">Object Data ▸ Rigify ▸ Generate Rig</span>. O Rigify constrói o rig final com centenas de bones organizados em Bone Collections, controles com custom shapes, chaves IK/FK por membro e foot roll prontos.</p></li>
+    <li><h4>Skinning</h4><p>Parenteie a malha ao rig <em>gerado</em> com Automatic Weights — o Rigify marca como Deform apenas os bones <code>DEF-</code> corretos. Refine pesos normalmente.</p></li>
+  </ol>
+
+  <p>Cada bone do meta-rig carrega um <em>rig type</em> (painel Bone, no Pose Mode do meta-rig): <code>limbs.arm</code>, <code>limbs.leg</code>, <code>spines.basic_spine</code> etc. Trocando tipos e parâmetros você monta criaturas, quadrúpedes e máquinas — o Rigify é um kit de módulos, não só um humano pronto.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Dica</div>
+    <p>Use o Rigify como professor: gere um rig e disseque-o. Cada truque desta apostila — cadeias triplas, drivers, pivôs reversos, coleções DEF/MCH/CTRL — está lá dentro, em escala industrial. Quando algo no Rigify se comportar de um jeito misterioso, agora você tem o vocabulário para investigar.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 13 ================= -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Rigging facial com shape keys e drivers</h2>
+
+  <p class="lead">Rostos deformam de um jeito que ossos sozinhos imitam mal: músculos deslizam sob a pele em padrões complexos. A ferramenta certa são as <strong>shape keys</strong> — poses esculpidas da malha — combinadas com bones de controle e drivers.</p>
+
+  <h3>13.1 — Shape keys em 4 passos</h3>
+  <ol class="passos">
+    <li><h4>Basis</h4><p>Na malha: <span class="menupath">Object Data ▸ Shape Keys ▸ +</span>. A primeira key, <em>Basis</em>, é o rosto neutro — nunca a edite por acidente.</p></li>
+    <li><h4>Esculpa a expressão</h4><p>Adicione outra key (ex.: <code>sorriso</code>), selecione-a com Value 1.0 e, no Edit Mode ou Sculpt Mode, mova os vértices para a expressão final. Só posições de vértice mudam — nada de adicionar/remover geometria.</p></li>
+    <li><h4>Misture</h4><p>De volta ao Object Mode, o slider Value de 0 a 1 interpola do neutro à expressão. Keys se somam: <code>sorriso</code> 0.7 + <code>sobrancelha-sup.L</code> 0.4 = expressão composta.</p></li>
+    <li><h4>Quebre em músculos</h4><p>Em vez de "rosto feliz" inteiro, crie keys pequenas e combináveis por região e lado: <code>boca-canto-sup.L</code>, <code>palpebra-fechar.R</code>, <code>bochecha-inflar</code>... — o mesmo princípio dos sistemas de unidades de ação musculares usados em animação facial profissional.</p></li>
+  </ol>
+
+  <h3>13.2 — Conectando ao rig</h3>
+  <p>Sliders soltos no painel são interface ruim para animar. Crie bones de controle flutuando diante do rosto (com custom shapes pequenos e travados em 2 eixos) e dirija cada shape key pela posição local do controle: botão direito no Value ▸ Add Driver ▸ variável Transform Channel (ex.: <code>X Location</code> do bone <code>CTRL-boca.L</code>, em Local Space), com a expressão escalando o alcance (ex.: <code>var * 10</code>). Mover o controle 0,1 unidade leva a key a 1.0. Combine com alguns bones reais de deformação para mandíbula (rotação pura — é uma dobradiça!) e olhos (Damped Track para um alvo de mirada).</p>
+
+  <div class="caixa fisica">
+    <div class="rot">⚙ Física do dia a dia</div>
+    <p>A mandíbula é a única grande articulação "de osso" do rosto — dobradiça com leve deslize, perfeita para um bone com Limit Rotation. Todo o resto (sorriso, sobrancelhas, pálpebras) é <strong>tecido mole tracionado por músculos</strong>, deslocamento de superfície sem pivô fixo — exatamente o que uma shape key descreve: um campo de deslocamentos de vértices. Usar a ferramenta com a física certa é o que faz o rosto parecer vivo.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 14 ================= -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">Boas práticas, organização e troubleshooting</h2>
+
+  <h3>14.1 — Checklist do rig profissional</h3>
+  <ul>
+    <li>☐ Transformações da malha aplicadas (<kbd>Ctrl</kbd>+<kbd>A</kbd>) antes do skinning; escala da armature = 1.0.</li>
+    <li>☐ Todos os bones nomeados, com <code>.L</code>/<code>.R</code> e prefixos DEF/MCH/CTRL.</li>
+    <li>☐ Deform desligado em todo bone que não deforma.</li>
+    <li>☐ Bone Collections separando Controles / Mecanismo / Deformação; só Controles visível por padrão.</li>
+    <li>☐ Rest pose com pré-dobras em todas as juntas que receberão IK.</li>
+    <li>☐ Rolls recalculados e conferidos com a sobreposição Axes.</li>
+    <li>☐ Canais inúteis dos controles travados (cadeados no painel N).</li>
+    <li>☐ Root no chão; mover só ele transporta o rig inteiro sem quebrar nada.</li>
+    <li>☐ Rotation Mode dos controles definido conscientemente (XYZ Euler para dobradiças e controles de um eixo; Quaternion para rotações livres — evita gimbal lock, o travamento de eixos dos Eulers).</li>
+    <li>☐ Teste de estresse: poses extremas em todos os controles sem a malha rasgar nem constraints explodirem.</li>
+  </ul>
+
+  <h3>14.2 — Tabela de socorro</h3>
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável</th><th>Remédio</th></tr>
+    <tr><td>Malha não acompanha os bones</td><td>Armature Modifier ausente/apontando errado; nomes de vertex groups não batem</td><td>Confira o modifier e os nomes; reparenteie se preciso</td></tr>
+    <tr><td>Joelho/cotovelo dobra para o lado errado</td><td>Rest pose reta demais ou roll errado</td><td>Pré-dobre a cadeia no Edit Mode; recalcule rolls; ajuste Pole Angle</td></tr>
+    <tr><td>Cadeia "pula" ao ligar o pole target</td><td>Pole Angle padrão incompatível com o roll do primeiro bone</td><td>Ajuste Pole Angle (±90° resolve na maioria)</td></tr>
+    <tr><td>Rig treme/vibra sozinho</td><td>Dependência cíclica entre constraints</td><td>Procure alvos parenteados dentro da própria cadeia; veja avisos no console</td></tr>
+    <tr><td>Deformação murcha em torções</td><td>Linear blend skinning</td><td>Ative Preserve Volume no Armature Modifier; adicione bones de twist se necessário</td></tr>
+    <tr><td>Vértices presos no lugar</td><td>Peso total 0 ou vértice fora de todos os grupos</td><td>Weight Paint no bone mais próximo; Auto Normalize ligado</td></tr>
+    <tr><td>Escala/posição estranha ao parentear</td><td>Transformações não aplicadas no Object Mode</td><td><kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms em malha e armature antes de tudo</td></tr>
+    <tr><td>Animação quebra ao renomear bone</td><td>F-curves apontam para o nome antigo</td><td>Renomeie sempre <em>antes</em> de animar; no 5.x a renomeação propaga para as actions, mas confira NLA e drivers</td></tr>
+  </table>
+
+  <h3>14.3 — Hábitos que escalam</h3>
+  <ul>
+    <li><strong>Salve a rest pose como sagrada.</strong> Se precisar redefinir (<span class="menupath">Pose ▸ Apply ▸ Apply Pose as Rest Pose</span>), saiba que todas as animações existentes passam a partir da nova base.</li>
+    <li><strong>Um rig, um arquivo.</strong> Em produção, o personagem riggado vive num .blend próprio e é <em>linkado</em> nas cenas com Library Override — animadores nunca editam o rig original.</li>
+    <li><strong>Documente no próprio rig:</strong> propriedades custom com nomes claros, coleções bem nomeadas e um text block "LEIA-ME" dentro do .blend valem mais que qualquer manual externo.</li>
+  </ul>
+</section>
+
+<!-- ================= CAP 15 ================= -->
+<section class="cap" id="cap15">
+  <div class="cap-tag"><div class="kf"></div><div class="num">CAPÍTULO 15</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades do 5.x</h2>
+
+  <h3>15.1 — Glossário essencial</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição curta</th></tr>
+    <tr><td><strong>Armature</strong></td><td>Objeto-contêiner do esqueleto; guarda os bones e a rest pose</td></tr>
+    <tr><td><strong>Bone</strong></td><td>Unidade rígida do esqueleto: head (pivô), body e tail</td></tr>
+    <tr><td><strong>Rest pose</strong></td><td>A pose "de fábrica" definida no Edit Mode; toda pose é um desvio dela</td></tr>
+    <tr><td><strong>FK</strong></td><td>Cinemática direta: ângulos definem a posição da ponta</td></tr>
+    <tr><td><strong>IK</strong></td><td>Cinemática inversa: a posição da ponta define os ângulos (via solver)</td></tr>
+    <tr><td><strong>Pole target</strong></td><td>Objeto/bone que orienta o plano da junta intermediária da cadeia IK</td></tr>
+    <tr><td><strong>Constraint</strong></td><td>Regra que calcula parte da transformação de um bone automaticamente</td></tr>
+    <tr><td><strong>Driver</strong></td><td>Expressão que liga qualquer propriedade a qualquer outra</td></tr>
+    <tr><td><strong>Vertex group / peso</strong></td><td>Mapa de influência (0–1) de um bone sobre cada vértice</td></tr>
+    <tr><td><strong>Skinning / binding</strong></td><td>Processo de ligar a malha ao esqueleto via pesos</td></tr>
+    <tr><td><strong>B-Bone</strong></td><td>Bone subdividido que se curva como fita Bézier</td></tr>
+    <tr><td><strong>Shape key</strong></td><td>Pose esculpida da malha, interpolável de 0 a 1</td></tr>
+    <tr><td><strong>Reverse foot</strong></td><td>Hierarquia invertida de pivôs (calcanhar/bola/ponta) para rolagem do passo</td></tr>
+    <tr><td><strong>Gimbal lock</strong></td><td>Perda de um eixo de rotação em ângulos Euler; evitado com quaternions</td></tr>
+    <tr><td><strong>Grau de liberdade</strong></td><td>Cada eixo independente em que uma junta pode se mover; dobradiça = 1</td></tr>
+  </table>
+
+  <h3>15.2 — Atalhos de rigging</h3>
+  <table>
+    <tr><th>Atalho</th><th>Contexto</th><th>Ação</th></tr>
+    <tr><td><kbd>Tab</kbd> / <kbd>Ctrl</kbd>+<kbd>Tab</kbd></td><td>—</td><td>Edit Mode / Pose Mode</td></tr>
+    <tr><td><kbd>E</kbd></td><td>Edit</td><td>Extrudar bone do tail selecionado</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd> / <kbd>Alt</kbd>+<kbd>P</kbd></td><td>Edit/Object</td><td>Parentear / limpar parent</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>N</kbd></td><td>Edit</td><td>Recalcular roll dos bones</td></tr>
+    <tr><td><kbd>M</kbd></td><td>Edit/Pose</td><td>Mover bones para Bone Collection</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>I</kbd></td><td>Pose</td><td>Adicionar IK rápido ao bone ativo</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd> (menu)</td><td>Pose</td><td>Menu de constraints (varia por keymap; use o painel)</td></tr>
+    <tr><td><kbd>Alt</kbd>+<kbd>G</kbd>/<kbd>R</kbd>/<kbd>S</kbd></td><td>Pose</td><td>Zerar posição/rotação/escala</td></tr>
+    <tr><td><kbd>I</kbd></td><td>Pose</td><td>Inserir keyframe</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd></td><td>Pose</td><td>Copiar pose / colar pose espelhada</td></tr>
+    <tr><td><kbd>F2</kbd></td><td>—</td><td>Renomear bone/objeto ativo</td></tr>
+  </table>
+
+  <h3>15.3 — Resumo das novidades 4.x → 5.x relevantes para rigging</h3>
+  <ul>
+    <li><strong>Bone Collections com hierarquia e cores</strong> substituíram de vez layers e bone groups (desde o 4.0; consolidado no 5.x).</li>
+    <li><strong>Custom shapes com gizmo/pivô na posição exibida</strong> — manipulação muito mais confortável em rigs faciais (5.0).</li>
+    <li><strong>Visibilidade e seleção de bones independentes por instância</strong> de armatures linkadas (5.0).</li>
+    <li><strong>Copy Global Transform integrado</strong> ao Blender (aba Animation do painel lateral) — útil para "pregar" mãos e pés no espaço entre trocas IK/FK (5.0).</li>
+    <li><strong>Slotted Actions</strong> (desde 4.4): uma mesma Action pode conter dados de múltiplos objetos/armatures via slots — afeta scripts e pose assets multi-personagem.</li>
+    <li><strong>Operador Duplicate and Rename</strong> para bones, evitando sufixos .001 em cadeias duplicadas (5.2).</li>
+    <li><strong>API Python com mudanças incompatíveis no 5.0</strong> — add-ons de rigging antigos podem exigir atualização; consulte as release notes oficiais em <a class="ext" href="https://developer.blender.org/docs/release_notes/">developer.blender.org</a>.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Para continuar estudando</div>
+    <p>O manual oficial (<a class="ext" href="https://docs.blender.org/manual/en/latest/animation/armatures/index.html">docs.blender.org ▸ Animation &amp; Rigging</a>) é a referência definitiva de cada painel citado aqui. Depois dos dois projetos desta apostila, bons próximos passos são: dissecar um rig do Rigify, riggar um quadrúpede (a coluna vira protagonista) e estudar Spline IK para caudas e cordas.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Apostila de Rigging no Blender 5.x · material de estudo · capítulos 1–15<br>
+  Boa prática: refaça os exercícios sem consultar o texto — rigging entra pelos dedos.
+</footer>
+
+</main>
+</div><!-- /layout -->
+</body>
+</html>

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia Completo — Boolean no Blender 5.x</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F5F2F4;
+  --tinta:#1E1A20;
+  --tinta-suave:#544D58;
+  --uniao:#6A3FA0;          /* roxo: operação / união */
+  --uniao-escuro:#4A2A75;
+  --corte:#0E9C8A;          /* teal: o cortador / diferença */
+  --corte-escuro:#0A6E62;
+  --alvo:#D94F70;           /* rosa: o alvo / interseção */
+  --aviso:#D98E04;
+  --verde:#3F7A4A;
+  --vermelho:#B3402E;
+  --linha:#DDD6E0;
+  --cartao:#FFFFFF;
+  --quadro:#231C2B;         /* fundo escuro dos diagramas */
+  --q-linha:#CDBBE2;
+  --q-dim:#9580AD;
+  --code-bg:#241E2A;
+  --code-fg:#ECE6F0;
+  --sombra:0 1px 3px rgba(30,26,32,.09), 0 8px 24px rgba(30,26,32,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{background:var(--papel);color:var(--tinta);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.62}
+::selection{background:var(--uniao);color:#fff}
+
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+.sidebar{border-right:1px solid var(--linha);background:linear-gradient(180deg,#EEEAF0,#F5F2F4 240px);padding:28px 22px 48px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar h2{font-family:"Archivo",sans-serif;font-stretch:90%;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-suave);margin:26px 0 10px}
+.sidebar nav a{display:block;text-decoration:none;color:var(--tinta-suave);font-family:"Archivo",sans-serif;font-size:.84rem;line-height:1.35;padding:5px 8px 5px 14px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(106,63,160,.08);border-left-color:var(--uniao)}
+.sidebar nav a .n{color:var(--uniao);font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px}
+.logo-b{display:flex;align-items:center;gap:11px}
+.logo-b .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.05rem;line-height:1.12;font-stretch:105%}
+.logo-b .t2{font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--uniao-escuro)}
+
+main{padding:0 0 120px}
+.miolo{max-width:780px;margin:0 auto;padding:0 36px}
+
+.capa{background:radial-gradient(900px 460px at 78% -10%, rgba(106,63,160,.4), transparent 60%),radial-gradient(700px 420px at 10% 120%, rgba(14,156,138,.32), transparent 60%),var(--quadro);color:#F1ECF5;padding:84px 36px 72px;position:relative;overflow:hidden}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;color:#C9A8F0;border:1px solid rgba(176,140,224,.5);border-radius:999px;padding:6px 14px;margin-bottom:26px;background:rgba(35,28,43,.5)}
+.capa h1{font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:880;font-size:clamp(2.2rem,5.2vw,3.5rem);line-height:1.02;letter-spacing:-.015em;max-width:15ch;margin-bottom:20px}
+.capa h1 em{font-style:normal;color:#3FD9C4}
+.capa p.sub{font-size:1.06rem;max-width:58ch;color:#CBC0D6;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;border:1px solid rgba(241,236,245,.28);border-radius:6px;padding:6px 12px;color:#D8CEE2}
+.capa-venn{position:absolute;right:-40px;top:50%;transform:translateY(-50%);z-index:1;opacity:.6}
+
+section.cap{padding-top:68px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .op{width:16px;height:16px;border-radius:50%;background:var(--uniao);box-shadow:7px 0 0 -3px var(--corte);flex:0 0 auto}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--uniao-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;font-size:clamp(1.65rem,3.3vw,2.25rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:20px}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.2rem;margin:40px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:28px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+a.ext{color:var(--uniao-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+
+kbd{font-family:"JetBrains Mono",monospace;font-size:.78em;background:#fff;border:1px solid #C9C0CE;border-bottom-width:2.5px;border-radius:5px;padding:1.5px 7px;white-space:nowrap;color:var(--tinta)}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#EAE4EC;border-radius:4px;padding:1.5px 6px}
+pre{background:var(--code-bg);color:var(--code-fg);font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--uniao-escuro)}
+
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{display:flex;align-items:center;gap:8px;font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.conceito{border-left:4px solid var(--uniao)}
+.caixa.conceito .rot{color:var(--uniao-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--corte)}
+.caixa.exercicio .rot{color:var(--corte-escuro)}
+.caixa.v5{border-left:4px solid var(--aviso);background:#FDF8EE}
+.caixa.v5 .rot{color:#A66A02}
+
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{content:counter(passo);position:absolute;left:0;top:1px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;display:flex;align-items:center;justify-content:center}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.92rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{font-family:"Archivo",sans-serif;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAF8FB}
+
+figure{margin:26px 0;background:var(--quadro);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:"Archivo",sans-serif;font-size:.82rem;color:#B7A6CB;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(205,187,226,.32)}
+figcaption b{color:#F1ECF5}
+.q-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#F1ECF5}
+.q-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--q-dim)}
+.q-uniao{fill:rgba(106,63,160,.5);stroke:#B08CE0;stroke-width:1.8}
+.q-corte{fill:rgba(14,156,138,.45);stroke:#3FD9C4;stroke-width:1.8}
+.q-tracado{fill:none;stroke:var(--q-linha);stroke-width:1.8;stroke-linejoin:round}
+.q-fino{fill:none;stroke:var(--q-dim);stroke-width:1;stroke-dasharray:4 4}
+.q-acento{fill:none;stroke:#F2A33C;stroke-width:2.2}
+.q-erro{fill:none;stroke:#E2574C;stroke-width:2.4}
+.q-vert{fill:#F2A33C;stroke:#231C2B;stroke-width:1}
+
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;margin:26px 0 10px}
+.sumario a{display:flex;gap:12px;align-items:baseline;text-decoration:none;color:var(--tinta);font-family:"Archivo",sans-serif;font-size:.92rem;padding:9px 12px;border-radius:8px;border:1px solid transparent}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--uniao-escuro);font-size:.8rem}
+
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+
+@media (max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}.sumario{grid-template-columns:1fr}.miolo{padding:0 20px}.capa{padding:64px 20px 56px}.capa-venn{display:none}}
+@media print{.sidebar{display:none}.layout{display:block}.capa{background:#fff;color:#000}.capa h1 em{color:#000}figure{background:#fff;border:1px solid #999}figure,.caixa,table{box-shadow:none}section.cap{page-break-before:always}}
+:focus-visible{outline:3px solid var(--uniao);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-b">
+    <svg width="44" height="34" viewBox="0 0 44 34" aria-hidden="true">
+      <circle cx="16" cy="17" r="13" fill="rgba(106,63,160,.5)" stroke="#4A2A75" stroke-width="2"/>
+      <circle cx="28" cy="17" r="13" fill="rgba(14,156,138,.45)" stroke="#0A6E62" stroke-width="2"/>
+    </svg>
+    <div>
+      <div class="t1">Boolean</div>
+      <div class="t2">Guia Completo · Blender 5.x</div>
+    </div>
+  </div>
+
+  <h2>Fundamentos</h2>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é um Boolean</a>
+    <a href="#cap2"><span class="n">02</span>As operações</a>
+    <a href="#cap3"><span class="n">03</span>Os três solvers</a>
+    <a href="#cap4"><span class="n">04</span>Manifold: o pré-requisito</a>
+  </nav>
+
+  <h2>As três vias</h2>
+  <nav>
+    <a href="#cap5"><span class="n">05</span>Boolean Modifier</a>
+    <a href="#cap6"><span class="n">06</span>Edit Mode (Knife/Intersect)</a>
+    <a href="#cap7"><span class="n">07</span>Bool Tool e add-ons</a>
+  </nav>
+
+  <h2>Domínio</h2>
+  <nav>
+    <a href="#cap8"><span class="n">08</span>Fluxo não destrutivo</a>
+    <a href="#cap9"><span class="n">09</span>Limpeza e shading</a>
+    <a href="#cap10"><span class="n">10</span>Boolean + Bevel + SubD</a>
+    <a href="#cap11"><span class="n">11</span>Receitas práticas</a>
+    <a href="#cap12"><span class="n">12</span>Troubleshooting</a>
+    <a href="#cap13"><span class="n">13</span>Glossário e atalhos</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="capa">
+  <svg class="capa-venn" width="420" height="420" viewBox="0 0 420 420" aria-hidden="true">
+    <circle cx="170" cy="210" r="120" fill="none" stroke="rgba(176,140,224,.5)" stroke-width="2"/>
+    <circle cx="270" cy="210" r="120" fill="none" stroke="rgba(63,217,196,.5)" stroke-width="2"/>
+    <path d="M220 113 A120 120 0 0 0 220 307 A120 120 0 0 0 220 113 Z" fill="rgba(217,79,112,.25)" stroke="rgba(217,79,112,.6)" stroke-width="1.6"/>
+  </svg>
+  <div class="miolo">
+    <span class="selo">◉ GUIA COMPLETO · VOLUME 3 DA COLEÇÃO</span>
+    <h1>Boolean no Blender <em>cortar, unir, intersectar</em></h1>
+    <p class="sub">Tudo sobre operações booleanas no Blender 5.x: a teoria por trás, as três operações e os três solvers (Float, Exact, Manifold), modifier vs. edit mode vs. add-ons, o fluxo não destrutivo, o porquê dos booleans "darem errado" — e como sempre consertar.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>13 capítulos</span>
+      <span>Diagramas de operação</span>
+      <span>Tabela de socorro completa</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><div class="op"></div><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">O que este guia cobre</h2>
+  <p class="lead">Boolean é a ferramenta mais poderosa — e a mais incompreendida — da modelagem. Este guia explica por que ela funciona, por que falha, e como dominá-la de forma não destrutiva. Leia 1–5 em ordem; o resto é consulta.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é um Boolean: volumes e teoria de conjuntos</a>
+    <a href="#cap2"><span class="n">02</span>As operações: Difference, Union, Intersect, Slice</a>
+    <a href="#cap3"><span class="n">03</span>Os três solvers: Float, Exact, Manifold</a>
+    <a href="#cap4"><span class="n">04</span>Manifold: por que o pré-requisito existe</a>
+    <a href="#cap5"><span class="n">05</span>O Boolean Modifier por inteiro</a>
+    <a href="#cap6"><span class="n">06</span>Boolean em Edit Mode: Knife e Intersect</a>
+    <a href="#cap7"><span class="n">07</span>Bool Tool e os add-ons do nicho</a>
+    <a href="#cap8"><span class="n">08</span>O fluxo não destrutivo completo</a>
+    <a href="#cap9"><span class="n">09</span>Limpeza pós-boolean e shading</a>
+    <a href="#cap10"><span class="n">10</span>Boolean com Bevel e Subdivision</a>
+    <a href="#cap11"><span class="n">11</span>Receitas: furos, painéis, padrões, slice</a>
+    <a href="#cap12"><span class="n">12</span>Troubleshooting: o boolean que não obedece</a>
+    <a href="#cap13"><span class="n">13</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">◉ Sobre a versão</div>
+    <p>Escrito para o <strong>Blender 5.x</strong>. As mudanças que afetam boolean nas versões recentes — o solver "Fast" renomeado para <strong>Float</strong>, a chegada do solver <strong>Manifold</strong> de alta performance, ganhos de velocidade do Exact, Auto Merge no Bevel — estão marcadas em caixas amarelas e resumidas no Capítulo 13.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 1 ============ -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é um Boolean: volumes e teoria de conjuntos</h2>
+
+  <p class="lead">Uma operação <strong>booleana</strong> combina dois sólidos tratando-os como <strong>volumes</strong>, não como cascas de polígonos. O nome vem de George Boole e da álgebra de conjuntos — e essa origem explica tudo o que o boolean faz e exige.</p>
+
+  <h3>1.1 — De conjuntos a sólidos</h3>
+  <p>Na teoria de conjuntos você combina coleções de elementos com <em>união</em>, <em>interseção</em> e <em>diferença</em>. Em CAD e em 3D, a mesma álgebra se aplica a <strong>regiões do espaço</strong>: cada malha fechada define um volume — um conjunto de todos os pontos "dentro" dela — e as operações booleanas combinam esses conjuntos de pontos. É a chamada <em>Constructive Solid Geometry</em> (CSG): construir formas complexas a partir de primitivas simples e operações.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◉ A ideia-chave</div>
+    <p>O boolean só faz sentido se cada objeto <strong>define um volume sem ambiguidade</strong> — todo ponto do espaço precisa estar claramente "dentro" ou "fora". É daí que nasce o pré-requisito de malha <em>manifold</em> (estanque) do Capítulo 4: uma malha com buracos não separa o dentro do fora, e o solver perde a referência de onde cortar. A maioria absoluta dos problemas de boolean é, na raiz, um problema de "este objeto não descreve um volume direito".</p>
+  </div>
+
+  <h3>1.2 — O vocabulário do guia</h3>
+  <ul>
+    <li><strong>Alvo</strong> (target) — o objeto que <em>recebe</em> a operação; é nele que o Boolean Modifier vive.</li>
+    <li><strong>Cortador / operando</strong> (cutter/operand) — o objeto que <em>aplica</em> a operação. Em Difference, é o que some.</li>
+    <li><strong>Solver</strong> — o algoritmo que calcula a interseção das superfícies (Capítulo 3).</li>
+    <li><strong>Manifold / watertight</strong> — malha que fecha um volume perfeitamente, sem buracos, bordas soltas ou faces internas.</li>
+  </ul>
+
+  <h3>1.3 — Por que booleans são insubstituíveis</h3>
+  <p>Modelar à mão um furo passante chanfrado num casco curvo é trabalhoso e propenso a erro. Com boolean: posicione um cilindro, Difference, pronto. Booleans brilham em <strong>velocidade de exploração</strong> (testar dez variações de um design em minutos), em <strong>formas mecânicas precisas</strong> (encaixes, recortes, furação) e em <strong>concepts</strong> onde a forma importa mais que a topologia. A fama de "boolean dá problema" vem quase sempre de pular a higiene de malha e a limpeza posterior — etapas que este guia trata em detalhe.</p>
+</section>
+
+<!-- ============ CAP 2 ============ -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">As operações: Difference, Union, Intersect, Slice</h2>
+
+  <p class="lead">Três operações nativas no modifier (mais o "Slice" oferecido por ferramentas/add-ons) cobrem tudo. Entenda cada uma como uma região de um diagrama de Venn de dois sólidos: A (o alvo) e B (o cortador).</p>
+
+  <figure>
+    <svg viewBox="0 0 720 230" role="img" aria-label="As operações booleanas como diagramas de Venn">
+      <!-- DIFFERENCE -->
+      <g transform="translate(40,20)">
+        <clipPath id="cA"><circle cx="58" cy="80" r="52"/></clipPath>
+        <circle cx="58" cy="80" r="52" class="q-uniao"/>
+        <circle cx="98" cy="80" r="52" fill="var(--quadro)" stroke="#3FD9C4" stroke-width="1.8"/>
+        <circle cx="58" cy="80" r="52" fill="none" stroke="#B08CE0" stroke-width="1.8"/>
+        <text x="78" y="172" text-anchor="middle" class="q-lbl">Difference</text>
+        <text x="78" y="190" text-anchor="middle" class="q-sub">A − B  (furar)</text>
+      </g>
+      <!-- UNION -->
+      <g transform="translate(260,20)">
+        <circle cx="58" cy="80" r="52" class="q-uniao"/>
+        <circle cx="98" cy="80" r="52" class="q-corte"/>
+        <text x="78" y="172" text-anchor="middle" class="q-lbl">Union</text>
+        <text x="78" y="190" text-anchor="middle" class="q-sub">A ∪ B  (soldar)</text>
+      </g>
+      <!-- INTERSECT -->
+      <g transform="translate(480,20)">
+        <circle cx="58" cy="80" r="52" fill="none" stroke="#B08CE0" stroke-width="1.8"/>
+        <circle cx="98" cy="80" r="52" fill="none" stroke="#3FD9C4" stroke-width="1.8"/>
+        <clipPath id="cL"><circle cx="58" cy="80" r="52"/></clipPath>
+        <circle cx="98" cy="80" r="52" fill="rgba(217,79,112,.45)" stroke="#D94F70" stroke-width="1.8" clip-path="url(#cL)"/>
+        <text x="78" y="172" text-anchor="middle" class="q-lbl">Intersect</text>
+        <text x="78" y="190" text-anchor="middle" class="q-sub">A ∩ B  (recortar)</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 2.1 — As três operações.</b> Roxo = alvo A, teal = cortador B, rosa = volume comum. Difference mantém A sem B; Union funde os dois; Intersect mantém só o que pertence a ambos.</figcaption>
+  </figure>
+
+  <table>
+    <tr><th>Operação</th><th>Resultado</th><th>Equivalente industrial</th><th>Uso típico</th></tr>
+    <tr><td><strong>Difference</strong></td><td>O cortador é removido do alvo</td><td>Furar, fresar, usinar</td><td>Furos, recortes, encaixes, gravações — 80% dos casos</td></tr>
+    <tr><td><strong>Union</strong></td><td>Os dois volumes fundidos; faces internas deletadas</td><td>Soldar, fundir em peça única</td><td>Juntar primitivas numa carcaça contínua e estanque</td></tr>
+    <tr><td><strong>Intersect</strong></td><td>Só o volume comum aos dois sobrevive</td><td>Recortar pelo gabarito / molde</td><td>Cortar uma forma exatamente no contorno de outra; chanfros de interseção</td></tr>
+    <tr><td><strong>Slice</strong> (Bool Tool/add-ons)</td><td>Difference + Intersect ao mesmo tempo: corta o alvo e produz a fatia removida como objeto separado</td><td>Serrar uma peça em duas</td><td>Separar tampas, dividir carcaças, criar peças que se encaixam</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">◉ Difference é Union "ao contrário"</div>
+    <p>No fundo há uma só operação. Difference de A com B é a interseção de A com o <em>complemento</em> de B — ou seja, "vire o cortador do avesso e una". Por isso inverter as normais de um objeto (<kbd>Shift</kbd>+<kbd>N</kbd> ▸ Flip) transforma um furo em saliência e vice-versa: você inverteu qual lado é "dentro". Guarde isto — metade dos bugs de boolean são normais invertidas fazendo o solver confundir dentro e fora.</p>
+  </div>
+
+  <h3>2.1 — Overlap Threshold</h3>
+  <p>Toda operação tem um parâmetro <strong>Overlap Threshold</strong> (padrão 0.000001 m): a distância máxima para o solver considerar duas faces "encostadas". Mantenha-o baixo. Aumentá-lo um pouco pode salvar um boolean com faces quase-coplanares problemáticas, mas em excesso funde detalhes que deveriam permanecer distintos.</p>
+</section>
+
+<!-- ============ CAP 3 ============ -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">Os três solvers: Float, Exact, Manifold</h2>
+
+  <p class="lead">O <strong>solver</strong> é o algoritmo que calcula onde as superfícies se cruzam e o que sobra. A escolha do solver é a decisão técnica mais importante de qualquer boolean — e a causa nº 1 de resultados que "deram errado".</p>
+
+  <table>
+    <tr><th>Solver</th><th>Caráter</th><th>Lida com sobreposição/coplanar?</th><th>Requisito de malha</th><th>Velocidade</th></tr>
+    <tr><td><strong>Float</strong><br>(ex-"Fast")</td><td>Simples e rápido; algoritmo BMesh clássico</td><td>Não — tropeça em faces coplanares e arestas sobrepostas</td><td>Tolerante a malhas imperfeitas</td><td>Rápido</td></tr>
+    <tr><td><strong>Exact</strong></td><td>Aritmética de precisão múltipla; o mais robusto</td><td>Sim — trata coplanares e sobreposições corretamente</td><td>Tolerante; tem opção <em>Self Intersection</em></td><td>Lento</td></tr>
+    <tr><td><strong>Manifold</strong></td><td>Algoritmo novo de alta performance</td><td>Sim, com bons resultados</td><td><strong>Só funciona em malhas 100% manifold</strong> (mais o caso especial Difference com um plano)</td><td>Geralmente o mais rápido</td></tr>
+  </table>
+
+  <div class="caixa v5">
+    <div class="rot">◉ Blender 5.x — a paisagem atual dos solvers</div>
+    <p>O antigo <strong>"Fast" virou "Float"</strong> no 5.0. O solver <strong>Manifold</strong> entrou como a opção de alta performance e, em ferramentas/add-ons que o expõem, costuma ser o <em>padrão</em> por ser rápido e limpo — desde que suas malhas sejam estanques. No 5.1, tanto o Exact quanto o Manifold ficaram mais rápidos (o Exact pode ser >35% mais veloz com muitos atributos). Conclusão prática: tutoriais que falam só de "Fast vs Exact" são anteriores ao Manifold.</p>
+  </div>
+
+  <h3>3.1 — Qual solver escolher (árvore de decisão)</h3>
+  <pre><code>Sua malha (alvo E cortador) é 100% manifold/estanque?
+├── SIM  → MANIFOLD   (mais rápido, resultado limpo)
+│           ↳ se der artefato → EXACT
+└── NÃO  → EXACT      (robusto, lida com coplanar e furos)
+            ↳ precisa de velocidade e o caso é simples,
+              sem faces encostadas → FLOAT</code></pre>
+
+  <h3>3.2 — Opções específicas do Exact</h3>
+  <ul>
+    <li><strong>Self Intersection</strong> — trata corretamente quando o próprio alvo ou cortador se auto-intersecta (uma malha que atravessa a si mesma). Custa desempenho; ligue só quando houver auto-interseção real.</li>
+    <li><strong>Hole Tolerant</strong> — otimiza o resultado para geometria não-manifold (com buracos), a um custo de tempo. Ative apenas quando o Exact apresentar erros em malhas furadas — não como padrão.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Estratégia "tente o outro"</div>
+    <p>Quando um boolean falha, a primeira reação não é desistir: é <strong>trocar o solver</strong>. Cada algoritmo falha de um jeito diferente. Se o Manifold deu artefato, o Exact pode acertar; se o Exact deu glitch numa malha furada, ligar Hole Tolerant (ou fechar o buraco) resolve. Trocar de solver leva um clique e resolve a maioria dos casos antes mesmo de você abrir o Edit Mode.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 4 ============ -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">Manifold: por que o pré-requisito existe</h2>
+
+  <p class="lead">Se você entender este capítulo, 90% dos seus problemas de boolean somem. <strong>Manifold</strong> (ou "watertight", estanque) é a propriedade de uma malha que define um volume sem ambiguidade — e booleans precisam dela para saber o que é dentro e o que é fora.</p>
+
+  <h3>4.1 — O que torna uma malha manifold</h3>
+  <p>Uma malha é manifold quando ela seria <strong>capaz de segurar água</strong> sem vazar. Tecnicamente:</p>
+  <ul>
+    <li><strong>Toda aresta pertence a exatamente 2 faces.</strong> Uma aresta com 1 face só é uma borda de buraco; com 3+ faces é uma "aba" interna — ambas confundem o solver.</li>
+    <li><strong>Sem vértices soltos, arestas soltas ou faces internas duplicadas.</strong></li>
+    <li><strong>Normais consistentes</strong>, todas apontando para fora.</li>
+  </ul>
+
+  <figure>
+    <svg viewBox="0 0 720 210" role="img" aria-label="Malha manifold versus não-manifold">
+      <!-- manifold -->
+      <g transform="translate(70,20)">
+        <path d="M0 120 L40 40 L120 40 L160 120 Z" class="q-tracado"/>
+        <path d="M40 40 L60 100 L0 120 M120 40 L100 100 L160 120 M60 100 L100 100" class="q-fino" stroke-dasharray="0" stroke="#9580AD"/>
+        <text x="80" y="160" text-anchor="middle" class="q-lbl">✓ manifold</text>
+        <text x="80" y="178" text-anchor="middle" class="q-sub">fecha um volume — segura água</text>
+      </g>
+      <!-- buraco -->
+      <g transform="translate(300,20)">
+        <path d="M0 120 L40 40 L120 40 L160 120" class="q-tracado"/>
+        <path d="M0 120 L60 100 M160 120 L100 100" class="q-tracado"/>
+        <path d="M60 100 L100 100" class="q-erro"/>
+        <circle cx="80" cy="70" r="3" class="q-vert"/>
+        <text x="80" y="160" text-anchor="middle" class="q-lbl">✗ buraco / borda aberta</text>
+        <text x="80" y="178" text-anchor="middle" class="q-sub">aresta com 1 face só → vaza</text>
+      </g>
+      <!-- aba interna -->
+      <g transform="translate(530,20)">
+        <path d="M0 120 L40 40 L120 40 L160 120 Z" class="q-tracado"/>
+        <path d="M80 40 L80 120" class="q-erro"/>
+        <text x="80" y="160" text-anchor="middle" class="q-lbl">✗ face interna / aba</text>
+        <text x="80" y="178" text-anchor="middle" class="q-sub">aresta com 3 faces → ambíguo</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 4.1 — Manifold vs. não-manifold.</b> O solver precisa decidir "dentro/fora" em cada ponto. Buracos e abas internas quebram essa decisão — é onde nascem furos que não fecham e faces fantasma.</figcaption>
+  </figure>
+
+  <h3>4.2 — Como diagnosticar e consertar</h3>
+  <ol class="passos">
+    <li><h4>Encontre o não-manifold</h4><p>Edit Mode ▸ desmarque tudo (<kbd>Alt</kbd>+<kbd>A</kbd>) ▸ <span class="menupath">Select ▸ All by Trait ▸ Non Manifold</span> (<kbd>Shift</kbd>+<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>M</kbd>). Tudo que acender é problema: bordas de buraco, arestas soltas, abas.</p></li>
+    <li><h4>Funda duplicados</h4><p><kbd>A</kbd> (tudo) ▸ <kbd>M</kbd> ▸ <strong>By Distance</strong>. Vértices empilhados que pareciam soldados, mas não estavam, somem aqui — causa silenciosa de mil problemas.</p></li>
+    <li><h4>Conserte as normais</h4><p><kbd>Shift</kbd>+<kbd>N</kbd> (Recalculate Outside). Ligue a sobreposição <strong>Face Orientation</strong>: azul = fora (certo), vermelho = invertida. Para um cortador, tudo precisa estar azul por fora.</p></li>
+    <li><h4>Feche buracos</h4><p>Selecione as bordas abertas (Select Non Manifold de novo) e <kbd>F</kbd> para tampar, ou <span class="menupath">Face ▸ Grid Fill</span> para uma tampa em quads. Há também <span class="menupath">Mesh ▸ Clean Up ▸ Make Manifold</span> para casos simples — mas confira o resultado, ele pode ser tosco.</p></li>
+    <li><h4>Aplique a escala</h4><p><kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms no Object Mode. Escala não aplicada distorce o cálculo de threshold e produz resultados imprevisíveis.</p></li>
+  </ol>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ O cortador também precisa estar fechado</div>
+    <p>O erro clássico do iniciante: usar um <em>plano</em> (malha aberta, sem volume) como cortador de Difference e estranhar que nada acontece — um plano não tem "dentro". Para cortar com uma superfície plana, dê espessura a ela (Solidify) ou use o caso especial do solver Manifold (Difference com um plano), que é tratado à parte justamente por isso. Em geral: <strong>cortador fechado = corte previsível</strong>.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 4</div>
+    <p>Pegue um cubo, delete uma face (criando um buraco) e tente um Difference com o solver Manifold — observe a falha. Agora ligue o solver Exact com Hole Tolerant: veja o resultado melhorar. Por fim, tampe o buraco (<kbd>F</kbd>) e volte ao Manifold: limpo e rápido. Você sentiu na prática a relação entre manifold e solver.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 5 ============ -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">O Boolean Modifier por inteiro</h2>
+
+  <p class="lead">O Boolean Modifier é a via <strong>não destrutiva</strong>: a operação é calculada ao vivo e a malha original permanece editável. É a forma profissional padrão. Aqui está cada campo do painel, explicado.</p>
+
+  <h3>5.1 — Montagem básica</h3>
+  <ol class="passos">
+    <li><h4>Selecione o alvo</h4><p>Clique no objeto que vai <em>receber</em> o corte. Em <span class="menupath">Properties ▸ Modifiers (chave inglesa) ▸ Add Modifier ▸ Generate ▸ Boolean</span>.</p></li>
+    <li><h4>Escolha a operação</h4><p>Difference, Union ou Intersect (Capítulo 2).</p></li>
+    <li><h4>Aponte o operando</h4><p>Em <em>Object</em>, escolha o cortador. Ou troque para <em>Collection</em> e aponte uma coleção inteira de cortadores — um único modifier processa todos.</p></li>
+    <li><h4>Escolha o solver</h4><p>Conforme o Capítulo 3. Comece com o padrão e troque se houver problema.</p></li>
+    <li><h4>Esconda o cortador</h4><p>Selecione o cortador ▸ <span class="menupath">Object Properties ▸ Viewport Display ▸ Display As: Wire</span> e desligue <em>Show in Renders</em>. Ele vira um aramado fantasma, editável para sempre.</p></li>
+  </ol>
+
+  <h3>5.2 — Mapa completo do painel</h3>
+  <table>
+    <tr><th>Campo</th><th>Função</th></tr>
+    <tr><td><strong>Operation</strong></td><td>Difference / Union / Intersect</td></tr>
+    <tr><td><strong>Operand Type</strong></td><td>Object (um cortador) ou Collection (vários de uma vez)</td></tr>
+    <tr><td><strong>Object / Collection</strong></td><td>O operando. Coleção pode estar vazia no Exact (nesse caso o modifier só remove a geometria interna do próprio alvo)</td></tr>
+    <tr><td><strong>Solver</strong></td><td>Float / Exact / Manifold (Capítulo 3)</td></tr>
+    <tr><td><strong>Overlap Threshold</strong> (Float/Exact)</td><td>Distância para considerar faces encostadas. Mantenha baixo (≈1e-6)</td></tr>
+    <tr><td><strong>Self Intersection</strong> (Exact)</td><td>Trata auto-interseções dos operandos</td></tr>
+    <tr><td><strong>Hole Tolerant</strong> (Exact)</td><td>Melhora resultado em malhas com buracos, a custo de tempo</td></tr>
+    <tr><td><strong>Material Mode</strong></td><td><em>Index Based</em> (mapeia índices de material) ou <em>Transfer</em> (traz os materiais do cortador para as faces novas)</td></tr>
+  </table>
+
+  <h3>5.3 — Posição na pilha de modifiers</h3>
+  <p>A ordem importa tanto quanto a operação. O padrão que funciona na maioria dos casos:</p>
+  <pre><code>1. Mirror          (espelhe antes: o corte vale para os dois lados)
+2. Boolean(s)      (os cortes propriamente ditos)
+3. Bevel (Angle)   (chanfra inclusive as arestas que o corte criou)
+4. Weighted Normal (limpa o shading do resultado — por último)</code></pre>
+  <p>Booleans ficam <em>antes</em> do Bevel para que as arestas novas também recebam chanfro; e o Mirror fica antes do Boolean quando você quer cortar simetricamente. Como a pilha é ao vivo, arraste os modifiers e observe — é a melhor forma de aprender a ordem.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Aplicar é definitivo</div>
+    <p>Enquanto o modifier não é aplicado, tudo é reversível: mover o cortador refaz o corte. Ao clicar <strong>Apply</strong> (<kbd>Ctrl</kbd>+<kbd>A</kbd> com o cursor no modifier, ou no menu do modifier), a geometria é "assada" na malha e o cortador deixa de ter efeito. Só aplique quando tiver certeza — ou trabalhe sempre numa cópia. No 5.x, aplicar modifier em objeto com shape keys pede confirmação extra.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 6 ============ -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Boolean em Edit Mode: Knife e Intersect</h2>
+
+  <p class="lead">Nem todo boolean precisa de um objeto separado. Dentro do Edit Mode existem operações de interseção que cortam usando a própria geometria selecionada — rápidas, diretas e <strong>destrutivas</strong> (não há modifier para desfazer depois).</p>
+
+  <h3>6.1 — Intersect (Boolean) e Intersect (Knife)</h3>
+  <p>Selecione duas porções de malha que se cruzam (dentro do mesmo objeto) e use o menu <span class="menupath">Face ▸ Intersect</span>:</p>
+  <table>
+    <tr><th>Ferramenta</th><th>O que faz</th><th>Quando usar</th></tr>
+    <tr><td><strong>Intersect (Boolean)</strong></td><td>Aplica Union/Difference/Intersect entre as duas partes selecionadas, deletando o que sobra</td><td>Boolean rápido entre pedaços de um mesmo objeto, sem criar cortador externo</td></tr>
+    <tr><td><strong>Intersect (Knife)</strong></td><td>Apenas cria as arestas na linha de interseção, sem deletar nada</td><td>Marcar onde dois volumes se cruzam para depois trabalhar à mão; gravar contornos</td></tr>
+  </table>
+  <p>Ambos oferecem os solvers Float e Exact no painel de redo. O <strong>Knife Project</strong> é um primo útil: selecione um objeto "estêncil", aponte a câmera e use <span class="menupath">Mesh ▸ Knife Project</span> para "carimbar" o contorno do estêncil na malha de baixo — ótimo para projetar logotipos, recortes e padrões sobre uma superfície.</p>
+
+  <h3>6.2 — Knife tool manual</h3>
+  <p>A faca livre (<kbd>K</kbd>) não é boolean, mas resolve muitos casos onde um boolean seria exagero: cortes retos e controlados, com <kbd>C</kbd> para travar ângulos, <kbd>Z</kbd> para cortar através (cut through) e clique-duplo/Enter para confirmar. Para um único corte reto numa peça, a faca costuma deixar topologia mais limpa que um boolean.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Modifier vs. Edit Mode — quando usar cada um</div>
+    <ul>
+      <li><strong>Modifier</strong>: design em evolução, cortes que você quer reposicionar, simetria, vários cortes geridos por collection. A escolha padrão.</li>
+      <li><strong>Edit Mode (Intersect)</strong>: operação pontual e definitiva dentro de um objeto, sem vontade de manter o cortador por perto.</li>
+      <li><strong>Knife manual</strong>: um corte reto simples onde topologia limpa importa mais que automação.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ CAP 7 ============ -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Bool Tool e os add-ons do nicho</h2>
+
+  <p class="lead">As operações nativas são completas, mas repetitivas de configurar. Add-ons automatizam o ritual — criar o cortador, esconder em wire, organizar a collection, aplicar — em um ou dois cliques. Eles não fazem nada que você não possa fazer à mão; aceleram o que você já entende.</p>
+
+  <h3>7.1 — Bool Tool (extensão oficial, gratuita)</h3>
+  <p>Ative em <span class="menupath">Preferences ▸ Get Extensions</span> ▸ busque <strong>Bool Tool</strong>. O que ele entrega:</p>
+  <ul>
+    <li><strong>Boolean instantâneo</strong> entre objetos selecionados (atalhos para Difference/Union/Intersect/Slice), destrutivo ou não destrutivo (brush mode).</li>
+    <li><strong>Carve tools</strong> — ferramentas de desenho de cortador direto no viewport: Box, Circle e Polyline, alinháveis à superfície da malha, com bevel e array embutidos.</li>
+    <li><strong>Gestão automática</strong>: cortadores vão para uma collection <code>boolean_cutters</code>, que se autolimpa quando esvazia. Duplo-clique no modifier seleciona o cortador.</li>
+    <li>Escolha de solver nas preferências e por operação; redo panel com modo de transferência de material.</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">◉ Versões e Blender 5.x</div>
+    <p>O Bool Tool tem versão para 5.x com uma preferência "Faster Destructive Booleans" (30–50% mais rápido, sem transferência de material) e melhor tratamento de objetos com shape keys. As carve tools modernas (Box/Circle/Polyline) com alinhamento à superfície e efeitos não destrutivos de bevel/array são o destaque das versões recentes. Atualize pela própria tela de Extensions.</p>
+  </div>
+
+  <h3>7.2 — Add-ons pagos (o ecossistema hard surface)</h3>
+  <table>
+    <tr><th>Add-on</th><th>Foco</th></tr>
+    <tr><td><strong>HardOps</strong></td><td>Operações de hard surface em pie menus: booleans, bevels, mirror, "sharpen", gestão de cortadores — o canivete suíço do estilo</td></tr>
+    <tr><td><strong>Boxcutter</strong></td><td>Desenho de cortadores estilo CAD direto no viewport, integrado ao HardOps; corte fluido por gestos</td></tr>
+    <tr><td><strong>MeshMachine</strong></td><td>Reparo de topologia e chanfros pós-boolean; conserta o "depois" que mais dá trabalho</td></tr>
+  </table>
+  <p>Eles são opcionais. Tudo que produzem é a mesma sequência deste guia — cortador, modifier, solver, limpeza — só que sem o atrito. Aprenda o fluxo manual primeiro: quando o add-on falhar (e vai), você saberá consertar.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Recomendação de percurso</div>
+    <p>Comece 100% nativo por algumas semanas. Quando configurar o cortador-em-wire-na-collection já for tédio reflexo, instale o Bool Tool gratuito. Só considere HardOps/Boxcutter quando boolean for o seu pão de cada dia e o ganho de velocidade pagar a curva de aprendizado.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 8 ============ -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">O fluxo não destrutivo completo</h2>
+
+  <p class="lead">O superpoder do boolean por modifier é a <strong>iteração</strong>: mudar o design a qualquer momento movendo cortadores. Este capítulo é o método completo para manter um modelo inteiro editável até o fim.</p>
+
+  <h3>8.1 — A arquitetura de cena</h3>
+  <ul>
+    <li><strong>Uma collection para cortadores</strong> (<code>cutters</code>). Todos os cortadores moram nela, sempre em modo Wire, fora dos renders. Você liga/desliga a collection inteira para "ver os cortes" ou "ver o resultado".</li>
+    <li><strong>Cortadores nomeados por função</strong>: <code>cut-furo-vent</code>, <code>cut-tela</code>, <code>cut-painel.L</code>. Daqui a uma semana você ainda saberá o que cada um faz.</li>
+    <li><strong>Cortadores parametrizados</strong>: um cilindro cortador com Array vira "a fileira inteira de furos" — mude a contagem do Array e a fileira inteira muda.</li>
+    <li><strong>Empties como controle</strong>: parenteie cortadores a um Empty para mover/rotacionar grupos inteiros de cortes de uma vez.</li>
+  </ul>
+
+  <h3>8.2 — A pilha do alvo</h3>
+  <p>Num alvo típico de hard surface, a pilha completa fica assim — e cada estágio permanece editável:</p>
+  <pre><code>ALVO (a carcaça)
+ ├─ Mirror              ← simetria
+ ├─ Boolean: cutters    ← Operand Type = Collection, aponta "cutters"
+ ├─ Bevel (Angle)       ← chanfra tudo, inclusive arestas dos cortes
+ └─ Weighted Normal     ← shading final limpo
+
+CORTADORES (collection "cutters", Wire, sem render)
+ ├─ cut-furo-vent  (+ Array)
+ ├─ cut-tela
+ └─ cut-painel.L   (+ Array, parenteado a um Empty)</code></pre>
+  <p>Com <em>Operand Type = Collection</em>, adicionar um novo corte é só jogar mais um objeto na collection <code>cutters</code> — nenhum modifier novo. O design vira um sistema vivo.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◉ Quando "assar"</div>
+    <p>Mantenha não destrutivo o máximo possível, mas reconheça a hora de aplicar: antes de retopologia manual, antes de exportar para um engine, ou quando a pilha ficar pesada demais para o viewport. Estratégia segura: <strong>duplique o objeto</strong> (mantendo o original não destrutivo como "backup paramétrico"), aplique a pilha na cópia e prossiga nela. Você nunca perde a capacidade de voltar e mudar um corte.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 8</div>
+    <p>Monte um controle remoto não destrutivo: um bloco arredondado como alvo; na collection <code>cutters</code>, um cortador de "visor" retangular, uma grade de botões (cilindro + Array 2D) e um rebaixo para o logo. Pilha: Boolean(Collection) ▸ Bevel ▸ Weighted Normal. Depois reposicione os botões e mude a contagem do Array — o produto inteiro se reconfigura ao vivo.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 9 ============ -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Limpeza pós-boolean e shading</h2>
+
+  <p class="lead">Boolean é cirurgia: depois do corte, há uma sutura. As interseções geram n-gons e vértices irregulares, e o shading pode ficar sujo. Saber tratar isso é o que separa o boolean "que dá problema" do boolean profissional.</p>
+
+  <h3>9.1 — O que o boolean deixa para trás</h3>
+  <p>Ao longo da linha de interseção, o solver cria <strong>n-gons</strong> (faces de muitos lados) e vértices densos. Isso é normal e nem sempre é problema:</p>
+  <ul>
+    <li><strong>Em face plana</strong>: o n-gon tem normal única e shading trivial. <strong>Pode ficar.</strong> Resista à vontade de "limpar" o que não está quebrado.</li>
+    <li><strong>Em superfície curva</strong>: o n-gon cruza normais variadas e o shading fica imprevisível — aqui sim é preciso reconstruir.</li>
+    <li><strong>Loop Cut deixa de funcionar</strong> perto do corte? É porque a área virou n-gon/tri — loop cut só atravessa quads. Use Knife ou reconstrua a topologia local.</li>
+  </ul>
+
+  <h3>9.2 — Protocolo de limpeza</h3>
+  <ol class="passos">
+    <li><h4>Higiene primeiro</h4><p><kbd>M</kbd> ▸ By Distance e <kbd>Shift</kbd>+<kbd>N</kbd> logo após aplicar — funde duplicados e conserta normais que o corte possa ter bagunçado.</p></li>
+    <li><h4>Dissolva o excesso</h4><p>Em faces planas com vértices demais: selecione a região e <kbd>X</kbd> ▸ <strong>Limited Dissolve</strong> (junta faces coplanares respeitando um ângulo). Achata a sutura mantendo a forma.</p></li>
+    <li><h4>Reconstrua em curvatura</h4><p>Onde o corte cruzou curva: redirecione com Knife para devolver quads, e aplique o padrão "círculo no quadrado" em furos redondos (uma moldura de quads ao redor do furo, com os pólos jogados para áreas planas).</p></li>
+    <li><h4>Marque as quinas</h4><p>As arestas novas do corte são quinas vivas — selecione-as e <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ <strong>Mark Sharp</strong> para o shading reconhecê-las.</p></li>
+  </ol>
+
+  <h3>9.3 — Shading: o passo que todo mundo esquece</h3>
+  <p>Uma aresta de corte perfeitamente viva não reflete luz — fica invisível e "fake". A receita de sempre, agora aplicada ao resultado do boolean:</p>
+  <ol class="passos">
+    <li><h4>Shade Auto Smooth</h4><p>Clique direito ▸ <em>Shade Auto Smooth</em>. (No 5.x isso adiciona o modifier <strong>Smooth by Angle</strong>; o antigo checkbox "Auto Smooth" foi removido no 4.1.)</p></li>
+    <li><h4>Bevel nas arestas de corte</h4><p>Um Bevel (Angle) na pilha, <em>depois</em> do Boolean, dá o microchanfro de fabricação que captura o highlight ao longo de cada corte. É o que faz o corte parecer usinado, não recortado a tesoura.</p></li>
+    <li><h4>Weighted Normal por último</h4><p>Impede que esses chanfros estreitos contaminem as faces planas vizinhas com gradientes escuros.</p></li>
+  </ol>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Inspecione no reflexo</div>
+    <p>Viewport em Material Preview com um HDRI de estúdio, e <strong>orbite</strong> ao redor da peça. Pinches, manchas e suturas malfeitas aparecem no reflexo em movimento muito antes de um render parado revelá-los. É o teste do funileiro olhando a lataria sob a lâmpada.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 10 ============ -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Boolean com Bevel e Subdivision</h2>
+
+  <p class="lead">Boolean sozinho deixa arestas vivas e topologia caótica — exatamente o que o Subdivision Surface mais odeia. Combinar boolean com bevel e SubD é possível, mas exige cuidado com a ordem e com a topologia.</p>
+
+  <h3>10.1 — Boolean + Bevel (mid-poly)</h3>
+  <p>A combinação mais fácil e robusta. Boolean cria as arestas; um Bevel modifier logo abaixo na pilha chanfra todas elas, inclusive as do corte. Funciona porque o Bevel não exige quads — opera em qualquer aresta. É a base do workflow mid-poly: cortar à vontade, chanfrar tudo no fim, fechar com Weighted Normal. Sem dor de topologia.</p>
+
+  <h3>10.2 — Boolean + Subdivision (o caso difícil)</h3>
+  <p>SubD subdivide a malha e arredonda tudo seguindo o fluxo de arestas — e a topologia bagunçada que o boolean deixa vira <strong>pinches</strong> e ondulações sob subdivisão. Há três caminhos:</p>
+  <table>
+    <tr><th>Abordagem</th><th>Como</th><th>Veredito</th></tr>
+    <tr><td><strong>Boolean sobre malha densa</strong></td><td>Aplique o SubD primeiro (malha já lisa e densa), depois faça o boolean e limpe localmente</td><td>Funciona; a densidade "absorve" a topologia ruim do corte. Pesado, mas direto</td></tr>
+    <tr><td><strong>Reconstruir loops de suporte</strong></td><td>Após o boolean, adicione manualmente loops de suporte ao redor das arestas de corte para o SubD segurá-las</td><td>Resultado mais limpo; é trabalho manual de retopologia</td></tr>
+    <tr><td><strong>Add-on de "boolean com bevel"</strong></td><td>Ferramentas baseadas em Geometry Nodes que dão chanfro paramétrico ao resultado do boolean, prontas para remesh</td><td>Rápido para concept; cuidado com bugs de shading entre 5.0 e 5.1 (corrigidos a partir do 5.2)</td></tr>
+  </table>
+
+  <div class="caixa v5">
+    <div class="rot">◉ Boolean volumétrico (SDF) no 5.0</div>
+    <p>O Blender 5.0 abriu a manipulação de <strong>Signed Distance Fields</strong> via Geometry Nodes: converter malhas em grades volumétricas e fazer booleans sobre elas, gerando formas complexas e organicamente fundidas sem a topologia problemática dos booleans de malha. É uma via poderosa para <em>concept</em> e estudo de forma — o resultado costuma ser remeshado depois. Não substitui o boolean de malha para peças de produção precisas, mas amplia o leque.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ A ordem na pilha com SubD</div>
+    <p>Se usar Boolean <em>e</em> Subdivision juntos no mesmo objeto, o Boolean quase sempre vai <strong>antes</strong> do Subdivision na pilha (corta a malha de controle; a subdivisão suaviza o resultado). Inverter raramente faz o que se espera. E lembre: o cortador também deve ter densidade compatível, senão o corte fica facetado quando suavizado.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 11 ============ -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 11</div><div class="fio"></div></div>
+  <h2 class="titulo">Receitas práticas</h2>
+
+  <p class="lead">Padrões prontos para os booleans que você fará repetidamente. Todos não destrutivos, todos seguindo a arquitetura do Capítulo 8.</p>
+
+  <h3>11.1 — Furo passante chanfrado</h3>
+  <ol class="passos">
+    <li><h4>Cortador</h4><p>Cilindro de 16–32 lados, comprido o bastante para atravessar a peça inteira com folga nas duas pontas.</p></li>
+    <li><h4>Corte</h4><p>Boolean Difference (Manifold se tudo estiver estanque).</p></li>
+    <li><h4>Chanfro</h4><p>O Bevel(Angle) da pilha já arredonda a boca do furo. Para um chanfro só na entrada, dê ao cortador um cone na ponta (escareado, como furo de parafuso de cabeça chata).</p></li>
+  </ol>
+
+  <h3>11.2 — Fileira de furos (ventilação)</h3>
+  <p>Um cilindro cortador + modifier <strong>Array</strong> no cortador = a fileira inteira num só objeto. Mude o Count do Array e a fileira cresce/encolhe. Para uma grade 2D, dois modifiers Array (um em X, um em Y). Tudo passa por um único Boolean na collection.</p>
+
+  <h3>11.3 — Painel/recorte rebaixado</h3>
+  <ol class="passos">
+    <li><h4>Cortador raso</h4><p>Uma caixa fina, afundada poucos milímetros na superfície (não atravessa).</p></li>
+    <li><h4>Difference</h4><p>Cria o rebaixo. O Bevel da pilha arredonda as bordas do recesso.</p></li>
+    <li><h4>Variação "linha de painel"</h4><p>Cortador muito fino e comprido = a fresta entre duas chapas. Várias delas desenham a painelização de uma carcaça.</p></li>
+  </ol>
+
+  <h3>11.4 — Slice: separar uma peça em duas</h3>
+  <p>Para dividir uma carcaça em "tampa" e "base" que se encaixam: use a operação <strong>Slice</strong> (Bool Tool) com um cortador no plano de divisão — ela gera as duas metades de uma vez. Sem Bool Tool, faça manualmente: duplique o alvo, em uma cópia Difference com o cortador, na outra Intersect com o mesmo cortador. Para criar a folga de encaixe, use as opções <em>Inset/Outset</em> do Slice (ou solidifique levemente uma das metades).</p>
+
+  <h3>11.5 — Gravar texto ou logo</h3>
+  <p>Objeto de Texto ▸ converta para malha (<span class="menupath">Object ▸ Convert ▸ Mesh</span>) ▸ dê espessura (Solidify ou Extrude) ▸ posicione atravessando a superfície ▸ Difference para gravar (baixo-relevo) ou Union para relevo elevado. Em superfície curva, o <strong>Shrinkwrap</strong> no texto faz ele "vestir" a curva antes do corte. Alternativa rápida e rasa: <strong>Knife Project</strong> carimba o contorno do texto sem precisar de volume.</p>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 11</div>
+    <p>Combine três receitas numa peça só: um disco (alvo) com uma fileira circular de furos (Array + Object Offset + Empty rotacionado), um recorte central rebaixado, e seu nome gravado em baixo-relevo na borda. Tudo não destrutivo. Depois mude a contagem de furos e veja o anel inteiro se ajustar.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 12 ============ -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">Troubleshooting: o boolean que não obedece</h2>
+
+  <p class="lead">Quase todo boolean problemático cai numa destas linhas. A coluna do meio é o diagnóstico; a da direita, o conserto na ordem em que vale a pena tentar.</p>
+
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável</th><th>Conserto (em ordem)</th></tr>
+    <tr><td>Nada acontece / resultado vazio</td><td>Cortador aberto (sem volume), normais invertidas, ou não atravessa o alvo</td><td>Feche o cortador; <kbd>Shift</kbd>+<kbd>N</kbd>; garanta que ele atravessa; troque para Exact</td></tr>
+    <tr><td>Corte parcial / pedaços faltando</td><td>Normais invertidas em parte do alvo ou do cortador</td><td>Face Orientation ligado; Recalculate Outside nos dois objetos</td></tr>
+    <tr><td>Faces fantasma / z-fighting na interseção</td><td>Faces coplanares entre alvo e cortador</td><td>Desloque o cortador ~0.1 mm; ou solver Exact (tolera coplanar)</td></tr>
+    <tr><td>Glitches em malha com buraco</td><td>Operando não-manifold</td><td>Feche o buraco; ou Exact + Hole Tolerant</td></tr>
+    <tr><td>Resultado muda de tamanho/posição estranho</td><td>Escala/rotação não aplicada</td><td><kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms em ambos</td></tr>
+    <tr><td>Artefato com solver Manifold</td><td>Malha não é 100% manifold</td><td>Torne manifold; ou troque para Exact</td></tr>
+    <tr><td>Shading sujo/listrado após o corte</td><td>Faltou Auto Smooth/Sharp; normais duplicadas; sem chanfro</td><td>Merge by Distance; Shade Auto Smooth; Mark Sharp; Bevel + Weighted Normal</td></tr>
+    <tr><td>Loop cut não passa perto do corte</td><td>Área virou n-gon/tri</td><td>Use Knife; reconstrua quads localmente (círculo no quadrado)</td></tr>
+    <tr><td>Auto-interseção do operando dá erro</td><td>A malha atravessa a si mesma</td><td>Exact + Self Intersection; ou simplifique o operando</td></tr>
+    <tr><td>Viewport travando com a pilha</td><td>Booleans recalculando ao vivo</td><td>Desligue o modifier no viewport (ícone monitor), reative no fim; prefira Manifold</td></tr>
+    <tr><td>Material errado nas faces novas</td><td>Material Mode inadequado</td><td>Ajuste Index Based / Transfer no painel do modifier</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">◉ O protocolo universal de 6 passos</div>
+    <p>Quando travar e não souber por quê, rode esta sequência — resolve a esmagadora maioria: <strong>(1)</strong> aplicar escala (<kbd>Ctrl</kbd>+<kbd>A</kbd>); <strong>(2)</strong> Merge by Distance nos dois objetos; <strong>(3)</strong> Recalculate Normals (<kbd>Shift</kbd>+<kbd>N</kbd>); <strong>(4)</strong> Select Non Manifold para achar buracos e fechá-los; <strong>(5)</strong> trocar o solver; <strong>(6)</strong> deslocar levemente o cortador para matar coplanares. Faça nesta ordem e raramente chega ao passo 6.</p>
+  </div>
+</section>
+
+<!-- ============ CAP 13 ============ -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><div class="op"></div><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>13.1 — Glossário</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição</th></tr>
+    <tr><td><strong>Boolean</strong></td><td>Operação que combina sólidos por união, diferença ou interseção de volumes</td></tr>
+    <tr><td><strong>CSG</strong></td><td>Constructive Solid Geometry: construir formas a partir de primitivas + operações booleanas</td></tr>
+    <tr><td><strong>Alvo / Operando</strong></td><td>O objeto que recebe a operação / o objeto que a aplica (cortador)</td></tr>
+    <tr><td><strong>Difference</strong></td><td>A − B: remove o cortador do alvo (furar)</td></tr>
+    <tr><td><strong>Union</strong></td><td>A ∪ B: funde os dois volumes (soldar)</td></tr>
+    <tr><td><strong>Intersect</strong></td><td>A ∩ B: mantém só o volume comum (recortar)</td></tr>
+    <tr><td><strong>Slice</strong></td><td>Difference + Intersect: corta e devolve a fatia como objeto</td></tr>
+    <tr><td><strong>Solver</strong></td><td>Algoritmo do cálculo: Float, Exact ou Manifold</td></tr>
+    <tr><td><strong>Manifold / watertight</strong></td><td>Malha que fecha um volume sem buracos, bordas soltas ou faces internas</td></tr>
+    <tr><td><strong>Non-manifold</strong></td><td>Malha com bordas abertas, abas ou geometria que não define volume</td></tr>
+    <tr><td><strong>Overlap Threshold</strong></td><td>Distância para considerar duas faces como sobrepostas</td></tr>
+    <tr><td><strong>Self Intersection</strong></td><td>Quando uma malha atravessa a si mesma; opção do Exact para tratar</td></tr>
+    <tr><td><strong>Coplanar</strong></td><td>Faces no mesmo plano; causa clássica de falha no Float</td></tr>
+    <tr><td><strong>Cortador em Wire</strong></td><td>Cortador exibido como aramado e oculto no render; base do fluxo não destrutivo</td></tr>
+  </table>
+
+  <h3>13.2 — Atalhos úteis para boolean</h3>
+  <table>
+    <tr><th>Atalho</th><th>Ação</th></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd> (Object)</td><td>Aplicar transformações (faça sempre antes do boolean)</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>N</kbd></td><td>Recalcular normais para fora (Edit Mode)</td></tr>
+    <tr><td><kbd>M</kbd> ▸ By Distance</td><td>Fundir vértices duplicados (Edit Mode)</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>M</kbd></td><td>Selecionar geometria não-manifold</td></tr>
+    <tr><td><kbd>X</kbd> ▸ Limited Dissolve</td><td>Achatar faces coplanares (limpeza pós-boolean)</td></tr>
+    <tr><td><kbd>K</kbd></td><td>Knife (<kbd>Z</kbd> atravessa, <kbd>C</kbd> trava ângulo)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>Menu de arestas: Mark Sharp, Bevel Weight, Mark Seam</td></tr>
+    <tr><td>Face ▸ Intersect</td><td>Boolean / Knife dentro do Edit Mode</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (add-on)</td><td>Atalho comum de boolean rápido no Bool Tool (configurável)</td></tr>
+  </table>
+
+  <h3>13.3 — Novidades que afetam boolean (4.x → 5.x)</h3>
+  <ul>
+    <li><strong>"Fast" renomeado para Float</strong> (5.0) — mesmo algoritmo BMesh, nome novo.</li>
+    <li><strong>Solver Manifold</strong> disponível como opção de alta performance para malhas estanques; em add-ons que o expõem, costuma ser o padrão.</li>
+    <li><strong>Exact mais rápido</strong> no 5.1 (>35% com muitos atributos); Manifold também ganhou desempenho.</li>
+    <li><strong>Auto Merge para Bevel e Symmetrize</strong> (5.0) — útil ao limpar geometria antes/depois de booleans.</li>
+    <li><strong>Smooth by Angle / Shade Auto Smooth</strong> substituíram o checkbox "Auto Smooth" (4.1) — relevante para o shading pós-corte.</li>
+    <li><strong>Booleans volumétricos (SDF) via Geometry Nodes</strong> (5.0) — nova via para concept de formas fundidas.</li>
+    <li><strong>Bool Tool 5.x</strong>: opção "Faster Destructive Booleans", carve tools com alinhamento à superfície e bevel/array não destrutivos no cortador.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Para continuar</div>
+    <p>O manual oficial do Boolean Modifier (<a class="ext" href="https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/booleans.html">docs.blender.org</a>) é a referência de cada campo citado. Este guia é o volume 3 da coleção: o <strong>volume 2 (Hard Surface)</strong> mostra onde o boolean se encaixa no modelo inteiro, e o <strong>volume 1 (Rigging)</strong> assume quando a peça pronta precisar se mover.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Guia Completo — Boolean no Blender 5.x · volume 3 da coleção · capítulos 1–13<br>
+  Regra de ouro: malha estanque + solver certo + limpeza = boolean que nunca "dá problema".
+</footer>
+
+</main>
+</div><!-- /layout -->
+</body>
+</html>

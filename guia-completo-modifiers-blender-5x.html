@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modifiers no Blender 5.x — Livro de Bolso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F3F1EC;--tinta:#191920;--tinta-suave:#52525E;
+  --base:#4842B0;--base-escuro:#322B82;
+  --proc:#4E9A43;--proc-escuro:#356E2B;
+  --pop:#D9573D;--aviso:#C8901C;--vermelho:#B3402E;
+  --linha:#DCD7CC;--cartao:#FFFFFF;--quadro:#15131F;
+  --q-linha:#CFCBE6;--q-dim:#8B86B0;--q-proc:#79D85F;
+  --code-bg:#1C1A28;--code-fg:#E9E7F2;
+  --sombra:0 1px 3px rgba(25,25,32,.09), 0 8px 24px rgba(25,25,32,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{background:var(--papel);color:var(--tinta);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.64}
+::selection{background:var(--base);color:#fff}
+.layout{display:grid;grid-template-columns:294px minmax(0,1fr);min-height:100vh}
+.sidebar{border-right:1px solid var(--linha);background:linear-gradient(180deg,#ECE9E1,#F3F1EC 260px);padding:28px 22px 56px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar .parte{font-family:"Archivo",sans-serif;font-stretch:88%;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--base-escuro);margin:24px 0 8px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sidebar .parte::before{content:"";width:14px;height:1.5px;background:var(--proc)}
+.sidebar nav a{display:block;text-decoration:none;color:var(--tinta-suave);font-family:"Archivo",sans-serif;font-size:.83rem;line-height:1.34;padding:5px 8px 5px 14px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(72,66,176,.09);border-left-color:var(--base)}
+.sidebar nav a .n{color:var(--base-escuro);font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px}
+.logo-m{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.logo-m .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.04rem;line-height:1.1;font-stretch:106%}
+.logo-m .t2{font-family:"JetBrains Mono",monospace;font-size:.64rem;color:var(--proc-escuro)}
+main{padding:0 0 120px}
+.miolo{max-width:790px;margin:0 auto;padding:0 38px}
+.capa{background:radial-gradient(1000px 500px at 80% -8%, rgba(72,66,176,.42), transparent 58%),radial-gradient(760px 460px at 6% 118%, rgba(78,154,67,.32), transparent 60%),var(--quadro);color:#EDECF5;padding:88px 38px 76px;position:relative;overflow:hidden}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;color:var(--q-proc);border:1px solid rgba(121,216,95,.45);border-radius:999px;padding:6px 14px;margin-bottom:26px;background:rgba(21,19,31,.5)}
+.capa h1{font-family:"Archivo",sans-serif;font-stretch:112%;font-weight:880;font-size:clamp(2.2rem,5.4vw,3.7rem);line-height:1.0;letter-spacing:-.02em;max-width:15ch;margin-bottom:22px}
+.capa h1 em{font-style:normal;color:var(--q-proc)}
+.capa p.sub{font-size:1.08rem;max-width:60ch;color:#C4C2D6;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;border:1px solid rgba(237,236,245,.26);border-radius:6px;padding:6px 12px;color:#D0CEE0}
+.capa-stack{position:absolute;right:-30px;top:50%;transform:translateY(-50%);z-index:1;opacity:.5}
+.parte-cover{padding:64px 0 8px;border-bottom:1px solid var(--linha);margin-top:40px}
+.parte-cover .pn{font-family:"JetBrains Mono",monospace;font-size:.8rem;letter-spacing:.2em;color:var(--base-escuro)}
+.parte-cover h2{font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:870;font-size:clamp(1.9rem,4vw,2.7rem);line-height:1.04;letter-spacing:-.015em;margin:8px 0 12px}
+.parte-cover p{font-size:1.05rem;color:var(--tinta-suave);max-width:60ch;margin-bottom:18px}
+section.cap{padding-top:60px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .stk{width:18px;height:16px;position:relative;flex:0 0 auto}
+.cap-tag .stk span{position:absolute;left:0;width:18px;height:3.4px;border-radius:1px;background:var(--base)}
+.cap-tag .stk span:nth-child(1){top:0;opacity:.5}
+.cap-tag .stk span:nth-child(2){top:6.3px;opacity:.75}
+.cap-tag .stk span:nth-child(3){top:12.6px;background:var(--proc)}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--base-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;font-size:clamp(1.6rem,3.2vw,2.2rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:20px}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.2rem;margin:40px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:28px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+em.term{font-style:italic;color:var(--base-escuro);font-weight:600}
+a.ext{color:var(--base-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+kbd{font-family:"JetBrains Mono",monospace;font-size:.78em;background:#fff;border:1px solid #C7C2B6;border-bottom-width:2.5px;border-radius:5px;padding:1.5px 7px;white-space:nowrap;color:var(--tinta)}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#E8E5DB;border-radius:4px;padding:1.5px 6px}
+pre{background:var(--code-bg);color:var(--code-fg);font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--base-escuro)}
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{display:flex;align-items:center;gap:8px;font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.conceito{border-left:4px solid var(--base)}
+.caixa.conceito .rot{color:var(--base-escuro)}
+.caixa.dica{border-left:4px solid var(--proc)}
+.caixa.dica .rot{color:var(--proc-escuro)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--pop)}
+.caixa.exercicio .rot{color:var(--pop)}
+.caixa.v5{border-left:4px solid var(--aviso);background:#FBF6EA}
+.caixa.v5 .rot{color:#9A6E0E}
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{content:counter(passo);position:absolute;left:0;top:1px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;display:flex;align-items:center;justify-content:center}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.91rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{font-family:"Archivo",sans-serif;font-size:.73rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAF8F3}
+figure{margin:26px 0;background:var(--quadro);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:"Archivo",sans-serif;font-size:.82rem;color:#A8A4C2;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(207,203,230,.28)}
+figcaption b{color:#EDECF5}
+.q-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#EDECF5}
+.q-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--q-dim)}
+.q-tracado{fill:none;stroke:var(--q-linha);stroke-width:1.8;stroke-linejoin:round}
+.q-fino{fill:none;stroke:var(--q-dim);stroke-width:1}
+.q-base{fill:rgba(72,66,176,.45);stroke:#8B86E0;stroke-width:1.8}
+.q-proc{fill:none;stroke:var(--q-proc);stroke-width:2.2}
+.q-proc-f{fill:rgba(78,154,67,.4);stroke:var(--q-proc);stroke-width:1.6}
+.q-pop{fill:none;stroke:var(--pop);stroke-width:2.2}
+.q-vert{fill:var(--q-proc);stroke:var(--quadro);stroke-width:1}
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:9px 26px;margin:24px 0 10px}
+.sumario a{display:flex;gap:11px;align-items:baseline;text-decoration:none;color:var(--tinta);font-family:"Archivo",sans-serif;font-size:.9rem;padding:8px 12px;border-radius:8px;border:1px solid transparent;line-height:1.25}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--base-escuro);font-size:.78rem;flex:0 0 auto}
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}.sumario{grid-template-columns:1fr}.miolo{padding:0 20px}.capa{padding:60px 20px 52px}.capa-stack{display:none}}
+@media print{.sidebar{display:none}.layout{display:block}.capa{background:#fff;color:#000}.capa h1 em{color:#000}.capa-stack{display:none}figure{background:#fff;border:1px solid #999}figure,.caixa,table{box-shadow:none}section.cap{page-break-inside:avoid}.parte-cover{page-break-before:always}}
+:focus-visible{outline:3px solid var(--base);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-m">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="6" y="7" width="28" height="6" rx="2" fill="#4842B0" opacity=".5"/>
+      <rect x="6" y="16" width="28" height="6" rx="2" fill="#4842B0" opacity=".75"/>
+      <rect x="6" y="25" width="28" height="6" rx="2" fill="#4E9A43"/>
+      <circle cx="34" cy="28" r="3.4" fill="#79D85F" stroke="#15131F" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <div class="t1">Modifiers</div>
+      <div class="t2">Livro de Bolso · Blender 5.x</div>
+    </div>
+  </div>
+
+  <div class="parte">I · Fundamentos</div>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é um modifier</a>
+    <a href="#cap2"><span class="n">02</span>A pilha de modifiers</a>
+    <a href="#cap3"><span class="n">03</span>A matéria-prima: grupos e atributos</a>
+    <a href="#cap4"><span class="n">04</span>Visibilidade, gizmos e aplicar</a>
+  </nav>
+
+  <div class="parte">II · Generate</div>
+  <nav>
+    <a href="#cap5"><span class="n">05</span>Subdivision Surface</a>
+    <a href="#cap6"><span class="n">06</span>Bevel</a>
+    <a href="#cap7"><span class="n">07</span>Mirror e Array</a>
+    <a href="#cap8"><span class="n">08</span>Solidify e Boolean</a>
+    <a href="#cap9"><span class="n">09</span>Remesh, Decimate e os de nicho</a>
+  </nav>
+
+  <div class="parte">III · Deform</div>
+  <nav>
+    <a href="#cap10"><span class="n">10</span>Armature e Lattice</a>
+    <a href="#cap11"><span class="n">11</span>Curve, Simple Deform, Cast</a>
+    <a href="#cap12"><span class="n">12</span>Displace, Wave e texturas</a>
+    <a href="#cap13"><span class="n">13</span>Shrinkwrap, Hook, Smooth</a>
+  </nav>
+
+  <div class="parte">IV · Modify e normais</div>
+  <nav>
+    <a href="#cap14"><span class="n">14</span>Shading: Smooth by Angle</a>
+    <a href="#cap15"><span class="n">15</span>Data Transfer, UV e pesos</a>
+  </nav>
+
+  <div class="parte">V · Simular e nodes</div>
+  <nav>
+    <a href="#cap16"><span class="n">16</span>Os modifiers de física</a>
+    <a href="#cap17"><span class="n">17</span>Geometry Nodes</a>
+  </nav>
+
+  <div class="parte">VI · Domínio</div>
+  <nav>
+    <a href="#cap18"><span class="n">18</span>A ordem da pilha</a>
+    <a href="#cap19"><span class="n">19</span>Combinações poderosas</a>
+    <a href="#cap20"><span class="n">20</span>Troubleshooting</a>
+    <a href="#cap21"><span class="n">21</span>Glossário e atalhos</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="capa">
+  <svg class="capa-stack" width="360" height="420" viewBox="0 0 360 420" aria-hidden="true">
+    <rect x="60" y="40" width="240" height="54" rx="8" fill="rgba(72,66,176,.28)" stroke="rgba(139,134,224,.5)" stroke-width="1.5"/>
+    <rect x="60" y="120" width="240" height="54" rx="8" fill="rgba(72,66,176,.34)" stroke="rgba(139,134,224,.55)" stroke-width="1.5"/>
+    <rect x="60" y="200" width="240" height="54" rx="8" fill="rgba(72,66,176,.4)" stroke="rgba(139,134,224,.6)" stroke-width="1.5"/>
+    <rect x="60" y="280" width="240" height="54" rx="8" fill="rgba(78,154,67,.34)" stroke="rgba(121,216,95,.6)" stroke-width="1.5"/>
+    <path d="M180 96 L180 118 M180 176 L180 198 M180 256 L180 278" stroke="rgba(121,216,95,.7)" stroke-width="2"/>
+  </svg>
+  <div class="miolo">
+    <span class="selo">▤ LIVRO/CURSO · VOLUME 5 DA COLEÇÃO</span>
+    <h1>Modifiers no Blender <em>a pilha que não destrói</em></h1>
+    <p class="sub">Um curso completo do sistema de modifiers do Blender 5.x: o conceito não destrutivo, a pilha e sua ordem, e cada modifier que importa — Subdivision, Bevel, Mirror, Array, Solidify, Boolean, Armature, Curve, Displace, Shrinkwrap, Smooth by Angle e a revolução dos Geometry Nodes. Da teoria da pilha às combinações de produção.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>21 capítulos · 6 partes</span>
+      <span>As 4 categorias</span>
+      <span>Receitas de pilha</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como ler este livro</h2>
+  <p class="lead">As Partes I e VI são <strong>conceito e estratégia</strong> — valem para qualquer modifier e para sempre. As Partes II a V são o <strong>catálogo</strong>, organizado pelas quatro categorias reais do menu (Generate, Deform, Modify, Simulate) mais os Geometry Nodes. Leia I em ordem; depois use o resto como referência de bancada.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é um modifier e por que muda tudo</a>
+    <a href="#cap2"><span class="n">02</span>A pilha de modifiers: ordem e avaliação</a>
+    <a href="#cap3"><span class="n">03</span>A matéria-prima: vertex groups e atributos</a>
+    <a href="#cap4"><span class="n">04</span>Visibilidade, gizmos, performance e aplicar</a>
+    <a href="#cap5"><span class="n">05</span>Subdivision Surface: o rei</a>
+    <a href="#cap6"><span class="n">06</span>Bevel: chanfros e o microbisel</a>
+    <a href="#cap7"><span class="n">07</span>Mirror e Array (novo 5.0 + legacy)</a>
+    <a href="#cap8"><span class="n">08</span>Solidify e Boolean</a>
+    <a href="#cap9"><span class="n">09</span>Remesh, Decimate, Weld e os de nicho</a>
+    <a href="#cap10"><span class="n">10</span>Armature e Lattice: deformar com esqueleto</a>
+    <a href="#cap11"><span class="n">11</span>Curve, Simple Deform, Cast, Warp</a>
+    <a href="#cap12"><span class="n">12</span>Displace, Wave e texturas como deformadores</a>
+    <a href="#cap13"><span class="n">13</span>Shrinkwrap, Hook, Smooth, Mesh/Surface Deform</a>
+    <a href="#cap14"><span class="n">14</span>Normais e shading: Smooth by Angle, Weighted Normal</a>
+    <a href="#cap15"><span class="n">15</span>Data Transfer, UV Project/Warp, Vertex Weight</a>
+    <a href="#cap16"><span class="n">16</span>Os modifiers de física (simulação)</a>
+    <a href="#cap17"><span class="n">17</span>Geometry Nodes: o modifier que virou tudo</a>
+    <a href="#cap18"><span class="n">18</span>A ordem da pilha: princípios e armadilhas</a>
+    <a href="#cap19"><span class="n">19</span>Combinações poderosas (workflows)</a>
+    <a href="#cap20"><span class="n">20</span>Troubleshooting: a pilha que não obedece</a>
+    <a href="#cap21"><span class="n">21</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">▤ Sobre a versão</div>
+    <p>Escrito para o <strong>Blender 5.x</strong>. A grande mudança em curso — a migração dos modifiers clássicos para versões baseadas em <strong>Geometry Nodes</strong> (o novo Array com gizmos, Scatter on Surface, Instance on Elements e companhia chegaram no 5.0) e o Smooth by Angle que substituiu o Auto Smooth (4.1) — está marcada em caixas amarelas e resumida no Capítulo 21. O conceito de pilha não destrutiva é o mesmo há anos.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE I ===================== -->
+<div class="parte-cover" id="parte1">
+  <div class="pn">PARTE I</div>
+  <h2>Fundamentos</h2>
+  <p>Antes do catálogo, o conceito. Modifiers só fazem sentido quando você entende o que é "não destrutivo", como a pilha avalia de cima para baixo, o que cada modifier lê da sua malha (grupos, atributos, texturas) e como controlar o que vê e quando "assar" o resultado. Esta parte é a chave de tudo o que vem depois.</p>
+</div>
+
+<!-- ===== CAP 1 ===== -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é um modifier e por que muda tudo</h2>
+
+  <p class="lead">Um <strong>modifier</strong> é uma operação que altera a aparência de um objeto <em>sem alterar permanentemente</em> a malha que você editou à mão. Ele é calculado ao vivo, em cima dos seus dados originais, e pode ser ajustado, reordenado ou removido a qualquer momento.</p>
+
+  <p>Imagine que você modelou um cubo simples de 8 vértices. Você adiciona um modifier Subdivision Surface e, na tela, surge uma esfera suave de milhares de polígonos. Mas seus 8 vértices originais continuam lá, intactos — o que você vê é o <em>resultado</em> de aplicar a suavização em cima deles, calculado em tempo real. Mexa num dos 8 vértices e a esfera inteira responde. Apague o modifier e o cubo bruto volta. Essa separação entre <strong>o que você edita</strong> e <strong>o que você vê</strong> é a ideia inteira.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 220" role="img" aria-label="O fluxo do modifier: malha base, modifier, resultado">
+      <!-- base -->
+      <g transform="translate(40,40)">
+        <rect x="0" y="0" width="130" height="130" rx="6" class="q-base"/>
+        <text x="65" y="155" text-anchor="middle" class="q-lbl">malha base</text>
+        <text x="65" y="173" text-anchor="middle" class="q-sub">o que você edita</text>
+      </g>
+      <!-- arrow -->
+      <path d="M185 105 L235 105" class="q-proc" marker-end="url(#a1)"/>
+      <defs><marker id="a1" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="var(--q-proc)"/></marker></defs>
+      <!-- modifier card -->
+      <g transform="translate(255,55)">
+        <rect x="0" y="0" width="180" height="100" rx="8" fill="rgba(78,154,67,.18)" stroke="var(--q-proc)" stroke-width="1.6"/>
+        <text x="90" y="38" text-anchor="middle" class="q-lbl">MODIFIER</text>
+        <text x="90" y="60" text-anchor="middle" class="q-sub">Subdivision Surface</text>
+        <text x="90" y="78" text-anchor="middle" class="q-sub">cálculo ao vivo · ajustável</text>
+      </g>
+      <path d="M450 105 L500 105" class="q-proc" marker-end="url(#a1)"/>
+      <!-- result -->
+      <g transform="translate(520,40)">
+        <circle cx="65" cy="65" r="62" fill="rgba(72,66,176,.3)" stroke="#8B86E0" stroke-width="1.8"/>
+        <text x="65" y="155" text-anchor="middle" class="q-lbl">resultado</text>
+        <text x="65" y="173" text-anchor="middle" class="q-sub">o que você vê e renderiza</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 1.1 — O fluxo do modifier.</b> A malha base (editável) passa pelo modifier (ajustável a qualquer momento) e produz o resultado (o que é exibido e renderizado). Os três estados coexistem: você nunca perde o original.</figcaption>
+  </figure>
+
+  <h3>1.1 — Destrutivo vs. não destrutivo</h3>
+  <p>Editar vértices à mão é <strong>destrutivo</strong>: cada corte, extrusão ou bevel altera a malha de forma definitiva, e desfazer só funciona enquanto o histórico durar. Um modifier é <strong>não destrutivo</strong>: ele é uma camada de instrução por cima da malha, reversível para sempre. Isso muda a forma de trabalhar — você experimenta sem medo, ajusta tarde, e mantém o design vivo até o último momento.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">▤ Por que isto importa tanto</div>
+    <p>Trabalho não destrutivo é a diferença entre "refazer do zero quando o cliente pede uma mudança" e "arrastar um controle". Um portão modelado com Array + Mirror muda de 10 para 14 barras com um clique; uma carcaça com Bevel + Subdivision tem o arredondamento ajustado no fim sem retocar um vértice. A pilha de modifiers é, na prática, a memória das suas decisões — e decisões memorizadas podem ser revistas.</p>
+  </div>
+
+  <h3>1.2 — As quatro categorias</h3>
+  <p>O menu <span class="menupath">Add Modifier</span> organiza tudo em quatro famílias. Conhecê-las já dá um mapa mental do que existe:</p>
+  <table>
+    <tr><th>Categoria</th><th>O que faz</th><th>Exemplos</th><th>Parte deste livro</th></tr>
+    <tr><td><strong>Generate</strong></td><td>Cria ou remove geometria; muda a topologia</td><td>Subdivision, Bevel, Mirror, Array, Solidify, Boolean</td><td>II</td></tr>
+    <tr><td><strong>Deform</strong></td><td>Move vértices sem mudar a contagem; deforma a forma</td><td>Armature, Lattice, Curve, Displace, Shrinkwrap</td><td>III</td></tr>
+    <tr><td><strong>Modify / Edit</strong></td><td>Altera dados da malha: normais, UVs, pesos, atributos</td><td>Smooth by Angle, Weighted Normal, Data Transfer, UV Warp</td><td>IV</td></tr>
+    <tr><td><strong>Physics / Simulate</strong></td><td>Geometria que responde a simulação</td><td>Cloth, Soft Body, Ocean, Particle Instance</td><td>V</td></tr>
+  </table>
+  <p>Há ainda uma quinta força transversal: <strong>Geometry Nodes</strong>, um modifier que é uma linguagem visual inteira e, cada vez mais, a base sobre a qual os outros são reconstruídos (Cap. 17).</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ A regra mental</div>
+    <p>"Generate muda <em>quantos</em> vértices existem. Deform muda <em>onde</em> eles estão. Modify muda <em>o que eles sabem</em> (normais, UV, peso)." Guardar essa distinção ajuda a prever a ordem da pilha (Cap. 18): em geral você gera a geometria, depois a deforma, e por último ajusta os dados dela.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 2 ===== -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">A pilha de modifiers: ordem e avaliação</h2>
+
+  <p class="lead">Um objeto pode ter vários modifiers ao mesmo tempo, empilhados numa lista — a <strong>pilha</strong> (stack). A pilha é avaliada <strong>de cima para baixo</strong>: cada modifier recebe o resultado do anterior e passa o seu para o próximo. A ordem, portanto, é tão importante quanto a escolha.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 260" role="img" aria-label="A pilha é avaliada de cima para baixo">
+      <g transform="translate(220,20)">
+        <rect x="0" y="0" width="280" height="44" rx="7" fill="rgba(72,66,176,.2)" stroke="#6E68C8" stroke-width="1.4"/>
+        <text x="20" y="28" class="q-lbl">Mirror</text><text x="260" y="28" text-anchor="end" class="q-sub">1º</text>
+        <rect x="0" y="58" width="280" height="44" rx="7" fill="rgba(72,66,176,.28)" stroke="#6E68C8" stroke-width="1.4"/>
+        <text x="20" y="86" class="q-lbl">Array</text><text x="260" y="86" text-anchor="end" class="q-sub">2º</text>
+        <rect x="0" y="116" width="280" height="44" rx="7" fill="rgba(72,66,176,.36)" stroke="#6E68C8" stroke-width="1.4"/>
+        <text x="20" y="144" class="q-lbl">Bevel</text><text x="260" y="144" text-anchor="end" class="q-sub">3º</text>
+        <rect x="0" y="174" width="280" height="44" rx="7" fill="rgba(78,154,67,.3)" stroke="var(--q-proc)" stroke-width="1.4"/>
+        <text x="20" y="202" class="q-lbl">Subdivision Surface</text><text x="260" y="202" text-anchor="end" class="q-sub">4º</text>
+        <!-- fluxo -->
+        <path d="M-30 22 L-30 196" stroke="var(--q-proc)" stroke-width="2" marker-end="url(#a2)"/>
+        <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="4.5" refY="8" orient="auto"><path d="M0 0 L9 0 L4.5 9 z" fill="var(--q-proc)"/></marker></defs>
+        <text x="-44" y="115" text-anchor="middle" class="q-sub" transform="rotate(-90 -44 115)">avaliação</text>
+        <text x="140" y="245" text-anchor="middle" class="q-sub">cada modifier recebe o resultado do de cima</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 2.1 — A pilha flui para baixo.</b> O Mirror gera o espelho, o Array repete o conjunto já espelhado, o Bevel chanfra tudo isso, e o Subdivision suaviza o resultado final. Trocar duas posições muda completamente a saída.</figcaption>
+  </figure>
+
+  <h3>2.1 — Por que a ordem muda o resultado</h3>
+  <p>Considere <strong>Bevel</strong> e <strong>Subdivision</strong>. Bevel-depois-Subdivision: o chanfro vira um arredondamento suave de canto vivo (a base do hard surface). Subdivision-depois-Bevel: você primeiro derrete tudo numa bolha lisa e só então chanfra — resultado totalmente diferente, quase sempre indesejado. Nenhuma das ordens está "errada"; elas produzem coisas distintas. Entender o fluxo de cima para baixo é o que permite prever — e dirigir — o resultado.</p>
+
+  <h3>2.2 — O painel de cada modifier</h3>
+  <p>Cada cartão de modifier (em <span class="menupath">Properties ▸ Modifiers (chave inglesa)</span>) tem um cabeçalho com controles padronizados:</p>
+  <table>
+    <tr><th>Controle</th><th>Função</th></tr>
+    <tr><td><strong>Nome</strong></td><td>Renomeie para se organizar (<code>Bevel-quinas</code>, <code>Array-grade</code>) — essencial em pilhas grandes</td></tr>
+    <tr><td><strong>👁 Realtime</strong></td><td>Liga/desliga o efeito no viewport</td></tr>
+    <tr><td><strong>📷 Render</strong></td><td>Liga/desliga no render (pode diferir do viewport)</td></tr>
+    <tr><td><strong>◨ Edit Mode</strong></td><td>Mostra o efeito também enquanto você edita</td></tr>
+    <tr><td><strong>△ On Cage</strong></td><td>Faz você editar sobre a malha já modificada (os vértices "grudam" no resultado)</td></tr>
+    <tr><td><strong>⋮ Menu</strong></td><td>Apply, Duplicate, Copy to Selected, mover para o topo/base</td></tr>
+    <tr><td><strong>↕ Arrastar</strong></td><td>Reordenar a pilha (o controle mais importante deste capítulo)</td></tr>
+  </table>
+
+  <h3>2.3 — Reordenar e a ponte com a edição</h3>
+  <p>Arraste os cartões (ou use <kbd>Ctrl</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> no menu) para reordenar e observe a saída mudar ao vivo — é a melhor forma de aprender. Os toggles de Edit Mode e On Cage merecem atenção: com eles ligados, você edita a malha base <em>vendo</em> o resultado modificado, o que é poderosíssimo (modelar um lado vendo o espelho do Mirror, por exemplo) mas pode confundir se você esquecer que está mexendo no original, não no resultado.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ A pilha tem custo</div>
+    <p>Cada modifier é recalculado a cada mudança. Uma pilha pesada (Subdivision alto + Boolean + Array de milhares) pode travar o viewport. Soluções: baixe o nível de viewport do Subdivision (mantendo o de render alto), desligue o 👁 dos modifiers caros enquanto modela, e deixe o "assar" para o fim. Voltaremos a performance no Capítulo 4.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 3 ===== -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">A matéria-prima: vertex groups e atributos</h2>
+
+  <p class="lead">Muitos modifiers não agem sobre a malha inteira por igual — eles leem <strong>máscaras</strong> que dizem "aplique aqui com esta intensidade, ali com aquela". A principal dessas máscaras é o <em class="term">vertex group</em> (grupo de vértices). Dominá-lo destrava metade do poder dos modifiers.</p>
+
+  <h3>3.1 — O que é um vertex group</h3>
+  <p>Um vertex group é uma lista de vértices, cada um com um <strong>peso</strong> de 0 a 1. Pense num mapa em tons de cinza pintado sobre a malha: preto (0) = "não afete", branco (1) = "afete totalmente", cinza = parcial. Você cria grupos em <span class="menupath">Properties ▸ Object Data ▸ Vertex Groups</span>, atribui vértices selecionados com um peso, e pode pintar os pesos à mão no <strong>Weight Paint</strong> mode para gradientes suaves.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 180" role="img" aria-label="Gradiente de peso de um vertex group">
+      <defs><linearGradient id="wg" x1="0" x2="1"><stop offset="0" stop-color="#15131f"/><stop offset="1" stop-color="#79D85F"/></linearGradient></defs>
+      <rect x="40" y="40" width="640" height="60" rx="6" fill="url(#wg)" stroke="#3a3656" stroke-width="1"/>
+      <text x="60" y="130" class="q-sub">peso 0.0 — não afetado</text>
+      <text x="660" y="130" text-anchor="end" class="q-sub">peso 1.0 — totalmente afetado</text>
+      <text x="360" y="30" text-anchor="middle" class="q-lbl">o vertex group é um mapa de intensidade pela malha</text>
+    </svg>
+    <figcaption><b>Figura 3.1 — Peso como intensidade.</b> Um modifier ligado a este grupo agiria fraco à esquerda e forte à direita, com transição suave no meio. É assim que se faz uma deformação "começar" numa região e crescer gradualmente.</figcaption>
+  </figure>
+
+  <h3>3.2 — Quem lê vertex groups</h3>
+  <p>Procure o campo de "Vertex Group" no painel — muitos modifiers o têm, e ele restringe/modula o efeito:</p>
+  <table>
+    <tr><th>Modifier</th><th>O grupo controla...</th></tr>
+    <tr><td><strong>Armature</strong></td><td>Quanto cada vértice segue cada osso (o skinning inteiro — vol. 1)</td></tr>
+    <tr><td><strong>Displace</strong></td><td>Onde e quão forte a textura empurra a superfície</td></tr>
+    <tr><td><strong>Mask</strong></td><td>Quais vértices ficam visíveis (esconde o resto)</td></tr>
+    <tr><td><strong>Smooth / Shrinkwrap / Cast / Warp</strong></td><td>Onde a deformação atua</td></tr>
+    <tr><td><strong>Bevel</strong> (por peso)</td><td>Quais arestas chanfrar e quanto (via bevel weight)</td></tr>
+    <tr><td><strong>Subdivision</strong> (via crease)</td><td>O quão "duras" certas arestas resistem à suavização</td></tr>
+  </table>
+
+  <h3>3.3 — Atributos: a evolução dos grupos</h3>
+  <p>O Blender moderno generalizou os vertex groups em <strong>atributos</strong> (attributes): dados arbitrários armazenados por vértice, aresta, face ou face corner — pesos, cores, vetores, booleanos, inteiros. Os Geometry Nodes (Cap. 17) leem e escrevem atributos livremente, e essa é a "cola" que faz a malha conversar com os modifiers procedurais. Um vertex group, hoje, é só um tipo particular de atributo (peso por vértice). Você verá o gerenciador em <span class="menupath">Object Data ▸ Attributes</span>.</p>
+
+  <h3>3.4 — As outras matérias-primas</h3>
+  <ul>
+    <li><strong>Texturas:</strong> Displace, Warp e Wave podem ser dirigidos por uma textura — a luminância da textura vira o "mapa de empurrão". É como se esculpe relevo procedural (Cap. 12).</li>
+    <li><strong>Objetos-alvo:</strong> Mirror espelha em torno de um objeto; Shrinkwrap projeta sobre um alvo; Boolean corta com outro objeto; Curve deforma ao longo de uma curva; Array pode seguir uma curva. O "alvo" é matéria-prima tanto quanto a malha.</li>
+    <li><strong>Empties como controle:</strong> muitos modifiers aceitam um Empty como referência de origem/eixo/centro, separando o controle da geometria (o mesmo princípio de rigging do vol. 1).</li>
+    <li><strong>UV maps e bevel/crease weights:</strong> dados por aresta que certos modifiers consultam.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Pinte, não selecione</div>
+    <p>Para efeitos com transição suave (uma deformação que cresce, um displace que some nas bordas), <strong>Weight Paint</strong> é muito superior a atribuir pesos por seleção. Entre no modo, escolha o grupo e pinte com o pincel — você "desenha" a intensidade do modifier diretamente na superfície, vendo o resultado ao vivo se o modifier estiver ativo. É o elo mais expressivo entre você e a pilha.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 4 ===== -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">Visibilidade, gizmos, performance e aplicar</h2>
+
+  <p class="lead">Saber <em>controlar</em> a pilha — o que aparece onde, como ajustar com gizmos no viewport, como manter tudo fluido e quando "assar" — é o que separa quem luta com modifiers de quem flui com eles.</p>
+
+  <h3>4.1 — Os toggles de visibilidade</h3>
+  <p>Os três ícones no cabeçalho de cada modifier (Cap. 2) permitem cenários úteis quando combinados:</p>
+  <ul>
+    <li><strong>Viewport ON, Render OFF:</strong> ver um auxílio (ex.: um Lattice) sem que ele saia no render.</li>
+    <li><strong>Viewport OFF, Render ON:</strong> esconder um Subdivision pesado enquanto modela, mantendo-o no render final. Truque de performance nº 1.</li>
+    <li><strong>Edit Mode ON + On Cage:</strong> editar a malha base já vendo o resultado (modelar metade com Mirror visível, ajustar dentro do Subdivision).</li>
+  </ul>
+
+  <h3>4.2 — Gizmos no viewport</h3>
+  <p>Vários modifiers expõem <strong>gizmos</strong> — alças interativas direto no viewport, sem precisar digitar valores. O novo Array do 5.0 traz uma seta de offset arrastável; o Simple Deform tem alças de ângulo; o Displace permite arrastar a força. Procure os controles que aparecem sobre o objeto ao selecionar o modifier — manipular no espaço 3D é mais intuitivo (e mais rápido) que mirar campos numéricos.</p>
+
+  <div class="caixa v5">
+    <div class="rot">▤ Blender 5.x — gizmos e nodes</div>
+    <p>Os novos modifiers baseados em Geometry Nodes (Array, etc.) trouxeram <strong>gizmos interativos</strong> como recurso de destaque do 5.0 — arrastar a contagem e o offset de um array diretamente na cena. Como são GN por baixo, também são customizáveis e expansíveis. O painel "Manage" desses modifiers de node pode ser ocultado para uma interface mais limpa.</p>
+  </div>
+
+  <h3>4.3 — Performance: mantendo a pilha leve</h3>
+  <ul>
+    <li><strong>Subdivision em dois níveis:</strong> <em>Viewport</em> baixo (1–2), <em>Render</em> alto (2–4). Você modela leve e renderiza suave.</li>
+    <li><strong>Desligue o 👁</strong> dos modifiers caros (Boolean complexo, Subdivision alto, Array enorme) enquanto faz edição fina; religue para conferir.</li>
+    <li><strong>Display As Bounds</strong> em objetos-alvo (cortadores, lattices) tira-os do caminho visual.</li>
+    <li><strong>Ordem importa para custo:</strong> um Decimate ou um Mask cedo na pilha reduz a contagem que os modifiers seguintes precisam processar.</li>
+    <li><strong>Aplique o que está estável:</strong> se uma parte do design não vai mais mudar, assar reduz a carga viva.</li>
+  </ul>
+
+  <h3>4.4 — Aplicar (assar a pilha)</h3>
+  <p><strong>Apply</strong> (no menu ⋮ do modifier, ou <kbd>Ctrl</kbd>+<kbd>A</kbd> com o cursor sobre o modifier) "assa" o efeito na malha: o resultado vira geometria real e editável, e o modifier some. É definitivo dentro daquele objeto — só o histórico de desfazer recupera.</p>
+  <ol class="passos">
+    <li><h4>Aplique de cima para baixo</h4><p>Modifiers só podem ser aplicados na ordem da pilha (o topo primeiro). O Blender avisa se você tentar aplicar um do meio — ele alerta que o resultado pode não corresponder à pilha completa.</p></li>
+    <li><h4>Quando aplicar</h4><p>Antes de exportar para um engine, antes de esculpir/retopologizar sobre o resultado, antes de operações que exigem geometria real, ou quando a pilha ficou pesada demais.</p></li>
+    <li><h4>Trabalhe numa cópia</h4><p>Estratégia segura: duplique o objeto (<kbd>Shift</kbd>+<kbd>D</kbd>), mantenha o original com a pilha intacta como "backup paramétrico", e aplique na cópia. Você nunca perde a editabilidade.</p></li>
+    <li><h4>Cuidado com shape keys</h4><p>Aplicar modifiers em objetos com shape keys é restrito — o Blender pede confirmação ou bloqueia, pois mudaria a contagem de vértices que as keys dependem.</p></li>
+  </ol>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Aplicar destrói a vantagem</div>
+    <p>O reflexo de aplicar tudo "para ver direito" joga fora justamente o que torna modifiers valiosos. Resista. Mantenha a pilha viva o máximo possível; aplique só quando há um motivo concreto (exportação, escultura, performance), e de preferência numa cópia. Uma cena bem-feita chega ao render final com boa parte dos modifiers ainda não aplicados.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE II ===================== -->
+<div class="parte-cover" id="parte2">
+  <div class="pn">PARTE II · GENERATE</div>
+  <h2>Gerar geometria</h2>
+  <p>Os modifiers de geração criam, multiplicam ou removem geometria — mudam <em>quantos</em> vértices existem. São os mais transformadores da pilha: convertem um punhado de polígonos numa superfície suave, num portão inteiro, numa carcaça oca, num objeto recortado. Aqui estão os que você usará todo dia.</p>
+</div>
+
+<!-- ===== CAP 5 ===== -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">Subdivision Surface: o rei</h2>
+
+  <p class="lead">O <strong>Subdivision Surface</strong> (SubD) subdivide a malha e a suaviza, transformando uma forma bruta e angular numa superfície orgânica e arredondada. É o modifier mais usado do Blender e a base de quase toda modelagem suave.</p>
+
+  <h3>5.1 — Como funciona (Catmull-Clark)</h3>
+  <p>A cada nível, o SubD divide cada face em quatro e reposiciona os vértices seguindo o algoritmo <em class="term">Catmull-Clark</em>, que puxa a superfície para uma média suave dos vizinhos. O resultado é uma "casca" lisa que aproxima a malha de controle (o <em>cage</em>) sem tocá-la. Dois níveis já transformam um cubo numa quase-esfera; três ou quatro dão acabamento de render.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Cage de controle e superfície subdividida">
+      <g transform="translate(80,30)">
+        <rect x="0" y="0" width="120" height="120" class="q-base"/>
+        <text x="60" y="148" text-anchor="middle" class="q-lbl">nível 0 (cage)</text>
+      </g>
+      <g transform="translate(300,30)">
+        <rect x="0" y="0" width="120" height="120" rx="34" fill="rgba(72,66,176,.3)" stroke="#8B86E0" stroke-width="1.5"/>
+        <rect x="0" y="0" width="120" height="120" class="q-fino" stroke-dasharray="3 3"/>
+        <text x="60" y="148" text-anchor="middle" class="q-lbl">nível 1</text>
+      </g>
+      <g transform="translate(520,30)">
+        <circle cx="60" cy="60" r="58" fill="rgba(72,66,176,.32)" stroke="#8B86E0" stroke-width="1.5"/>
+        <rect x="2" y="2" width="116" height="116" class="q-fino" stroke-dasharray="3 3"/>
+        <text x="60" y="148" text-anchor="middle" class="q-lbl">nível 3 (suave)</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 5.1 — Cage e casca.</b> A malha de controle (tracejada) permanece angular e editável; a superfície subdividida (sólida) aproxima-se de uma forma suave a cada nível. Você modela o cage; o SubD entrega a curva.</figcaption>
+  </figure>
+
+  <h3>5.2 — Os controles</h3>
+  <table>
+    <tr><th>Controle</th><th>Função</th></tr>
+    <tr><td><strong>Levels Viewport</strong></td><td>Subdivisões no viewport — mantenha baixo (1–2) para fluidez</td></tr>
+    <tr><td><strong>Render</strong></td><td>Subdivisões no render — pode ser maior (2–4) para suavidade final</td></tr>
+    <tr><td><strong>Catmull-Clark vs. Simple</strong></td><td>Catmull-Clark suaviza; Simple só subdivide sem arredondar (útil para mais resolução sem mudar a forma)</td></tr>
+    <tr><td><strong>Optimal Display</strong></td><td>Esconde as arestas extras no viewport, mostrando só o cage — leitura mais limpa</td></tr>
+    <tr><td><strong>Adaptive (Cycles)</strong></td><td>Subdivide conforme a proximidade da câmera, gerando detalhe só onde é visto</td></tr>
+  </table>
+
+  <h3>5.3 — Controlar a suavização: loops de suporte e creases</h3>
+  <p>O SubD arredonda <em>tudo</em> — mas você raramente quer cantos igualmente moles. Duas técnicas controlam onde a superfície fica dura ou macia:</p>
+  <ul>
+    <li><strong>Loops de suporte:</strong> arestas extras posicionadas perto de um canto "seguram" a superfície ali, deixando-o mais definido. Quanto mais perto, mais duro o canto. É a técnica clássica e dá o melhor fluxo de topologia (volume 2, hard surface).</li>
+    <li><strong>Edge Crease</strong> (<kbd>Shift</kbd>+<kbd>E</kbd>): atribui a uma aresta uma "dureza" de 0 a 1 que o SubD respeita, sem precisar de loops extras. Rápido, mas pode dar resultados menos previsíveis em junções complexas.</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">▤ Blender 5.0 — Adaptive Subdivision</div>
+    <p>A <strong>subdivisão adaptativa</strong> deixou de ser experimental no 5.0 e está sempre disponível no modifier Subdivision Surface (no Cycles). Ela gera microgeometria conforme a câmera — detalhe onde se vê, economia onde não se vê — e agora suporta recursos antes ausentes (como motion blur e subdivisão de UV), aproximando-a de pronta para produção.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ SubD ama quads</div>
+    <p>Catmull-Clark foi feito para <strong>quadriláteros</strong>. Triângulos e n-gons sob SubD criam pinches e artefatos de shading, especialmente em superfície curva. Por isso a obsessão com topologia limpa em quads na modelagem suave. Se um SubD está "ondulando" feio, quase sempre a causa é um tri ou n-gon mal posicionado, ou um pólo (vértice de muitas arestas) num lugar visível.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 6 ===== -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Bevel: chanfros e o microbisel</h2>
+
+  <p class="lead">O <strong>Bevel</strong> substitui uma aresta viva por uma ou mais faces, criando um chanfro ou arredondamento. Como modifier, ele bisela arestas em toda a malha por critério (ângulo, peso ou grupo) de forma não destrutiva — o segredo do brilho realista em hard surface.</p>
+
+  <h3>6.1 — Por que arestas vivas não existem na vida real</h3>
+  <p>Nenhuma borda física é infinitamente afiada: toda quina tem um microchanfro que <strong>captura um fio de luz</strong> (o highlight). Renders com arestas perfeitamente vivas parecem "CG" justamente por não terem esse brilho. Um Bevel de poucos segmentos e largura mínima em todas as quinas é o que faz uma peça parecer fabricada. Este é, talvez, o uso mais importante do modifier.</p>
+
+  <h3>6.2 — Os controles essenciais</h3>
+  <table>
+    <tr><th>Controle</th><th>Função</th></tr>
+    <tr><td><strong>Amount / Width</strong></td><td>A largura do chanfro</td></tr>
+    <tr><td><strong>Segments</strong></td><td>Número de faces no chanfro: 1 = bisel reto; 2+ = arredondamento (quanto mais, mais suave)</td></tr>
+    <tr><td><strong>Limit Method</strong></td><td>Quais arestas biselar: <em>Angle</em> (só as mais agudas que X°), <em>Weight</em> (por bevel weight), <em>Vertex Group</em></td></tr>
+    <tr><td><strong>Profile</strong></td><td>O perfil da curva: 0.5 = arco circular; &lt;0.5 = côncavo; &gt;0.5 = saliente; 1.0 = chanfro em degrau</td></tr>
+    <tr><td><strong>Harden Normals</strong></td><td>Mantém o shading das faces planas limpo apesar do chanfro estreito (par com Weighted Normal)</td></tr>
+    <tr><td><strong>Clamp Overlap</strong></td><td>Impede que chanfros largos se cruzem e gerem geometria quebrada</td></tr>
+  </table>
+
+  <h3>6.3 — Angle vs. Weight</h3>
+  <p>O <strong>Limit Method ▸ Angle</strong> é o jeito mais prático: defina um ângulo (ex.: 30°) e o Bevel chanfra todas as arestas mais agudas que isso, ignorando as suaves. Um único modifier dá o microbisel a um objeto inteiro. Quando você precisa de controle por aresta — chanfros largos em umas, finos em outras — use <strong>Weight</strong>: pinte bevel weights (<kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Bevel Weight) e o modifier respeita cada valor.</p>
+
+  <div class="caixa v5">
+    <div class="rot">▤ Blender 5.x — Bevel</div>
+    <p>Operações de bevel ganharam controles de precisão recentes (segurar <kbd>Ctrl</kbd> para snap, <kbd>Shift</kbd> para ajuste fino) e o <strong>Auto Merge</strong> foi adicionado ao Bevel (5.0), ajudando a limpar geometria sobreposta automaticamente. Para hard surface, a dupla <em>Bevel (Angle) → Weighted Normal</em> continua sendo o acabamento padrão de quinas (Cap. 14).</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Bevel + Subdivision: a regra de ouro</div>
+    <p>Para hard surface com SubD, um Bevel de <strong>2 segmentos</strong> antes do Subdivision cria loops de suporte automáticos: o chanfro vira o "aperto" que mantém o canto definido sob a suavização. É a forma não destrutiva de fazer hard surface com SubD sem adicionar loops à mão. Ajuste a largura do bevel = ajuste a dureza de todos os cantos de uma vez.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 7 ===== -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Mirror e Array</h2>
+
+  <p class="lead">Dois geradores de repetição que economizam metade (ou mais) do seu trabalho. <strong>Mirror</strong> espelha a malha sobre um eixo; <strong>Array</strong> faz cópias em sequência. Juntos, modelam tudo que é simétrico ou repetido — quase tudo, no fim das contas.</p>
+
+  <h3>7.1 — Mirror</h3>
+  <p>Modele só metade de um objeto simétrico (um personagem, um carro, uma nave) e o Mirror reflete a outra metade ao vivo. Edite um lado e os dois respondem. É indispensável e quase nunca sai da pilha de objetos simétricos.</p>
+  <table>
+    <tr><th>Controle</th><th>Função</th></tr>
+    <tr><td><strong>Axis X/Y/Z</strong></td><td>Em torno de qual(is) eixo(s) espelhar (local ao objeto ou ao Mirror Object)</td></tr>
+    <tr><td><strong>Mirror Object</strong></td><td>Espelha em torno de outro objeto/Empty, não da própria origem — controle externo do plano de simetria</td></tr>
+    <tr><td><strong>Clipping</strong></td><td>Impede que vértices cruzem o plano de espelho (evita que as metades se sobreponham na costura)</td></tr>
+    <tr><td><strong>Merge</strong></td><td>Funde os vértices na linha central, criando uma malha contínua e estanque</td></tr>
+    <tr><td><strong>Flip UVs / Mirror U,V</strong></td><td>Espelha também as coordenadas de textura</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 720 190" role="img" aria-label="Mirror espelha em torno de um eixo">
+      <line x1="360" y1="20" x2="360" y2="160" class="q-proc" stroke-dasharray="6 5"/>
+      <text x="360" y="180" text-anchor="middle" class="q-sub">plano de espelho</text>
+      <path d="M360 60 L280 50 L240 100 L300 130 L360 120 Z" class="q-base"/>
+      <path d="M360 60 L440 50 L480 100 L420 130 L360 120 Z" fill="rgba(72,66,176,.22)" stroke="#8B86E0" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <text x="290" y="100" text-anchor="middle" class="q-sub">você modela</text>
+      <text x="430" y="100" text-anchor="middle" class="q-sub">o Mirror gera</text>
+    </svg>
+    <figcaption><b>Figura 7.1 — Modele metade, ganhe o todo.</b> O lado sólido é o que você edita; o tracejado é gerado ao vivo. Com Merge + Clipping, a costura central vira uma malha única e contínua.</figcaption>
+  </figure>
+
+  <h3>7.2 — Array</h3>
+  <p>O <strong>Array</strong> repete a malha N vezes com um deslocamento entre cópias — escadas, correntes, grades, cercas, colunatas, esteiras. O deslocamento pode ser combinado de três formas:</p>
+  <table>
+    <tr><th>Tipo de offset</th><th>O que faz</th></tr>
+    <tr><td><strong>Relative</strong></td><td>Desloca em múltiplos do tamanho do objeto (1.0 = encostadas; 1.2 = com folga)</td></tr>
+    <tr><td><strong>Constant</strong></td><td>Desloca uma distância fixa em metros, independente do tamanho</td></tr>
+    <tr><td><strong>Object Offset</strong></td><td>Usa a transformação de um Empty — gira/escala cada cópia, criando arrays em espiral, em leque ou circulares</td></tr>
+  </table>
+  <p>O <strong>Object Offset com um Empty rotacionado</strong> é o truque clássico do array circular: cada cópia recebe um incremento de rotação, formando um anel (dentes de engrenagem, pétalas, mostrador de relógio). Combine com <em>Merge</em> para fundir as juntas e com <em>Count</em> para mudar a quantidade ao vivo.</p>
+
+  <div class="caixa v5">
+    <div class="rot">▤ Blender 5.0 — o novo Array (Geometry Nodes)</div>
+    <p>O 5.0 trouxe um <strong>Array reconstruído sobre Geometry Nodes</strong> com recursos pedidos há anos: distribuição <strong>circular</strong> nativa, <strong>randomização</strong> (posição, rotação, escala), <strong>gizmos interativos</strong> para arrastar contagem e offset no viewport, e melhor suporte a distribuição ao longo de curvas. Como é GN por baixo, é customizável. O Array clássico continua disponível como <strong>Legacy Array</strong> — útil porque nem todos os recursos antigos foram portados ainda. Para a maioria dos casos novos, prefira o novo; para pilhas antigas, o legacy mantém compatibilidade.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 7</div>
+    <p>Modele um único elo de corrente (um toro achatado). Aplique Array com Count 8 e Relative Offset ajustado para os elos se entrelaçarem; rotacione elos alternados 90° (dica: dois Arrays, ou o novo Array com randomização/rotação). Depois faça uma roda dentada: um único dente + Array circular via Empty rotacionado. Mude o Count e veja a engrenagem inteira se reconfigurar.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 8 ===== -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Solidify e Boolean</h2>
+
+  <p class="lead">Dois geradores que dão volume e fazem operações de sólido. <strong>Solidify</strong> dá espessura a uma superfície fina; <strong>Boolean</strong> combina dois objetos por união, diferença ou interseção. Ambos transformam superfícies abertas em sólidos utilizáveis.</p>
+
+  <h3>8.1 — Solidify</h3>
+  <p>Uma malha-superfície (um plano, uma casca) não tem espessura — é infinitamente fina. O Solidify gera a "parede" oposta e as bordas, transformando-a num sólido oco com espessura definida: copos, paredes, roupas, carcaças, chapas. É a forma rápida de dar corpo a algo modelado como casca.</p>
+  <table>
+    <tr><th>Controle</th><th>Função</th></tr>
+    <tr><td><strong>Thickness</strong></td><td>A espessura da parede (positiva/negativa controla para que lado cresce)</td></tr>
+    <tr><td><strong>Offset</strong></td><td>De que lado da superfície original a espessura é adicionada (-1 = para dentro, +1 = para fora, 0 = centrada)</td></tr>
+    <tr><td><strong>Even Thickness</strong></td><td>Mantém espessura uniforme nos cantos (evita afinamento em quinas agudas)</td></tr>
+    <tr><td><strong>Rim</strong></td><td>Fecha as bordas abertas, tornando o resultado estanque</td></tr>
+    <tr><td><strong>Complex (Solidify Mode)</strong></td><td>Modo robusto que lida com geometria que se auto-intersecta (mais lento)</td></tr>
+  </table>
+
+  <h3>8.2 — Boolean (resumo)</h3>
+  <p>O <strong>Boolean</strong> combina o objeto com um operando (cortador) por <em>Difference</em> (furar), <em>Union</em> (fundir) ou <em>Intersect</em> (recortar), tratando os dois como volumes. É o gerador mais poderoso — e o mais exigente: depende de malhas estanques (manifold) e da escolha do solver certo (Float, Exact ou Manifold).</p>
+
+  <div class="caixa conceito">
+    <div class="rot">▤ Boolean tem um volume só para ele</div>
+    <p>Este capítulo é um resumo proposital: o Boolean é tão central e cheio de nuances (os três solvers, manifold, limpeza pós-corte, fluxo não destrutivo com collection de cortadores) que ele tem um livro inteiro nesta coleção — o <strong>volume 3</strong>. Aqui basta saber: como modifier, ele entra na pilha como qualquer gerador, normalmente <em>antes</em> do Bevel (para chanfrar as arestas que o corte cria) e do Subdivision. Para tudo o mais, consulte o volume dedicado.</p>
+  </div>
+
+  <h3>8.3 — A dupla Solidify + Boolean</h3>
+  <p>Um par recorrente: dê espessura a uma chapa com Solidify e depois fure-a com Boolean (parafusos, ventilação, recortes). A ordem importa — Solidify antes do Boolean garante que o furo atravesse a parede já com volume. Inverter pode deixar o furo "aberto" na espessura. É um microexemplo do tema da Parte VI: a ordem é design.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Solidify para "grossura instantânea"</div>
+    <p>Modelar tudo como superfície fina e dar volume depois com Solidify é mais rápido e mais flexível que modelar sólido desde o início: você ajusta a espessura de uma chapa, de uma parede ou de um tecido inteiro com um único slider, sem retocar a malha. Para roupas e tecidos vindos de simulação de Cloth, é quase obrigatório.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 9 ===== -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Remesh, Decimate, Weld e os geradores de nicho</h2>
+
+  <p class="lead">Os geradores restantes resolvem problemas específicos: refazer ou reduzir a topologia, soldar vértices, gerar geometria a partir de perfis. Você não usa todos sempre, mas saber que existem evita reinventar a roda.</p>
+
+  <h3>9.1 — Reconstruir e otimizar a topologia</h3>
+  <table>
+    <tr><th>Modifier</th><th>O que faz</th><th>Quando usar</th></tr>
+    <tr><td><strong>Remesh</strong></td><td>Substitui a topologia inteira por uma malha nova e regular (modo Voxel ou QuadriFlow)</td><td>Limpar resultado de escultura/boolean; fechar e uniformizar uma malha bagunçada</td></tr>
+    <tr><td><strong>Decimate</strong></td><td>Reduz a contagem de polígonos (Collapse, Un-Subdivide ou Planar)</td><td>Otimizar para game/web; reduzir malha pesada mantendo a forma</td></tr>
+    <tr><td><strong>Triangulate</strong></td><td>Converte quads/n-gons em triângulos</td><td>Exportar para engines que exigem tris; controlar a triangulação</td></tr>
+    <tr><td><strong>Weld</strong></td><td>Funde vértices a menos de uma distância (como Merge by Distance, mas ao vivo)</td><td>Costurar bordas de Array/Mirror não destrutivamente; limpar duplicados</td></tr>
+    <tr><td><strong>Edge Split</strong></td><td>Separa arestas por ângulo/marca, criando quinas vivas no shading</td><td>Endurecer arestas (hoje em grande parte substituído por Smooth by Angle)</td></tr>
+  </table>
+
+  <h3>9.2 — Geradores de perfil e estrutura</h3>
+  <table>
+    <tr><th>Modifier</th><th>O que faz</th></tr>
+    <tr><td><strong>Screw</strong></td><td>Gira um perfil em torno de um eixo, gerando sólidos de revolução (taças, garrafas, molas, roscas, parafusos)</td></tr>
+    <tr><td><strong>Skin</strong></td><td>Gera uma "pele" de polígonos ao redor de arestas/vértices, com raio ajustável por vértice (<kbd>Ctrl</kbd>+<kbd>A</kbd>) — ótimo para esboçar criaturas, árvores e tubos a partir de um esqueleto de arestas</td></tr>
+    <tr><td><strong>Wireframe</strong></td><td>Converte cada aresta num tubo/viga — estruturas, gaiolas, treliças, efeito "wireframe" renderizável</td></tr>
+    <tr><td><strong>Build</strong></td><td>Faz a malha "surgir" face a face ao longo do tempo — efeito de construção/desmonte animado</td></tr>
+    <tr><td><strong>Mask</strong></td><td>Esconde parte da malha (por vertex group ou por ossos do armature) — revelar/ocultar regiões sem deletar</td></tr>
+  </table>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Screw para qualquer coisa redonda</div>
+    <p>Tudo que é torneado — copo, vaso, pino, garrafa, lente, roda — começa como um <em>perfil</em> (uma linha de vértices desenhando a silhueta de meia seção) e um Screw de 360°. Mude o perfil e o objeto inteiro muda; mude os <em>Steps</em> e ajusta a resolução circular. Para uma rosca/mola, dê ao Screw um <em>Screw</em> (deslocamento ao longo do eixo) maior que zero. É modelagem por revolução, totalmente não destrutiva.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Remesh e Decimate descartam o fluxo</div>
+    <p>Remesh e Decimate produzem topologia automática que raramente respeita loops limpos — ótima para formas finais, escultura ou otimização, péssima para algo que ainda vai animar ou subdividir. Use-os como passo de acabamento ou conversão, não no meio de um fluxo que depende de topologia controlada. Para reorganizar mantendo controle, retopologia manual ainda vence.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE III ===================== -->
+<div class="parte-cover" id="parte3">
+  <div class="pn">PARTE III · DEFORM</div>
+  <h2>Deformar a forma</h2>
+  <p>Os modifiers de deformação movem os vértices sem mudar quantos existem — eles dobram, esticam, enrolam, projetam e amassam a geometria. São o elo entre modelagem e movimento: o mesmo Armature que deforma para animar, o Curve que faz algo seguir um caminho, o Displace que cria relevo a partir de uma textura.</p>
+</div>
+
+<!-- ===== CAP 10 ===== -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Armature e Lattice: deformar com estrutura</h2>
+
+  <p class="lead">Dois deformadores que usam uma estrutura externa para controlar a malha. O <strong>Armature</strong> deforma com um esqueleto de ossos (a base de toda animação de personagem); o <strong>Lattice</strong> deforma com uma gaiola simples, ótima para ajustes amplos e suaves.</p>
+
+  <h3>10.1 — Armature</h3>
+  <p>O modifier Armature liga a malha a um esqueleto: quando os ossos se movem, os vértices os seguem conforme os pesos do skinning (os vertex groups do Cap. 3, um por osso). É o que transforma um modelo estático num personagem animável. Como modifier, ele costuma ficar no <strong>fim</strong> da pilha de deformação (você deforma a malha já gerada e suavizada).</p>
+
+  <div class="caixa conceito">
+    <div class="rot">▤ Armature tem um volume só para ele</div>
+    <p>Como o Boolean, o Armature é vasto demais para caber num capítulo — ossos, modos, skinning, pesos, FK/IK, constraints, controles. Ele é o coração do <strong>volume 1</strong> desta coleção (Rigging). Aqui o essencial: é um modifier Deform, lê um vertex group por osso, e sua posição na pilha importa (deformar depois de gerar/suavizar, antes de modifiers que dependem da pose final). Para o resto, o volume dedicado.</p>
+  </div>
+
+  <h3>10.2 — Lattice</h3>
+  <p>Um <strong>Lattice</strong> é uma gaiola de pontos de controle (uma grade 3D simples) que envolve o objeto. Você deforma a gaiola — e a malha dentro dela acompanha de forma suave, como gelatina num molde. A vantagem: deformar uma malha densa com pouquíssimos controles, e poder aplicar a <em>mesma</em> deformação a vários objetos (todos com modifier Lattice apontando para a mesma gaiola).</p>
+  <ol class="passos">
+    <li><h4>Crie o lattice</h4><p><kbd>Shift</kbd>+<kbd>A</kbd> ▸ Lattice. Posicione-o envolvendo o objeto e ajuste as resoluções U/V/W (poucos pontos = deformação mais ampla e suave).</p></li>
+    <li><h4>Ligue o objeto</h4><p>No objeto, adicione modifier <em>Lattice</em> e aponte o <em>Object</em> para a gaiola.</p></li>
+    <li><h4>Deforme a gaiola</h4><p>Em Edit Mode no lattice, mova os pontos de controle. A malha responde ao vivo. Use proportional editing (<kbd>O</kbd>) para deformações orgânicas.</p></li>
+  </ol>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Lattice para "esticar bonito"</div>
+    <p>Precisa deformar um objeto detalhado (afinar, inflar, curvar) sem bagunçar a topologia? Lattice. É ideal para variações de uma mesma base (esticar uma garrafa em três alturas diferentes), para squash-and-stretch de animação, e para deformar grupos inteiros de uma vez. Por ser não destrutivo e de baixíssima contagem, é o "controle de forma macro" mais elegante do Blender.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 11 ===== -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 11</div><div class="fio"></div></div>
+  <h2 class="titulo">Curve, Simple Deform, Cast e Warp</h2>
+
+  <p class="lead">Deformadores procedurais que dobram a forma seguindo uma regra geométrica — um caminho, um ângulo, uma forma-alvo. São os "moldadores" da pilha: rápidos, ajustáveis e perfeitos para movimento e motion graphics.</p>
+
+  <h3>11.1 — Curve</h3>
+  <p>O modifier <strong>Curve</strong> dobra a malha ao longo de uma curva-caminho. Mova o objeto no eixo de deformação e ele "anda" pela curva, acompanhando suas dobras. Usos: estradas, trilhos, tentáculos, cabos, texto seguindo um traçado, esteiras transportadoras, e qualquer coisa que serpenteia.</p>
+  <ol class="passos">
+    <li><h4>Eixo de deformação</h4><p>No modifier, escolha o <em>Deform Axis</em> (X/Y/Z) que corresponde ao comprimento do objeto. Errar o eixo é a causa nº 1 de "o Curve fez algo maluco".</p></li>
+    <li><h4>Origens alinhadas</h4><p>A origem do objeto e a da curva controlam o ponto de partida. Geralmente você quer a malha começando na origem da curva, ao longo do eixo certo.</p></li>
+    <li><h4>Combine com Array</h4><p>Array (Fit Curve / seguir curva) + Curve = uma corrente ou trilho que preenche e dobra ao longo do caminho. Mude a curva e tudo reflui.</p></li>
+  </ol>
+
+  <h3>11.2 — Simple Deform</h3>
+  <p>Quatro deformações clássicas num modifier só, controladas por um ângulo/fator:</p>
+  <table>
+    <tr><th>Modo</th><th>Efeito</th><th>Uso típico</th></tr>
+    <tr><td><strong>Twist</strong></td><td>Torce a malha em torno de um eixo</td><td>Brocas, colunas torcidas, espirais, motion graphics</td></tr>
+    <tr><td><strong>Bend</strong></td><td>Dobra a malha num arco</td><td>Anéis, ferraduras, transformar um plano num cilindro</td></tr>
+    <tr><td><strong>Taper</strong></td><td>Afina/alarga ao longo do eixo</td><td>Cones, pontas, lâminas, perspectiva forçada</td></tr>
+    <tr><td><strong>Stretch</strong></td><td>Estica preservando volume (squash &amp; stretch)</td><td>Animação cartoon, elasticidade</td></tr>
+  </table>
+
+  <h3>11.3 — Cast e Warp</h3>
+  <ul>
+    <li><strong>Cast:</strong> empurra a malha em direção a uma forma primitiva — esfera, cilindro ou cuboide — por um fator. Fator 1.0 numa esfera transforma qualquer coisa numa bola perfeita; valores intermediários "inflam" suavemente em direção à forma. Ótimo para arredondar, inflar ou dar volume controlado.</li>
+    <li><strong>Warp:</strong> deforma a malha entre dois Empties (origem e destino), como puxar uma região da geometria de um ponto para outro. Útil para distorções localizadas dirigidas por controles, e para efeitos de "imã" em motion graphics.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Plano → cilindro sem modelar</div>
+    <p>Um truque elegante: modele um padrão (texto, relevo, painel) num <strong>plano</strong> achatado, onde tudo é fácil de alinhar; depois use <em>Simple Deform ▸ Bend</em> 360° para enrolá-lo num cilindro perfeito. Você projeta no plano e o modifier embrulha — muito mais simples que modelar curvo desde o início. Vale para rótulos, mostradores, anéis decorados e latas.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 11</div>
+    <p>Faça uma broca: um plano comprido e estreito com alguns loops, + Simple Deform ▸ Twist (ângulo alto), + Taper para afinar a ponta, + Solidify para dar espessura. Três deformadores empilhados, zero edição manual. Depois mude o ângulo do Twist e veja a broca "girar" na forma.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 12 ===== -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">Displace, Wave e texturas como deformadores</h2>
+
+  <p class="lead">Estes deformadores empurram os vértices guiados por uma <strong>textura</strong> ou por uma função matemática — criam relevo, ondas, terreno e detalhe de superfície sem você esculpir nada à mão.</p>
+
+  <h3>12.1 — Displace</h3>
+  <p>O <strong>Displace</strong> desloca cada vértice ao longo da normal (ou de um eixo) conforme o valor de uma textura: onde a textura é clara, empurra para fora; onde é escura, recua. Uma textura de ruído vira terreno rochoso; um mapa de altura (heightmap) vira montanhas; uma imagem de tijolos vira relevo de parede. É escultura procedural.</p>
+  <ol class="passos">
+    <li><h4>Tenha resolução</h4><p>Displace só move vértices existentes — precisa de geometria densa para mostrar detalhe. Combine com Subdivision <em>antes</em> dele, ou ative Adaptive Subdivision para densidade sob demanda.</p></li>
+    <li><h4>Adicione a textura</h4><p>No modifier, crie/escolha uma textura (Noise, Voronoi, Musgrave, ou uma imagem). Ajuste a escala da textura nas propriedades de textura.</p></li>
+    <li><h4>Controle força e direção</h4><p><em>Strength</em> = intensidade; <em>Midlevel</em> = o valor neutro (0.5 padrão: cinza não move). <em>Direction</em> = Normal (relevo orgânico) ou um eixo fixo.</p></li>
+    <li><h4>Mascare com vertex group</h4><p>Restrinja o relevo a uma região pintando um grupo de pesos (Cap. 3) — detalhe só onde você quer.</p></li>
+  </ol>
+
+  <figure>
+    <svg viewBox="0 0 720 170" role="img" aria-label="Displace converte textura em relevo">
+      <g transform="translate(60,30)">
+        <rect x="0" y="40" width="200" height="14" class="q-base"/>
+        <text x="100" y="95" text-anchor="middle" class="q-sub">plano denso + textura</text>
+      </g>
+      <path d="M290 70 L340 70" class="q-proc" marker-end="url(#a3)"/>
+      <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="var(--q-proc)"/></marker></defs>
+      <g transform="translate(380,20)">
+        <path d="M0 70 Q30 30 60 60 T120 50 T180 70 T260 45" class="q-proc" fill="none"/>
+        <path d="M0 70 Q30 30 60 60 T120 50 T180 70 T260 45 L260 90 L0 90 Z" fill="rgba(78,154,67,.18)"/>
+        <text x="130" y="120" text-anchor="middle" class="q-sub">vértices empurrados pela luminância → relevo</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 12.1 — Textura vira forma.</b> O Displace lê o brilho da textura e empurra cada vértice na direção da normal: claro sobe, escuro desce. Com geometria densa, qualquer padrão vira relevo 3D real.</figcaption>
+  </figure>
+
+  <h3>12.2 — Wave</h3>
+  <p>O <strong>Wave</strong> propaga ondas pela malha ao longo do tempo — círculos concêntricos (como uma pedra na água) ou ondas lineares. É animado por padrão (depende do frame atual). Usos: superfície de água estilizada, bandeiras simples, pulsos de energia, efeitos rítmicos de motion graphics. Controle a velocidade, altura, largura e o ponto de origem das ondas.</p>
+
+  <h3>12.3 — Volume Displace (5.x)</h3>
+  <p>Para objetos de volume (fumaça, nuvens, VDB), o <strong>Volume Displace</strong> distorce a grade volumétrica com uma textura — útil para quebrar a uniformidade de fumaça e dar detalhe a nuvens procedurais.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Sem geometria, sem relevo</div>
+    <p>O erro nº 1 com Displace: aplicar numa malha de baixa resolução e estranhar que "nada acontece" ou que o relevo é blocado. Displace só pode mover os vértices que existem. Coloque um <strong>Subdivision (modo Simple, alto nível)</strong> antes do Displace para densidade, ou use Adaptive Subdivision. Lembre que isso pesa — Displace detalhado é caro; considere fazer o detalhe fino via normal/bump map no shader quando a silhueta real não precisar mudar.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 13 ===== -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Shrinkwrap, Hook, Smooth e os deformadores de superfície</h2>
+
+  <p class="lead">O grupo final de deformadores resolve relações entre malhas: grudar uma na outra, puxar regiões por controles, suavizar formas e transferir a deformação de uma malha-gaiola para outra densa.</p>
+
+  <h3>13.1 — Shrinkwrap</h3>
+  <p>O <strong>Shrinkwrap</strong> projeta a malha sobre a superfície de um objeto-alvo, "encolhendo-a" até grudar nele. Usos: roupas que vestem um corpo, decalques/remendos que abraçam uma superfície curva, texto que adere a um relevo, retopologia (uma malha nova grudando na escultura de alta resolução).</p>
+  <table>
+    <tr><th>Modo de projeção</th><th>Como gruda</th></tr>
+    <tr><td><strong>Nearest Surface Point</strong></td><td>Cada vértice vai ao ponto mais próximo do alvo — o mais comum</td></tr>
+    <tr><td><strong>Project</strong></td><td>Projeta numa direção (normal ou eixo) — bom para decalques e retopo direcional</td></tr>
+    <tr><td><strong>Nearest Vertex</strong></td><td>Vai ao vértice mais próximo do alvo</td></tr>
+    <tr><td><strong>Target Normal Project</strong></td><td>Projeta seguindo as normais do alvo</td></tr>
+  </table>
+
+  <h3>13.2 — Hook</h3>
+  <p>O <strong>Hook</strong> liga vértices (ou um vertex group) a um objeto externo — geralmente um Empty. Mover o Empty puxa aqueles vértices, com queda suave (falloff) ao redor. É um controle de deformação leve e animável: a antena que balança, a boca que abre, o tecido puxado por um gancho, controles faciais simples. Pense nele como "um rig de um osso só, sem armature".</p>
+
+  <h3>13.3 — Os Smooth e os Deform de superfície</h3>
+  <table>
+    <tr><th>Modifier</th><th>O que faz</th></tr>
+    <tr><td><strong>Smooth</strong></td><td>Relaxa a malha aproximando cada vértice da média dos vizinhos (como borrar uma imagem). Fator e iterações controlam a intensidade; mascarável por vertex group</td></tr>
+    <tr><td><strong>Smooth Corrective</strong></td><td>Suaviza só os artefatos de deformação (ex.: dobras feias do Armature em cotovelos), preservando a forma base</td></tr>
+    <tr><td><strong>Laplacian Smooth</strong></td><td>Suavização que preserva melhor o volume; bom para limpar escaneamentos/remesh ruidosos</td></tr>
+    <tr><td><strong>Mesh Deform</strong></td><td>Uma malha-gaiola de baixa resolução deforma uma malha densa de dentro (como Lattice, mas com gaiola de forma livre) — controle orgânico de personagens e objetos complexos</td></tr>
+    <tr><td><strong>Surface Deform</strong></td><td>Liga uma malha à superfície de outra: deforme a malha-alvo e a "grudada" acompanha — roupas em corpos animados, detalhes em superfícies que se movem</td></tr>
+  </table>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Smooth Corrective: o salva-vidas do rigging</div>
+    <p>Quando uma articulação dobra e a malha "afunda" feio (o cotovelo que vira ampulheta), em vez de repintar pesos infinitamente, jogue um <strong>Corrective Smooth</strong> no fim da pilha mascarado para a região da junta. Ele relaxa só o artefato da deformação, devolvendo volume sem mexer no resto. É um dos truques mais subestimados para skinning bonito (conecta com o vol. 1).</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE IV ===================== -->
+<div class="parte-cover" id="parte4">
+  <div class="pn">PARTE IV · MODIFY</div>
+  <h2>Editar os dados da malha</h2>
+  <p>Estes modifiers não mudam quantos vértices existem nem onde estão — mudam <em>o que a malha sabe sobre si mesma</em>: como ela reflete a luz (normais), como recebe textura (UVs), e os pesos e atributos que outros modifiers leem. São discretos, mas decidem se um render parece profissional ou amador.</p>
+</div>
+
+<!-- ===== CAP 14 ===== -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">Normais e shading: Smooth by Angle e Weighted Normal</h2>
+
+  <p class="lead">As <strong>normais</strong> determinam como cada face reflete a luz. Controlá-las é a diferença entre um objeto com shading limpo e um cheio de manchas escuras inexplicáveis. Estes modifiers gerenciam normais de forma não destrutiva.</p>
+
+  <h3>14.1 — Smooth by Angle (o ex-Auto Smooth)</h3>
+  <p>O <strong>Smooth by Angle</strong> decide automaticamente quais arestas ficam suaves e quais ficam vivas com base no ângulo entre as faces: ângulos suaves (abaixo do limite) são arredondados no shading; ângulos agudos (quinas) ficam definidos. Um objeto com Shade Smooth + Smooth by Angle tem superfícies lisas <em>e</em> quinas nítidas — o melhor dos dois mundos, sem marcar arestas à mão.</p>
+
+  <div class="caixa v5">
+    <div class="rot">▤ Blender 4.1+ / 5.x — a grande renomeação</div>
+    <p>O antigo checkbox "Auto Smooth" (que ficava nos dados da malha) foi <strong>removido no 4.1</strong> e substituído pelo modifier <strong>Smooth by Angle</strong> — o primeiro caso da migração geral para modifiers baseados em Geometry Nodes. Hoje o fluxo é: clique direito ▸ <em>Shade Auto Smooth</em>, que aplica Shade Smooth <em>e</em> adiciona o modifier Smooth by Angle automaticamente; depois ajuste o ângulo no painel de modifiers. Tutoriais antigos que mandam "ligar Auto Smooth nos dados da malha" estão desatualizados.</p>
+  </div>
+
+  <h3>14.2 — Weighted Normal</h3>
+  <p>Em superfícies com chanfros estreitos (resultado de Bevel), faces grandes vizinhas a faces pequenas podem receber gradientes de sombra esquisitos, porque a normal de cada vértice é a média das faces ao redor — e faces pequenas "puxam" demais. O <strong>Weighted Normal</strong> recalcula as normais ponderando pela <em>área</em> (ou ângulo) das faces, fazendo as faces grandes dominarem. Resultado: superfícies planas ficam perfeitamente lisas mesmo ao lado de chanfros finos.</p>
+
+  <h3>14.3 — Normal Edit e Data Transfer de normais</h3>
+  <ul>
+    <li><strong>Normal Edit:</strong> força as normais a apontarem como as de uma forma-alvo (esfera, etc.). Truque clássico para folhagem (folhas com shading de uma esfera parecem um arbusto coeso) e para shading estilizado.</li>
+    <li><strong>Data Transfer</strong> (Cap. 15) pode copiar normais de uma malha para outra — usado em games para fazer objetos de baixa contagem "pegarem emprestado" o shading suave de uma versão de alta.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ O acabamento de hard surface</div>
+    <p>A sequência de shading que resolve 90% dos problemas em objetos rígidos: <strong>Shade Smooth → Smooth by Angle (ou marcar arestas sharp) → Bevel (Angle, 2 seg) → Weighted Normal</strong>, nessa ordem na pilha. Quinas nítidas, superfícies lisas, chanfros que pegam o highlight e zero manchas de sombra. Decore essa receita — ela aparece em quase todo objeto mecânico bem renderizado.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 15 ===== -->
+<section class="cap" id="cap15">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 15</div><div class="fio"></div></div>
+  <h2 class="titulo">Data Transfer, UV Project/Warp e Vertex Weight</h2>
+
+  <p class="lead">Os modifiers de Modify restantes manipulam UVs, transferem dados entre malhas e editam pesos proceduralmente. São ferramentas de fluxo de produção — discretas, mas que automatizam tarefas que à mão seriam tediosas.</p>
+
+  <h3>15.1 — Data Transfer</h3>
+  <p>O <strong>Data Transfer</strong> copia dados de uma malha de origem para a do objeto: vertex groups, normais, UVs, vertex colors, sharp edges. Casos de uso: transferir pesos de skinning de um personagem para a roupa dele, copiar o shading suave de um modelo high-poly para o low-poly (games), propagar máscaras de uma malha para outra. É a ponte de dados entre objetos.</p>
+
+  <h3>15.2 — UV Project e UV Warp</h3>
+  <ul>
+    <li><strong>UV Project:</strong> projeta uma textura sobre a malha a partir de um objeto projetor (como um slide projector), independente do UV map existente. Ótimo para decalques, logos projetados, mapeamento planar em superfícies complexas.</li>
+    <li><strong>UV Warp:</strong> transforma as coordenadas UV com base em dois objetos de controle — desliza, gira ou escala a textura na superfície de forma animável, sem tocar nos UVs originais. Usado para esteiras rolantes, água deslizante, painéis com texturas que se movem.</li>
+  </ul>
+
+  <h3>15.3 — Vertex Weight (Edit / Mix / Proximity)</h3>
+  <p>Três modifiers que <strong>geram ou modificam pesos</strong> de vertex groups proceduralmente — em vez de pintar à mão, você deriva os pesos de uma regra:</p>
+  <table>
+    <tr><th>Modifier</th><th>O que faz</th></tr>
+    <tr><td><strong>Vertex Weight Edit</strong></td><td>Remapeia os pesos de um grupo por uma curva/função (clarear, escurecer, inverter, aplicar contraste)</td></tr>
+    <tr><td><strong>Vertex Weight Mix</strong></td><td>Combina dois grupos (somar, multiplicar, subtrair) — como blending de máscaras</td></tr>
+    <tr><td><strong>Vertex Weight Proximity</strong></td><td>Gera pesos com base na <em>distância</em> a um objeto-alvo — perto = peso alto, longe = baixo</td></tr>
+  </table>
+  <p>A força deles é <strong>encadear máscaras dinâmicas</strong>: um Weight Proximity cria um peso que segue um Empty; um Displace lê esse peso. Mova o Empty e o relevo aparece onde ele passa — um "carimbo" animado, totalmente procedural, sem pintar nada.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Pesos que se movem sozinhos</div>
+    <p>A combinação <em>Vertex Weight Proximity → (Displace ou Mask ou Smooth)</em> é um padrão poderoso: o peso é dirigido pela proximidade de um objeto, então a deformação "acende" dinamicamente conforme esse objeto se aproxima ou passa. Pegadas que afundam o chão, ondas que seguem um barco, regiões que se revelam à passagem de um controle — tudo procedural e animável, sem keyframes em cada vértice.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE V ===================== -->
+<div class="parte-cover" id="parte5">
+  <div class="pn">PARTE V · SIMULAR & NODES</div>
+  <h2>Simulação e o futuro procedural</h2>
+  <p>A última família de modifiers entrega geometria que <em>responde</em> — a física, ao tempo, a regras. E acima de todos paira o Geometry Nodes: não um modifier, mas uma linguagem visual inteira que está, aos poucos, reconstruindo todo o sistema. Esta parte mapeia o presente da simulação e o futuro de tudo.</p>
+</div>
+
+<!-- ===== CAP 16 ===== -->
+<section class="cap" id="cap16">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 16</div><div class="fio"></div></div>
+  <h2 class="titulo">Os modifiers de física (simulação)</h2>
+
+  <p class="lead">Os modifiers de <strong>Physics/Simulate</strong> aparecem na pilha quando você adiciona um sistema físico ao objeto. Eles fazem a geometria responder a forças, colisões e tempo — e, como vivem na pilha, interagem com os outros modifiers em ordem.</p>
+
+  <h3>16.1 — O panorama</h3>
+  <table>
+    <tr><th>Sistema</th><th>O que simula</th><th>Uso</th></tr>
+    <tr><td><strong>Cloth</strong></td><td>Tecido: dobra, cai, amassa, colide</td><td>Roupas, bandeiras, cortinas, capas</td></tr>
+    <tr><td><strong>Soft Body</strong></td><td>Objetos moles que deformam e balançam</td><td>Gelatina, borracha, balanços orgânicos secundários</td></tr>
+    <tr><td><strong>Collision</strong></td><td>Marca o objeto como obstáculo para outras sims</td><td>O corpo que o tecido veste; o chão que apara partículas</td></tr>
+    <tr><td><strong>Fluid</strong></td><td>Líquidos e gás (fumaça/fogo) via domínio</td><td>Água, fumaça, fogo, respingos</td></tr>
+    <tr><td><strong>Ocean</strong></td><td>Gera e anima uma superfície de oceano</td><td>Mar, ondas em larga escala, com espuma</td></tr>
+    <tr><td><strong>Dynamic Paint</strong></td><td>Objetos "pintam"/deformam uns aos outros por contato</td><td>Pegadas, rastros molhados, ondas de impacto</td></tr>
+    <tr><td><strong>Explode</strong></td><td>Estilhaça a malha seguindo um sistema de partículas</td><td>Explosões, desintegração</td></tr>
+    <tr><td><strong>Particle Instance</strong></td><td>Instancia esta malha nas partículas de outra</td><td>Folhas num galho, grama, detritos voando</td></tr>
+  </table>
+
+  <h3>16.2 — Por que eles vivem na pilha</h3>
+  <p>Sendo modifiers, sua posição importa. Exemplos: um <strong>Subdivision antes do Cloth</strong> simula tecido de baixa resolução (rápido) e suaviza o resultado depois — mas o drape pode diferir de simular já denso. Um <strong>Solidify depois do Cloth</strong> dá espessura ao pano simulado como superfície fina. Um <strong>Armature antes</strong> de uma sim de Cloth move o personagem que o tecido então veste. Pensar na ordem é pensar no que é causa e o que é consequência.</p>
+
+  <h3>16.3 — O ciclo de cache</h3>
+  <p>Simulações dependem do <strong>tempo</strong>: o frame atual é calculado a partir dos anteriores. Por isso elas precisam ser reproduzidas do início (baking/cache) para resolver corretamente, e os resultados ficam armazenados num cache. Diferente dos modifiers procedurais (que recalculam instantaneamente em qualquer frame), uma sim precisa "rodar" no tempo. Cacheie antes de renderizar para garantir consistência.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">▤ Simulação é um tema próprio</div>
+    <p>Cada sistema de física (Cloth, Fluid, partículas) é vasto o suficiente para um curso inteiro — forças, parâmetros de material, colisão, cache, resolução. Este capítulo é um mapa: o objetivo é você reconhecer que esses sistemas <em>são</em> modifiers, vivem na pilha e obedecem à ordem. O domínio de cada um é assunto para estudo dedicado; aqui você ganha o contexto de como eles se encaixam no sistema que este livro cobre.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 17 ===== -->
+<section class="cap" id="cap17">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 17</div><div class="fio"></div></div>
+  <h2 class="titulo">Geometry Nodes: o modifier que virou tudo</h2>
+
+  <p class="lead">O <strong>Geometry Nodes</strong> (GN) aparece na lista como mais um modifier, mas é uma linguagem de programação visual inteira para criar e manipular geometria. É, hoje, a fronteira do Blender — e o sistema sobre o qual os outros modifiers estão sendo reconstruídos.</p>
+
+  <h3>17.1 — O que é</h3>
+  <p>Em vez de campos fixos, o GN te dá uma tela de <strong>nós</strong>: você conecta operações (criar pontos, instanciar objetos, deslocar, juntar, mascarar, ler atributos) num fluxo da entrada (a geometria do objeto) até a saída (o resultado). Tudo é não destrutivo, paramétrico e reutilizável. Você pode recriar um Array, um Displace ou um sistema de espalhamento — ou inventar algo que nenhum modifier fixo faria.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 150" role="img" aria-label="Fluxo de nós do Geometry Nodes">
+      <g font-family="JetBrains Mono" font-size="10.5">
+        <rect x="20" y="50" width="110" height="46" rx="6" fill="rgba(72,66,176,.2)" stroke="#6E68C8" stroke-width="1.3"/>
+        <text x="75" y="78" text-anchor="middle" class="q-sub" fill="#cfcbe6">Group Input</text>
+        <rect x="180" y="50" width="120" height="46" rx="6" fill="rgba(72,66,176,.24)" stroke="#6E68C8" stroke-width="1.3"/>
+        <text x="240" y="78" text-anchor="middle" class="q-sub" fill="#cfcbe6">Distribute Points</text>
+        <rect x="350" y="50" width="120" height="46" rx="6" fill="rgba(72,66,176,.28)" stroke="#6E68C8" stroke-width="1.3"/>
+        <text x="410" y="78" text-anchor="middle" class="q-sub" fill="#cfcbe6">Instance on Pts</text>
+        <rect x="520" y="50" width="120" height="46" rx="6" fill="rgba(78,154,67,.28)" stroke="var(--q-proc)" stroke-width="1.3"/>
+        <text x="580" y="78" text-anchor="middle" class="q-sub" fill="#cfcbe6">Group Output</text>
+        <path d="M130 73 L180 73 M300 73 L350 73 M470 73 L520 73" stroke="var(--q-proc)" stroke-width="2" fill="none"/>
+        <circle cx="130" cy="73" r="3" fill="#79D85F"/><circle cx="180" cy="73" r="3" fill="#79D85F"/>
+        <circle cx="300" cy="73" r="3" fill="#79D85F"/><circle cx="350" cy="73" r="3" fill="#79D85F"/>
+        <circle cx="470" cy="73" r="3" fill="#79D85F"/><circle cx="520" cy="73" r="3" fill="#79D85F"/>
+      </g>
+      <text x="360" y="125" text-anchor="middle" class="q-sub">entrada → operações encadeadas → saída · tudo paramétrico</text>
+    </svg>
+    <figcaption><b>Figura 17.1 — Um fluxo de nós.</b> Aqui: distribuir pontos numa superfície e instanciar um objeto em cada um — um "espalhador" feito em quatro nós. O mesmo princípio escala para sistemas arbitrariamente complexos.</figcaption>
+  </figure>
+
+  <h3>17.2 — Por que é o futuro do sistema</h3>
+  <p>O time do Blender adotou a estratégia de <strong>reescrever os modifiers clássicos como node groups</strong> de GN — mais flexíveis e expansíveis. O Smooth by Angle (4.1) foi o primeiro. No 5.0 vieram seis novos modifiers GN, listados abaixo. Com o tempo, "modifier" e "node group" tendem a se fundir: cada modifier fixo é, por dentro, uma árvore de nós que você poderá abrir e modificar.</p>
+
+  <div class="caixa v5">
+    <div class="rot">▤ Blender 5.0 — seis novos modifiers de Geometry Nodes</div>
+    <table>
+      <tr><th>Modifier</th><th>O que faz</th></tr>
+      <tr><td><strong>Array</strong> (novo)</td><td>Distribui ao longo de linha, círculo, curva ou transformação custom; com gizmos e randomização</td></tr>
+      <tr><td><strong>Scatter on Surface</strong></td><td>Instancia objetos sobre a superfície, por densidade ou quantidade, controlável por atributo/textura; encadeável</td></tr>
+      <tr><td><strong>Instance on Elements</strong></td><td>Cria instâncias em pontos, arestas, faces ou face corners de outra malha</td></tr>
+      <tr><td><strong>Randomize Instances</strong></td><td>Adiciona variação (posição, escala, rotação) às instâncias geradas por outros modifiers</td></tr>
+      <tr><td><strong>Curve to Tube</strong></td><td>Gera um tubo (ou forma custom) a partir de uma curva, com tampas arredondadas e UVs</td></tr>
+      <tr><td><strong>Geometry Input</strong></td><td>No topo da pilha, copia a geometria final de outro objeto para dentro desta</td></tr>
+    </table>
+    <p>Há ainda dezenas de novos nós (incluindo 27 ligados a grades de volume/SDF), bundles e closures, e adições à Essentials Library (seleção, suavização, displacement, topologia). O painel "Manage" dos modifiers GN pode ser ocultado.</p>
+  </div>
+
+  <h3>17.3 — Quando pular para os nodes</h3>
+  <p>Use modifiers fixos enquanto eles resolvem — são mais rápidos de configurar. Vá para o GN quando precisar de algo <strong>que os fixos não fazem</strong>: espalhamento controlado por textura/atributo, lógica condicional, repetição com variação, geração de geometria a partir de regras, instanciamento massivo, efeitos dirigidos por dados. A boa notícia: muito do que você aprendeu aqui (vertex groups são atributos, a ordem da pilha, deformar depois de gerar) transfere direto para o raciocínio de nós.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Comece copiando um modifier</div>
+    <p>A melhor forma de entrar no GN sem se assustar: tente recriar um modifier que você já entende. Um Array de nós (linha de pontos + Instance on Points), um Displace de nós (Set Position com um ruído), um Solidify... Ao reconstruir o familiar com nós, você aprende a gramática do sistema com um objetivo claro — e logo perceberá que pode ir além do que o modifier fixo permitia.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VI ===================== -->
+<div class="parte-cover" id="parte6">
+  <div class="pn">PARTE VI · DOMÍNIO</div>
+  <h2>Pensar em pilhas</h2>
+  <p>Conhecer cada modifier é metade do caminho; a outra metade é saber <em>combiná-los na ordem certa</em>. Esta parte é estratégia pura: os princípios universais de ordenação, as receitas de pilha que aparecem em produção real, o protocolo de socorro quando algo dá errado, e a referência rápida.</p>
+</div>
+
+<!-- ===== CAP 18 ===== -->
+<section class="cap" id="cap18">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 18</div><div class="fio"></div></div>
+  <h2 class="titulo">A ordem da pilha: princípios e armadilhas</h2>
+
+  <p class="lead">A pergunta que todo mundo faz — "em que ordem ponho os modifiers?" — tem uma resposta com princípios, não decoreba. Entenda o fluxo e você deduz a ordem de qualquer pilha.</p>
+
+  <h3>18.1 — A ordem canônica</h3>
+  <p>A sequência que funciona na esmagadora maioria dos casos, de cima para baixo:</p>
+  <pre><code>1. GERAR a base       → Mirror, Array, Screw      (multiplica/cria)
+2. OPERAR sólidos     → Boolean, Solidify          (combina volumes)
+3. REFINAR a forma    → Bevel                       (chanfra o que existe)
+4. SUAVIZAR           → Subdivision Surface         (arredonda tudo)
+5. DEFORMAR           → Curve, Simple Deform, Cast   (dobra a forma pronta)
+6. ANIMAR             → Armature, Lattice, Hook      (deforma para mover)
+7. CORRIGIR/ENFEITAR  → Corrective Smooth, Displace
+8. DADOS/SHADING      → Weighted Normal, Data Transfer  (sempre por último)</code></pre>
+
+  <h3>18.2 — Os três princípios que geram a ordem</h3>
+  <ol>
+    <li><strong>Gere antes de deformar.</strong> Crie/multiplique a geometria primeiro; depois dobre-a. Um Array <em>antes</em> de um Curve repete e então faz tudo seguir o caminho; o inverso dobraria um objeto só e depois copiaria a dobra.</li>
+    <li><strong>Deforme antes de finalizar dados.</strong> Normais e shading (Weighted Normal) vão por último, porque dependem da forma final — recalculá-los antes da deformação dá shading errado.</li>
+    <li><strong>Bevel antes de Subdivision.</strong> O bevel cria os loops de suporte que o subdivision usa para segurar os cantos. Inverter derrete tudo e só então chanfra (quase nunca o que se quer).</li>
+  </ol>
+
+  <h3>18.3 — Armadilhas frequentes de ordem</h3>
+  <table>
+    <tr><th>Pilha errada</th><th>Sintoma</th><th>Conserto</th></tr>
+    <tr><td>Subdivision antes de Bevel</td><td>Cantos moles e chanfro estranho sobre a bolha</td><td>Bevel acima do Subdivision</td></tr>
+    <tr><td>Weighted Normal antes de deformar</td><td>Shading "quebra" quando o objeto se move</td><td>Weighted Normal no fim da pilha</td></tr>
+    <tr><td>Curve antes de Array</td><td>Só um elemento dobra; as cópias ignoram a curva</td><td>Array acima do Curve</td></tr>
+    <tr><td>Mirror depois de Array assimétrico</td><td>Simetria quebrada/duplicação esquisita</td><td>Mirror normalmente no topo</td></tr>
+    <tr><td>Boolean depois de Subdivision</td><td>Corte sobre malha já densa e suave; lento e sujo</td><td>Boolean antes do Subdivision (e do Bevel)</td></tr>
+    <tr><td>Solidify depois de Boolean de furo</td><td>Furo "aberto" na espessura</td><td>Solidify antes do Boolean</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">▤ A ordem é uma decisão de design</div>
+    <p>Não existe "a ordem certa" universal — existe a ordem que produz o que você quer. As regras acima são o ponto de partida que acerta 90% das vezes; os 10% restantes são quando você quebra a regra de propósito (deformar antes de gerar para um efeito específico, por exemplo). A maestria é entender o fluxo bem o bastante para prever o resultado de qualquer ordem — e então escolher.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 19 ===== -->
+<section class="cap" id="cap19">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 19</div><div class="fio"></div></div>
+  <h2 class="titulo">Combinações poderosas (workflows)</h2>
+
+  <p class="lead">Receitas de pilha testadas que resolvem tarefas inteiras. Use-as como pontos de partida — todas não destrutivas, todas ajustáveis até o fim.</p>
+
+  <h3>19.1 — Hard surface com SubD</h3>
+  <pre><code>Mirror → Bevel (Angle, 2 seg) → Subdivision (2/3) → Weighted Normal</code></pre>
+  <p>Modele metade em quads limpos; o Bevel cria os apertos de canto; o SubD suaviza; o Weighted Normal limpa o shading. Ajuste a largura do Bevel para afrouxar/apertar todos os cantos de uma vez. A espinha dorsal da modelagem mecânica suave.</p>
+
+  <h3>19.2 — Hard surface mid-poly (sem SubD)</h3>
+  <pre><code>Mirror → Boolean(collection de cortadores) → Bevel (Angle) → Weighted Normal</code></pre>
+  <p>Corte à vontade com booleans; o Bevel chanfra inclusive as arestas dos cortes; o Weighted Normal fecha o shading. Sem a dor de topologia do SubD. Conecta diretamente com os volumes 2 (hard surface) e 3 (boolean).</p>
+
+  <h3>19.3 — Objeto torneado</h3>
+  <pre><code>Perfil (meia seção) → Screw (360°) → Solidify (se preciso) → Subdivision</code></pre>
+  <p>Copo, vaso, garrafa, pino. Mude o perfil e o objeto inteiro reflui. Para rosca/mola, dê deslocamento ao Screw.</p>
+
+  <h3>19.4 — Estrutura repetida que dobra</h3>
+  <pre><code>Array (Fit Curve) → Curve → [Bevel] </code></pre>
+  <p>Corrente, trilho, cerca, espinha. O Array preenche o comprimento da curva; o Curve faz tudo serpentear. Mude a curva e a estrutura inteira segue.</p>
+
+  <h3>19.5 — Terreno/relevo procedural</h3>
+  <pre><code>Plano → Subdivision (Simple, alto) → Displace (textura Noise) → [Subdivision Catmull leve]</code></pre>
+  <p>Densidade primeiro, depois empurra pela textura. Máscare com vertex group para áreas planas (uma clareira, um caminho). Troque a textura = troque a paisagem.</p>
+
+  <h3>19.6 — Espalhar objetos (5.0)</h3>
+  <pre><code>Superfície → Scatter on Surface → Randomize Instances</code></pre>
+  <p>Grama, pedras, árvores, detritos. Controle a densidade por textura/atributo; o Randomize quebra a repetição. Encadeie vários Scatter para distribuir tipos diferentes com densidades diferentes.</p>
+
+  <h3>19.7 — Personagem (visão de pilha)</h3>
+  <pre><code>Mirror → Subdivision → Armature → Corrective Smooth (mascarado nas juntas)</code></pre>
+  <p>Modele metade, suavize, deforme com o esqueleto, e corrija os artefatos das dobras. A roupa em separado pode usar Surface Deform ou Data Transfer de pesos do corpo. Aprofunda no volume 1.</p>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 19</div>
+    <p>Escolha um objeto do seu dia (uma caneca, um parafuso, um portão, uma planta) e, antes de modelar, <strong>escreva a pilha</strong> que o construiria de forma não destrutiva. Depois execute e compare com o que você planejou. Esse hábito de "pensar em pilha antes de mexer" é o que transforma o conhecimento das peças em fluidez real.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 20 ===== -->
+<section class="cap" id="cap20">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 20</div><div class="fio"></div></div>
+  <h2 class="titulo">Troubleshooting: a pilha que não obedece</h2>
+
+  <p class="lead">Quando um modifier faz algo inesperado, a causa quase sempre cai numa destas linhas. A coluna do meio é o diagnóstico; a da direita, o conserto.</p>
+
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr>
+    <tr><td>Resultado escala/posição estranho</td><td>Escala ou rotação não aplicada</td><td><kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms antes de modifiers sensíveis (Bevel, Array, Solidify)</td></tr>
+    <tr><td>SubD com pinches/ondulações</td><td>Tris/n-gons ou pólos em área curva</td><td>Refaça em quads; reposicione pólos para áreas planas</td></tr>
+    <tr><td>Bevel se auto-cruza/quebra</td><td>Largura maior que a geometria permite</td><td>Ligue Clamp Overlap; reduza a largura; aplique escala</td></tr>
+    <tr><td>Manchas escuras no shading</td><td>Normais médias mal ponderadas; faltou Weighted Normal</td><td>Weighted Normal no fim; Shade Smooth + Smooth by Angle</td></tr>
+    <tr><td>Displace não faz nada/é blocado</td><td>Malha de baixa resolução</td><td>Subdivision (Simple, alto) antes do Displace; ou Adaptive</td></tr>
+    <tr><td>Curve deforma de forma maluca</td><td>Eixo de deformação errado / origens desalinhadas</td><td>Acerte o Deform Axis; alinhe origem da malha à da curva</td></tr>
+    <tr><td>Mirror não funde no centro</td><td>Merge desligado ou vértices fora do plano</td><td>Ligue Merge + Clipping; alinhe vértices centrais a 0</td></tr>
+    <tr><td>Boolean falha/some</td><td>Malha não-manifold, normais invertidas, solver errado</td><td>Veja o vol. 3: feche a malha, recalcule normais, troque o solver</td></tr>
+    <tr><td>Viewport travando</td><td>Pilha pesada recalculando ao vivo</td><td>Baixe Levels Viewport do SubD; desligue 👁 dos modifiers caros</td></tr>
+    <tr><td>Shading quebra ao animar</td><td>Weighted Normal/normais calculadas antes da deformação</td><td>Mova os modifiers de normais para depois do Armature</td></tr>
+    <tr><td>"Apply" dá resultado diferente do visto</td><td>Aplicou um modifier do meio da pilha</td><td>Aplique de cima para baixo, na ordem</td></tr>
+    <tr><td>Modifier some ao entrar em Edit Mode</td><td>Toggle de Edit Mode desligado</td><td>Ligue o ícone "Edit Mode" no cabeçalho do modifier</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">▤ Protocolo universal de 5 passos</div>
+    <p>Travou e não sabe por quê? Rode esta sequência: <strong>(1)</strong> aplique escala/rotação (<kbd>Ctrl</kbd>+<kbd>A</kbd>); <strong>(2)</strong> cheque a ordem da pilha contra os princípios do Cap. 18; <strong>(3)</strong> verifique a topologia (quads? manifold? normais para fora com <kbd>Shift</kbd>+<kbd>N</kbd>?); <strong>(4)</strong> confira os toggles de visibilidade (viewport/render/edit); <strong>(5)</strong> isole — desligue todos os modifiers e religue um a um até o problema aparecer. O culpado se revela quase sempre antes do passo 5.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 21 ===== -->
+<section class="cap" id="cap21">
+  <div class="cap-tag"><div class="stk"><span></span><span></span><span></span></div><div class="num">CAPÍTULO 21</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>21.1 — Glossário</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição</th></tr>
+    <tr><td><strong>Modifier</strong></td><td>Operação não destrutiva calculada ao vivo sobre a malha base</td></tr>
+    <tr><td><strong>Pilha (stack)</strong></td><td>A lista ordenada de modifiers, avaliada de cima para baixo</td></tr>
+    <tr><td><strong>Não destrutivo</strong></td><td>Reversível: a malha original permanece editável</td></tr>
+    <tr><td><strong>Apply (assar)</strong></td><td>Converter o efeito do modifier em geometria real e definitiva</td></tr>
+    <tr><td><strong>Generate / Deform / Modify / Simulate</strong></td><td>As quatro categorias: criar geometria / mover vértices / editar dados / responder à física</td></tr>
+    <tr><td><strong>Cage</strong></td><td>A malha de controle de baixa resolução sob um Subdivision</td></tr>
+    <tr><td><strong>Catmull-Clark</strong></td><td>O algoritmo de suavização do Subdivision Surface</td></tr>
+    <tr><td><strong>Loop de suporte</strong></td><td>Aresta extra perto de um canto para mantê-lo definido sob SubD</td></tr>
+    <tr><td><strong>Crease</strong></td><td>"Dureza" atribuída a uma aresta para resistir à suavização</td></tr>
+    <tr><td><strong>Vertex group</strong></td><td>Conjunto de vértices com pesos (0–1) usado como máscara por modifiers</td></tr>
+    <tr><td><strong>Atributo</strong></td><td>Dado arbitrário por vértice/aresta/face; generalização dos vertex groups</td></tr>
+    <tr><td><strong>Bevel weight / Sharp / Crease</strong></td><td>Dados por aresta que modifiers consultam (chanfro, shading, dureza)</td></tr>
+    <tr><td><strong>Weighted Normal</strong></td><td>Recalcula normais ponderando por área, para shading limpo</td></tr>
+    <tr><td><strong>Object Offset</strong></td><td>Modo do Array que usa um Empty para girar/escalar cada cópia (arrays circulares)</td></tr>
+    <tr><td><strong>Manifold / watertight</strong></td><td>Malha estanque, pré-requisito do Boolean (vol. 3)</td></tr>
+    <tr><td><strong>Geometry Nodes</strong></td><td>Linguagem visual de nós para geometria; a base sobre a qual os modifiers migram</td></tr>
+    <tr><td><strong>Gizmo</strong></td><td>Alça interativa de um modifier no viewport (ex.: offset do novo Array)</td></tr>
+  </table>
+
+  <h3>21.2 — Atalhos úteis</h3>
+  <table>
+    <tr><th>Atalho</th><th>Ação</th></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd> (sobre o modifier)</td><td>Aplicar (assar) o modifier</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd> (Object Mode)</td><td>Aplicar transformações — faça antes de Bevel/Array/Solidify</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>5</kbd></td><td>Adicionar/ajustar Subdivision para o nível N (no Object Mode)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Bevel Weight</td><td>Atribuir peso de bevel a arestas (Edit Mode)</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>E</kbd></td><td>Atribuir crease a arestas (Edit Mode)</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>N</kbd></td><td>Recalcular normais para fora (Edit Mode)</td></tr>
+    <tr><td><kbd>M</kbd> ▸ By Distance</td><td>Fundir vértices duplicados (Edit Mode)</td></tr>
+    <tr><td><kbd>O</kbd></td><td>Proportional editing (ótimo ao deformar lattices/cages)</td></tr>
+    <tr><td>Clique direito ▸ Shade Auto Smooth</td><td>Shade Smooth + adiciona o modifier Smooth by Angle</td></tr>
+  </table>
+
+  <h3>21.3 — Novidades 4.x → 5.x</h3>
+  <ul>
+    <li><strong>Migração para Geometry Nodes:</strong> os modifiers clássicos estão sendo reconstruídos como node groups, mais flexíveis. Iniciou com o <strong>Smooth by Angle</strong> (4.1), que substituiu o Auto Smooth.</li>
+    <li><strong>Seis novos modifiers GN (5.0):</strong> novo <strong>Array</strong> (circular, randomização, gizmos, curva), <strong>Scatter on Surface</strong>, <strong>Instance on Elements</strong>, <strong>Randomize Instances</strong>, <strong>Curve to Tube</strong>, <strong>Geometry Input</strong>. O Array clássico permanece como <em>Legacy Array</em>.</li>
+    <li><strong>Adaptive Subdivision</strong> deixou de ser experimental (5.0), sempre disponível no modifier Subdivision (Cycles), com suporte a motion blur e UV.</li>
+    <li><strong>Boolean:</strong> solver "Fast" renomeado para <strong>Float</strong>; solver <strong>Manifold</strong> de alta performance; Exact mais rápido (vol. 3).</li>
+    <li><strong>Bevel:</strong> Auto Merge adicionado (5.0); controles de precisão (snap com <kbd>Ctrl</kbd>, ajuste fino com <kbd>Shift</kbd>).</li>
+    <li><strong>Multiresolution:</strong> baking muito melhorado (n-gons, vector displacement) no 5.0.</li>
+    <li><strong>Geometry Nodes:</strong> 27 novos nós de grade de volume/SDF, bundles e closures, novos nós na Essentials Library; painel "Manage" ocultável.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ A coleção completa</div>
+    <p>Este é o volume 5, e ele costura a coleção inteira: <strong>Boolean (vol. 3)</strong> e <strong>Armature</strong> são modifiers que ganharam livros próprios; <strong>Hard Surface (vol. 2)</strong> vive das pilhas Bevel/SubD/Boolean daqui; <strong>Rigging (vol. 1)</strong> é o modifier Armature em profundidade; e <strong>Composição (vol. 4)</strong> enquadra tudo o que você construir. O manual oficial (<a class="ext" href="https://docs.blender.org/manual/en/latest/modeling/modifiers/index.html">docs.blender.org</a>) documenta cada modifier campo a campo. O próximo passo natural daqui são os <strong>Geometry Nodes</strong> a sério — o sistema que, aos poucos, vai absorver tudo o que este livro descreve.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Modifiers no Blender 5.x · Livro de Bolso · volume 5 da coleção · 21 capítulos em 6 partes<br>
+  A pilha é a memória das suas decisões — e decisões memorizadas podem sempre ser revistas.
+</footer>
+
+</main>
+</div><!-- /layout -->
+</body>
+</html>

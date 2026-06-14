@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Composição de Cena no Blender 5.x — Livro de Bolso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F2EFE7;
+  --tinta:#1A1916;
+  --tinta-suave:#54514A;
+  --ouro:#C28A1E;          /* ouro / hora dourada — acento principal */
+  --ouro-escuro:#8C6110;
+  --cine:#2B6E72;          /* teal cinematográfico — contraponto frio */
+  --cine-escuro:#184B4E;
+  --foco:#D9603C;          /* laranja focal — ponto de interesse, usar pouco */
+  --verde:#3F7A4A;
+  --vermelho:#B3402E;
+  --linha:#DCD6C8;
+  --cartao:#FFFFFF;
+  --quadro:#14201F;        /* fundo escuro do "visor" das figuras */
+  --q-linha:#D8E0DA;
+  --q-dim:#7C9690;
+  --q-ouro:#E0A93E;
+  --code-bg:#1E201C;
+  --code-fg:#E9E7DD;
+  --sombra:0 1px 3px rgba(26,25,22,.09), 0 8px 24px rgba(26,25,22,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{background:var(--papel);color:var(--tinta);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.64}
+::selection{background:var(--ouro);color:#1a1916}
+
+.layout{display:grid;grid-template-columns:294px minmax(0,1fr);min-height:100vh}
+.sidebar{border-right:1px solid var(--linha);background:linear-gradient(180deg,#ECE8DD,#F2EFE7 260px);padding:28px 22px 56px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar .parte{font-family:"Archivo",sans-serif;font-stretch:88%;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ouro-escuro);margin:24px 0 8px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sidebar .parte::before{content:"";width:14px;height:1.5px;background:var(--ouro)}
+.sidebar nav a{display:block;text-decoration:none;color:var(--tinta-suave);font-family:"Archivo",sans-serif;font-size:.83rem;line-height:1.34;padding:5px 8px 5px 14px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(194,138,30,.09);border-left-color:var(--ouro)}
+.sidebar nav a .n{color:var(--ouro-escuro);font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px}
+.logo-c{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.logo-c .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.04rem;line-height:1.1;font-stretch:106%}
+.logo-c .t2{font-family:"JetBrains Mono",monospace;font-size:.64rem;color:var(--cine-escuro)}
+
+main{padding:0 0 120px}
+.miolo{max-width:790px;margin:0 auto;padding:0 38px}
+
+/* capa */
+.capa{background:radial-gradient(1000px 500px at 80% -8%, rgba(194,138,30,.34), transparent 58%),radial-gradient(760px 460px at 6% 118%, rgba(43,110,114,.34), transparent 60%),var(--quadro);color:#EFEDE3;padding:88px 38px 76px;position:relative;overflow:hidden}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;color:var(--q-ouro);border:1px solid rgba(224,169,62,.5);border-radius:999px;padding:6px 14px;margin-bottom:26px;background:rgba(20,32,31,.5)}
+.capa h1{font-family:"Archivo",sans-serif;font-stretch:112%;font-weight:880;font-size:clamp(2.2rem,5.4vw,3.7rem);line-height:1.0;letter-spacing:-.02em;max-width:15ch;margin-bottom:22px}
+.capa h1 em{font-style:normal;color:var(--q-ouro)}
+.capa p.sub{font-size:1.08rem;max-width:60ch;color:#C8C5B8;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;border:1px solid rgba(239,237,227,.28);border-radius:6px;padding:6px 12px;color:#D4D1C4}
+/* viewfinder brackets na capa */
+.capa .vf{position:absolute;z-index:1;width:64px;height:64px;border:3px solid rgba(224,169,62,.55)}
+.capa .vf.tl{top:30px;left:30px;border-right:0;border-bottom:0}
+.capa .vf.tr{top:30px;right:30px;border-left:0;border-bottom:0}
+.capa .vf.bl{bottom:30px;left:30px;border-right:0;border-top:0}
+.capa .vf.br{bottom:30px;right:30px;border-left:0;border-top:0}
+.capa .rec{position:absolute;top:38px;right:108px;z-index:2;font-family:"JetBrains Mono",monospace;font-size:.7rem;color:#E0A93E;display:flex;align-items:center;gap:7px}
+.capa .rec::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--foco)}
+
+/* abertura de parte */
+.parte-cover{padding:64px 0 8px;border-bottom:1px solid var(--linha);margin-top:40px}
+.parte-cover .pn{font-family:"JetBrains Mono",monospace;font-size:.8rem;letter-spacing:.2em;color:var(--ouro-escuro)}
+.parte-cover h2{font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:870;font-size:clamp(1.9rem,4vw,2.7rem);line-height:1.04;letter-spacing:-.015em;margin:8px 0 12px}
+.parte-cover p{font-size:1.05rem;color:var(--tinta-suave);max-width:60ch;margin-bottom:18px}
+
+section.cap{padding-top:60px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .vfm{width:16px;height:16px;border:3px solid var(--ouro);border-right:0;border-bottom:0;flex:0 0 auto}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--ouro-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;font-size:clamp(1.6rem,3.2vw,2.2rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:20px}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.2rem;margin:40px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:28px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+em.term{font-style:italic;color:var(--cine-escuro);font-weight:600}
+a.ext{color:var(--ouro-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+
+kbd{font-family:"JetBrains Mono",monospace;font-size:.78em;background:#fff;border:1px solid #C8C2B2;border-bottom-width:2.5px;border-radius:5px;padding:1.5px 7px;white-space:nowrap;color:var(--tinta)}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#E9E5D9;border-radius:4px;padding:1.5px 6px}
+pre{background:var(--code-bg);color:var(--code-fg);font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--cine-escuro)}
+
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{display:flex;align-items:center;gap:8px;font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.olho{border-left:4px solid var(--cine)}
+.caixa.olho .rot{color:var(--cine-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--ouro)}
+.caixa.exercicio .rot{color:var(--ouro-escuro)}
+.caixa.v5{border-left:4px solid var(--ouro);background:#FAF5EA}
+.caixa.v5 .rot{color:var(--ouro-escuro)}
+
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{content:counter(passo);position:absolute;left:0;top:1px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;display:flex;align-items:center;justify-content:center}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.91rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{font-family:"Archivo",sans-serif;font-size:.73rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAF8F2}
+
+figure{margin:26px 0;background:var(--quadro);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:"Archivo",sans-serif;font-size:.82rem;color:#A9BCB6;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(216,224,218,.3)}
+figcaption b{color:#EFEDE3}
+.q-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#EFEDE3}
+.q-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--q-dim)}
+.q-grid{stroke:rgba(224,169,62,.5);stroke-width:1}
+.q-tracado{fill:none;stroke:var(--q-linha);stroke-width:1.8;stroke-linejoin:round}
+.q-fino{fill:none;stroke:var(--q-dim);stroke-width:1}
+.q-ouro{fill:none;stroke:var(--q-ouro);stroke-width:2.2}
+.q-foco{fill:var(--foco)}
+.q-foco-s{fill:none;stroke:var(--foco);stroke-width:2.4}
+.q-fill-d{fill:rgba(216,224,218,.16);stroke:var(--q-linha);stroke-width:1.4}
+.q-cine{fill:rgba(43,110,114,.5);stroke:#5BA9AD;stroke-width:1.6}
+
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:9px 26px;margin:24px 0 10px}
+.sumario a{display:flex;gap:11px;align-items:baseline;text-decoration:none;color:var(--tinta);font-family:"Archivo",sans-serif;font-size:.9rem;padding:8px 12px;border-radius:8px;border:1px solid transparent;line-height:1.25}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--ouro-escuro);font-size:.78rem;flex:0 0 auto}
+
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+
+@media (max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}.sumario{grid-template-columns:1fr}.miolo{padding:0 20px}.capa{padding:60px 20px 52px}.capa .vf{width:44px;height:44px}}
+@media print{.sidebar{display:none}.layout{display:block}.capa{background:#fff;color:#000}.capa h1 em{color:#000}.capa .vf,.capa .rec{display:none}figure{background:#fff;border:1px solid #999}figure,.caixa,table{box-shadow:none}section.cap{page-break-inside:avoid}.parte-cover{page-break-before:always}}
+:focus-visible{outline:3px solid var(--ouro);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-c">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="3" y="3" width="34" height="34" rx="3" fill="none" stroke="#184B4E" stroke-width="2.4"/>
+      <line x1="14.3" y1="4" x2="14.3" y2="36" stroke="#C28A1E" stroke-width="1.4"/>
+      <line x1="25.7" y1="4" x2="25.7" y2="36" stroke="#C28A1E" stroke-width="1.4"/>
+      <line x1="4" y1="14.3" x2="36" y2="14.3" stroke="#C28A1E" stroke-width="1.4"/>
+      <line x1="4" y1="25.7" x2="36" y2="25.7" stroke="#C28A1E" stroke-width="1.4"/>
+      <circle cx="25.7" cy="25.7" r="3.4" fill="#D9603C"/>
+    </svg>
+    <div>
+      <div class="t1">Composição<br>de Cena</div>
+      <div class="t2">Livro de Bolso · Blender 5.x</div>
+    </div>
+  </div>
+
+  <div class="parte">I · Ver como artista</div>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é composição</a>
+    <a href="#cap2"><span class="n">02</span>Ponto focal e hierarquia</a>
+    <a href="#cap3"><span class="n">03</span>Estruturas: terços, áurea</a>
+    <a href="#cap4"><span class="n">04</span>Valor: claro e escuro</a>
+    <a href="#cap5"><span class="n">05</span>Peso, equilíbrio, tensão</a>
+    <a href="#cap6"><span class="n">06</span>Cor na composição</a>
+  </nav>
+
+  <div class="parte">II · A câmera</div>
+  <nav>
+    <a href="#cap7"><span class="n">07</span>Anatomia da câmera</a>
+    <a href="#cap8"><span class="n">08</span>Distância focal e lentes</a>
+    <a href="#cap9"><span class="n">09</span>Profundidade de campo</a>
+    <a href="#cap10"><span class="n">10</span>Enquadramento e formato</a>
+    <a href="#cap11"><span class="n">11</span>Posicionar e travar</a>
+    <a href="#cap12"><span class="n">12</span>Movimento de câmera</a>
+  </nav>
+
+  <div class="parte">III · Profundidade</div>
+  <nav>
+    <a href="#cap13"><span class="n">13</span>Camadas de profundidade</a>
+    <a href="#cap14"><span class="n">14</span>Atmosfera e névoa</a>
+    <a href="#cap15"><span class="n">15</span>Encenação (staging)</a>
+  </nav>
+
+  <div class="parte">IV · Luz e cor</div>
+  <nav>
+    <a href="#cap16"><span class="n">16</span>Luz que compõe</a>
+    <a href="#cap17"><span class="n">17</span>Mood e paleta</a>
+  </nav>
+
+  <div class="parte">V · Execução</div>
+  <nav>
+    <a href="#cap18"><span class="n">18</span>Workflow do plano</a>
+    <a href="#cap19"><span class="n">19</span>Ferramentas do viewport</a>
+    <a href="#cap20"><span class="n">20</span>Cor, render e compositor</a>
+  </nav>
+
+  <div class="parte">Apêndice</div>
+  <nav>
+    <a href="#cap21"><span class="n">21</span>Checklist e erros comuns</a>
+    <a href="#cap22"><span class="n">22</span>Glossário e atalhos</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="capa">
+  <span class="vf tl"></span><span class="vf tr"></span><span class="vf bl"></span><span class="vf br"></span>
+  <span class="rec">REC · 2.39:1</span>
+  <div class="miolo">
+    <span class="selo">◐ LIVRO/CURSO · VOLUME 4 DA COLEÇÃO</span>
+    <h1>Composição de Cena <em>enquadrar a história</em></h1>
+    <p class="sub">Um curso completo, do olhar do artista à execução técnica no Blender 5.x: ponto focal e hierarquia, regra dos terços e proporção áurea, valor e cor, a linguagem das lentes, profundidade de campo, camadas de profundidade, encenação, luz que compõe — e o fluxo completo de compor um plano, do blocking ao compositor.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>22 capítulos · 5 partes</span>
+      <span>Teoria + prática</span>
+      <span>Consulta de bancada</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como ler este livro</h2>
+  <p class="lead">As Partes I e IV são <strong>atemporais</strong> — teoria de composição que serve a qualquer software, qualquer época. As Partes II, III e V são a <strong>execução no Blender</strong>. Na primeira leitura, siga a ordem; depois, use como manual: cada capítulo se sustenta sozinho e remete aos vizinhos.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é composição e por que vem antes do render</a>
+    <a href="#cap2"><span class="n">02</span>Ponto focal e hierarquia: o caminho do olhar</a>
+    <a href="#cap3"><span class="n">03</span>Estruturas: terços, proporção áurea, triângulos</a>
+    <a href="#cap4"><span class="n">04</span>Valor: a composição de claro e escuro</a>
+    <a href="#cap5"><span class="n">05</span>Peso visual, equilíbrio e tensão</a>
+    <a href="#cap6"><span class="n">06</span>Cor na composição: temperatura, harmonia, acento</a>
+    <a href="#cap7"><span class="n">07</span>Anatomia da câmera no Blender</a>
+    <a href="#cap8"><span class="n">08</span>Distância focal, sensor e a linguagem das lentes</a>
+    <a href="#cap9"><span class="n">09</span>Profundidade de campo e foco</a>
+    <a href="#cap10"><span class="n">10</span>Enquadramento, formato e tipos de plano</a>
+    <a href="#cap11"><span class="n">11</span>Posicionar, mirar e travar a câmera</a>
+    <a href="#cap12"><span class="n">12</span>Movimento de câmera</a>
+    <a href="#cap13"><span class="n">13</span>Camadas: primeiro plano, meio e fundo</a>
+    <a href="#cap14"><span class="n">14</span>Perspectiva atmosférica, névoa e volume</a>
+    <a href="#cap15"><span class="n">15</span>Encenação: silhuetas legíveis e arranjo</a>
+    <a href="#cap16"><span class="n">16</span>Luz que compõe: chave, fill, contorno, motivação</a>
+    <a href="#cap17"><span class="n">17</span>Mood, hora do dia e a paleta da cena</a>
+    <a href="#cap18"><span class="n">18</span>O workflow de compor um plano</a>
+    <a href="#cap19"><span class="n">19</span>Ferramentas do viewport e da câmera</a>
+    <a href="#cap20"><span class="n">20</span>Color management, render e o compositor</a>
+    <a href="#cap21"><span class="n">21</span>Checklist, erros comuns e como estudar</a>
+    <a href="#cap22"><span class="n">22</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">◐ Sobre a versão</div>
+    <p>Escrito para o <strong>Blender 5.x</strong>. O que mudou e importa para composição — o compositor reformulado com asset shelf e efeitos prontos (vinheta, aberração cromática, vignette, glare com Sun Beams), o EEVEE renomeado e com View Layer overrides, a câmera OSL do Cycles — está em caixas amarelas e no Capítulo 22. A teoria das Partes I e IV não tem versão: vale para sempre.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE I ===================== -->
+<div class="parte-cover" id="parte1">
+  <div class="pn">PARTE I</div>
+  <h2>Ver como um artista</h2>
+  <p>Composição é, antes de tudo, uma forma de enxergar. Antes de tocar numa câmera, é preciso entender como o olho humano lê uma imagem, o que ele procura, por onde ele viaja e o que o faz parar. Esta parte é pura teoria visual — e é a metade mais importante do livro.</p>
+</div>
+
+<!-- ===== CAP 1 ===== -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é composição e por que vem antes do render</h2>
+
+  <p class="lead"><strong>Composição</strong> é a organização deliberada dos elementos dentro do quadro para guiar o olhar, comunicar uma ideia e provocar uma sensação. É a diferença entre <em>mostrar</em> um objeto e <em>contar</em> algo com ele.</p>
+
+  <p>Um modelo impecável, materiais perfeitos e iluminação cara podem resultar numa imagem morta se a composição falhar. O inverso também é verdade: um <em>blockout</em> cinza, sem textura nenhuma, pode emocionar se estiver bem composto. Por isso compositores e diretores de fotografia trabalham a composição <strong>primeiro</strong> — ela é a fundação sobre a qual tudo o mais se apoia.</p>
+
+  <div class="caixa olho">
+    <div class="rot">◉ A ideia-chave do livro</div>
+    <p>O espectador não "vê a cena" — ele <strong>vê o quadro</strong>. Tudo que existe na sua cena 3D só importa na medida em que aparece, e como aparece, dentro do retângulo da câmera. Compor é dirigir essa janela: decidir o que entra, onde fica, quão grande é, e em que ordem o olho descobre cada coisa. A cena é o palco; a composição é a direção do espetáculo.</p>
+  </div>
+
+  <h3>1.1 — Os três trabalhos da composição</h3>
+  <ol>
+    <li><strong>Guiar o olhar.</strong> Toda imagem tem um percurso de leitura. Boa composição cria esse percurso de propósito, levando o olho ao que importa e segurando-o lá.</li>
+    <li><strong>Estabelecer hierarquia.</strong> Nem tudo no quadro tem a mesma importância. A composição decide o protagonista, os coadjuvantes e o figurino de fundo — e os apresenta nessa ordem.</li>
+    <li><strong>Criar sensação.</strong> Um horizonte baixo e céu vasto dá liberdade; um enquadramento apertado e assimétrico dá tensão. A estrutura do quadro fala antes do conteúdo.</li>
+  </ol>
+
+  <h3>1.2 — Intenção primeiro</h3>
+  <p>Antes de qualquer regra, responda em uma frase: <strong>o que esta imagem precisa dizer?</strong> "Esta nave é colossal e ameaçadora." "Este produto é elegante e desejável." "Este lugar é solitário e silencioso." Toda decisão de composição — lente, ângulo, luz, cor — se mede contra essa frase. Sem intenção, regras viram decoração; com intenção, até quebrar uma regra é uma escolha.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ O teste da miniatura</div>
+    <p>Reduza sua imagem a uma miniatura (ou aperte os olhos até ela ficar embaçada). Se você ainda entende qual é o assunto e para onde olhar, a composição é forte. Se vira uma sopa uniforme, o problema é estrutural — e nenhum detalhe ou textura vai resolver. Faça esse teste cedo e sempre.</p>
+  </div>
+
+  <h3>1.3 — Regras são ferramentas, não leis</h3>
+  <p>Tudo neste livro — terços, áurea, equilíbrio — descreve <em>tendências</em> de como o olho humano reage, destiladas de séculos de pintura e um século de cinema. Não são leis físicas. Domine-as para usá-las quando servem e quebrá-las quando a intenção pede. O artista que centraliza um sujeito de propósito, contra a "regra dos terços", está usando a regra — ao negá-la conscientemente.</p>
+</section>
+
+<!-- ===== CAP 2 ===== -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">Ponto focal e hierarquia: o caminho do olhar</h2>
+
+  <p class="lead">Toda imagem bem composta tem um <strong>ponto focal</strong> — o lugar onde o olho pousa primeiro e ao qual ele sempre retorna. Sem ele, a imagem não tem assunto; tem apenas elementos competindo.</p>
+
+  <h3>2.1 — Como o olho escolhe onde olhar</h3>
+  <p>O olhar humano não varre a imagem por igual: ele é atraído por <strong>contrastes</strong>. Onde algo se destaca do entorno, o olho vai. Os principais imãs visuais, em ordem de força aproximada:</p>
+  <table>
+    <tr><th>Imã visual</th><th>Como funciona</th><th>No Blender você controla com</th></tr>
+    <tr><td><strong>Contraste de valor</strong></td><td>O ponto mais claro contra o mais escuro (ou vice-versa) vence quase tudo</td><td>Luz, sombra, cor do material</td></tr>
+    <tr><td><strong>Foco/nitidez</strong></td><td>O que está nítido contra o que está borrado</td><td>Profundidade de campo (Cap. 9)</td></tr>
+    <tr><td><strong>Cor saturada/quente</strong></td><td>Um acento saturado num campo dessaturado salta</td><td>Material, luz colorida (Cap. 6, 16)</td></tr>
+    <tr><td><strong>Convergência de linhas</strong></td><td>O olho segue linhas até onde elas apontam</td><td>Geometria da cena, perspectiva (Cap. 8)</td></tr>
+    <tr><td><strong>Isolamento</strong></td><td>Um elemento cercado de espaço vazio chama atenção</td><td>Arranjo, espaço negativo (Cap. 5)</td></tr>
+    <tr><td><strong>Rosto / olhos / direção do olhar</strong></td><td>Humanos buscam rostos e seguem para onde eles olham</td><td>Encenação (Cap. 15)</td></tr>
+    <tr><td><strong>Detalhe / densidade</strong></td><td>Uma região detalhada num campo simples atrai</td><td>Modelagem, textura</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-label="O caminho do olhar e o ponto focal">
+      <rect x="20" y="20" width="680" height="260" rx="4" fill="none" stroke="#3a4a48" stroke-width="1.5"/>
+      <!-- linhas de leitura / caminho do olho -->
+      <path d="M60 250 C 200 230, 230 120, 380 130 S 560 90, 470 110" class="q-fino" stroke-dasharray="5 5"/>
+      <path d="M60 250 C 200 230, 320 170, 470 110" class="q-ouro" stroke-dasharray="0" fill="none" marker-end="url(#ar)"/>
+      <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="var(--q-ouro)"/></marker></defs>
+      <!-- elementos da cena, esquematicos -->
+      <rect x="50" y="210" width="90" height="60" rx="3" class="q-fill-d"/>
+      <rect x="210" y="170" width="70" height="60" rx="3" class="q-fill-d"/>
+      <!-- ponto focal -->
+      <circle cx="470" cy="110" r="26" class="q-foco-s"/>
+      <circle cx="470" cy="110" r="9" class="q-foco"/>
+      <text x="470" y="68" text-anchor="middle" class="q-lbl">PONTO FOCAL</text>
+      <text x="470" y="156" text-anchor="middle" class="q-sub">máx. contraste / nitidez</text>
+      <text x="95" y="245" text-anchor="middle" class="q-sub">entrada</text>
+      <text x="245" y="205" text-anchor="middle" class="q-sub">parada secundária</text>
+      <text x="360" y="270" class="q-sub">o olho entra pela base esquerda, sobe pelas formas e pousa no foco</text>
+    </svg>
+    <figcaption><b>Figura 2.1 — O caminho do olhar.</b> Uma composição conduz o olho por uma sequência: entrada → paradas secundárias → ponto focal. As linhas e os contrastes da cena desenham esse percurso, mesmo que o espectador nunca perceba.</figcaption>
+  </figure>
+
+  <h3>2.2 — Hierarquia: protagonista, coadjuvante, figuração</h3>
+  <p>Depois do ponto focal vêm os <strong>pontos secundários</strong> — elementos importantes, mas subordinados — e o <strong>fundo</strong>, que ambienta sem competir. Estabelecer essa hierarquia é o trabalho central da composição. A ferramenta mais poderosa para isso é a <em>moderação do contraste</em>: dê ao protagonista o maior contraste de valor, e <strong>reduza o contraste de tudo o mais</strong>. Um erro comum de iniciante é dar destaque máximo a tudo — e quando tudo grita, nada é ouvido.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Os dois inimigos do ponto focal</div>
+    <ul>
+      <li><strong>Foco duplo:</strong> dois elementos brigando pela atenção com força igual. O olho fica indeciso, "pingando" entre eles, e a imagem cansa. Solução: rebaixe um deles (menos contraste, menos nitidez, mais fundo).</li>
+      <li><strong>Fuga pela borda:</strong> uma linha forte (ou o olhar de um personagem) apontando para fora do quadro leva o olho embora. Reposicione ou crie um elemento que "rebata" o olhar de volta para dentro.</li>
+    </ul>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 2</div>
+    <p>Pegue cinco imagens que você admira (filmes, fotos, pinturas). Em cada uma, marque com um dedo o ponto focal e desenhe no ar o caminho do olho. Identifique <em>qual</em> imã visual (da tabela 2.1) está criando o foco. Esse hábito de "ler" composições alheias é o exercício que mais acelera o olho.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 3 ===== -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">Estruturas: terços, proporção áurea, triângulos</h2>
+
+  <p class="lead">Existem "esqueletos" de composição testados por séculos — grades e formas onde posicionar elementos para que a imagem pareça equilibrada e dinâmica ao mesmo tempo. Não são fórmulas mágicas; são pontos de partida confiáveis.</p>
+
+  <h3>3.1 — A regra dos terços</h3>
+  <p>Divida o quadro em três colunas e três linhas iguais. Os elementos importantes ganham força quando posicionados <strong>sobre as linhas</strong> ou, melhor ainda, sobre os <strong>quatro pontos de cruzamento</strong> (os "pontos fortes"). Por que funciona? Porque foge tanto do centro morto (estático, frontal) quanto da borda (instável) — encontra o equilíbrio entre estabilidade e dinamismo. É a primeira grade que todo compositor internaliza, e o Blender a desenha na câmera com um clique (Cap. 19).</p>
+
+  <figure>
+    <svg viewBox="0 0 720 280" role="img" aria-label="Regra dos terços e espiral áurea">
+      <!-- terços -->
+      <g transform="translate(20,20)">
+        <rect x="0" y="0" width="320" height="240" rx="3" fill="none" stroke="#3a4a48" stroke-width="1.5"/>
+        <line x1="106.7" y1="0" x2="106.7" y2="240" class="q-grid"/>
+        <line x1="213.3" y1="0" x2="213.3" y2="240" class="q-grid"/>
+        <line x1="0" y1="80" x2="320" y2="80" class="q-grid"/>
+        <line x1="0" y1="160" x2="320" y2="160" class="q-grid"/>
+        <circle cx="213.3" cy="80" r="11" class="q-foco-s"/>
+        <circle cx="213.3" cy="80" r="5" class="q-foco"/>
+        <circle cx="106.7" cy="80" r="6" fill="none" stroke="var(--q-dim)" stroke-width="1.6"/>
+        <circle cx="106.7" cy="160" r="6" fill="none" stroke="var(--q-dim)" stroke-width="1.6"/>
+        <circle cx="213.3" cy="160" r="6" fill="none" stroke="var(--q-dim)" stroke-width="1.6"/>
+        <text x="160" y="262" text-anchor="middle" class="q-lbl">Regra dos terços</text>
+        <text x="160" y="-6" text-anchor="middle" class="q-sub">pontos fortes nos cruzamentos</text>
+      </g>
+      <!-- espiral áurea -->
+      <g transform="translate(380,20)">
+        <rect x="0" y="0" width="320" height="240" rx="3" fill="none" stroke="#3a4a48" stroke-width="1.5"/>
+        <!-- subdivisões phi aproximadas -->
+        <line x1="198" y1="0" x2="198" y2="240" class="q-fino"/>
+        <line x1="198" y1="91" x2="320" y2="91" class="q-fino"/>
+        <line x1="271" y1="91" x2="271" y2="240" class="q-fino"/>
+        <line x1="271" y1="148" x2="320" y2="148" class="q-fino"/>
+        <path d="M198 0 A198 198 0 0 0 0 198" fill="none" class="q-ouro"/>
+        <path d="M198 240 A122 122 0 0 0 320 91" fill="none" class="q-ouro" transform="translate(0,-49)"/>
+        <path d="M320 91 A122 122 0 0 0 198 213" fill="none" class="q-ouro"/>
+        <circle cx="288" cy="118" r="9" class="q-foco-s"/>
+        <circle cx="288" cy="118" r="4" class="q-foco"/>
+        <text x="160" y="262" text-anchor="middle" class="q-lbl">Espiral áurea (φ ≈ 1,618)</text>
+        <text x="160" y="-6" text-anchor="middle" class="q-sub">o olho percorre a espiral até o "olho" dela</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 3.1 — Duas grades clássicas.</b> A regra dos terços (esquerda) é a aproximação prática; a proporção áurea (direita) é a versão mais orgânica, em que as divisões seguem a razão φ e a espiral conduz o olho a um foco apertado.</figcaption>
+  </figure>
+
+  <h3>3.2 — A proporção áurea e a espiral</h3>
+  <p>A <em class="term">proporção áurea</em> (φ ≈ 1,618) divide o quadro de forma ligeiramente mais descentrada que os terços, e a <strong>espiral áurea</strong> oferece um caminho de leitura curvo que termina num foco apertado. Na prática, terços e áurea são primos próximos: a áurea apenas desloca os "pontos fortes" um pouco mais para o centro. Use a espiral quando quiser um percurso de olhar fluido e um ponto focal bem definido no "olho" da espiral. Não se prenda à matemática — o valor está na <em>tendência descentrada e no fluxo</em>, não em casas decimais.</p>
+
+  <h3>3.3 — Triângulos e formas</h3>
+  <p>Compor em <strong>triângulos</strong> dá estabilidade (base larga embaixo, como uma montanha) ou dinamismo (vértice apontando, diagonais ativas). Agrupar elementos em formas reconhecíveis — triângulo, L, círculo, S — organiza a bagunça e cria uma "gestalt" que o olho lê como unidade. Diretores de cena pensam em "blocos triangulares" de personagens; pintores compõem naturezas-mortas em pirâmides. No 3D, posicione objetos para que suas massas formem essas figuras.</p>
+
+  <h3>3.4 — Outras estruturas úteis</h3>
+  <ul>
+    <li><strong>Linhas-guia (leading lines):</strong> estradas, trilhos, corrimãos, feixes de luz que conduzem o olho ao foco. As mais fortes do compositor.</li>
+    <li><strong>Quadro dentro do quadro (frame-in-frame):</strong> uma janela, um arco, galhos ao redor do sujeito. Concentra a atenção e adiciona profundidade.</li>
+    <li><strong>Simetria:</strong> potente para ordem, poder, formalidade e estranheza (Kubrick, Wes Anderson). Quebrar a simetria com um único elemento cria foco instantâneo.</li>
+    <li><strong>Padrão e quebra:</strong> uma repetição (colunas, janelas) cria ritmo; um elemento que rompe o padrão vira o foco automático.</li>
+    <li><strong>Espaço de respiro (lead room / nose room):</strong> deixe espaço à frente da direção em que um sujeito olha ou se move, senão o quadro "sufoca".</li>
+  </ul>
+
+  <div class="caixa olho">
+    <div class="rot">◉ Combinar, não escolher</div>
+    <p>As estruturas não se excluem. Um plano forte costuma empilhar várias: o sujeito num ponto forte dos terços, alcançado por uma leading line, dentro de um frame-in-frame, com lead room à frente. Você não decide "vou usar terços OU áurea" — você usa o que a intenção do plano pedir, em camadas.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 3</div>
+    <p>Monte uma cena mínima (um objeto principal + dois secundários + chão). No Blender, ligue a sobreposição de terços na câmera (Cap. 19) e posicione o objeto principal num ponto forte. Depois recomponha usando uma leading line evidente (uma estrada, uma sombra longa) apontando para ele. Compare os dois enquadramentos: qual conduz melhor o olho?</p>
+  </div>
+</section>
+
+<!-- ===== CAP 4 ===== -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">Valor: a composição de claro e escuro</h2>
+
+  <p class="lead"><strong>Valor</strong> é a luminosidade de cada região — quão clara ou escura ela é, independente da cor. É, de longe, o aspecto mais poderoso de uma composição: o olho lê valor antes de ler cor, forma ou detalhe.</p>
+
+  <h3>4.1 — Por que valor manda em tudo</h3>
+  <p>A retina humana tem muito mais sensibilidade a brilho do que a cor (é por isso que enxergamos formas no escuro, sem cor). Resultado: <strong>a estrutura de valores de uma imagem é o que o cérebro processa primeiro e mais forte</strong>. Uma composição com cores lindas mas valores achatados parece "chapada" e sem foco; uma composição em puro preto e branco, com valores bem distribuídos, já é forte por si só. Mestres da pintura planejavam o <em class="term">notan</em> — o arranjo de massas claras e escuras — antes de qualquer cor.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 250" role="img" aria-label="Redução de uma cena a três valores">
+      <!-- versão valor completo -->
+      <g transform="translate(20,20)">
+        <rect x="0" y="0" width="200" height="200" rx="3" fill="#2a2a26"/>
+        <rect x="0" y="120" width="200" height="80" fill="#4a4a44"/>
+        <circle cx="130" cy="95" r="42" fill="#e8e2d2"/>
+        <rect x="20" y="60" width="40" height="90" fill="#3a3a34"/>
+        <text x="100" y="226" text-anchor="middle" class="q-lbl">a cena</text>
+      </g>
+      <!-- 3 valores -->
+      <g transform="translate(260,20)">
+        <rect x="0" y="0" width="200" height="200" rx="3" fill="#3a3a34"/>
+        <rect x="0" y="120" width="200" height="80" fill="#6c6c62"/>
+        <circle cx="130" cy="95" r="42" fill="#ECE8DC"/>
+        <rect x="20" y="60" width="40" height="90" fill="#1f1f1c"/>
+        <text x="100" y="226" text-anchor="middle" class="q-lbl">3 valores (notan)</text>
+      </g>
+      <!-- escala -->
+      <g transform="translate(500,20)">
+        <text x="100" y="-4" text-anchor="middle" class="q-sub">o foco = maior salto de valor</text>
+        <rect x="0" y="20" width="200" height="26" fill="#1f1f1c"/><text x="100" y="38" text-anchor="middle" class="q-sub" fill="#999">sombra (escuro)</text>
+        <rect x="0" y="56" width="200" height="26" fill="#6c6c62"/><text x="100" y="74" text-anchor="middle" class="q-sub">meio-tom</text>
+        <rect x="0" y="92" width="200" height="26" fill="#ECE8DC"/><text x="100" y="110" text-anchor="middle" class="q-sub" fill="#333">luz (claro)</text>
+        <path d="M40 150 L160 150" stroke="var(--q-ouro)" stroke-width="2"/>
+        <text x="100" y="172" text-anchor="middle" class="q-sub">claro contra escuro = onde o olho vai</text>
+        <circle cx="100" cy="200" r="8" class="q-foco-s"/><circle cx="100" cy="200" r="3" class="q-foco"/>
+      </g>
+    </svg>
+    <figcaption><b>Figura 4.1 — O teste dos três valores.</b> Reduza mentalmente a cena a apenas escuro, meio-tom e claro. Se as massas se organizam e o foco salta (aqui, a esfera clara contra a coluna escura), a composição é sólida antes mesmo de existir cor ou textura.</figcaption>
+  </figure>
+
+  <h3>4.2 — Chaves de valor (high key / low key)</h3>
+  <table>
+    <tr><th>Chave</th><th>Distribuição</th><th>Sensação</th><th>Exemplos</th></tr>
+    <tr><td><strong>Low key</strong></td><td>Predomínio de escuros, poucos claros</td><td>Mistério, drama, ameaça, intimidade</td><td>Film noir, terror, retrato dramático</td></tr>
+    <tr><td><strong>High key</strong></td><td>Predomínio de claros, poucos escuros</td><td>Leveza, limpeza, otimismo, clínico</td><td>Comédia, publicidade de produto, cena de sonho</td></tr>
+    <tr><td><strong>Médio / cheio</strong></td><td>Faixa completa, do preto ao branco</td><td>Natural, equilibrado, "documentário"</td><td>A maioria das cenas realistas</td></tr>
+  </table>
+
+  <h3>4.3 — Onde colocar o contraste</h3>
+  <p>A regra de ouro do valor: <strong>reserve o maior salto de valor para o ponto focal</strong>. Se o sujeito é claro, dê a ele um entorno escuro; se é escuro, ilumine o fundo atrás dele. Esse "recorte" por contraste de valor (chamado <em class="term">counterchange</em>) é o jeito mais confiável de fazer um elemento saltar — mais ainda que cor. No restante da imagem, comprima os valores (aproxime-os) para que nada mais compita.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Ver valores no Blender</div>
+    <p>Para checar a composição de valores, dessature mentalmente — ou de verdade: jogue um nó de <em>Saturação 0</em> no compositor, ou troque o "Look" para um preto e branco no color management, ou simplesmente aperte os olhos até a cor sumir. Se em preto e branco a imagem perde o foco, conserte o valor antes de mexer em qualquer outra coisa.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 5 ===== -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">Peso visual, equilíbrio e tensão</h2>
+
+  <p class="lead">Cada elemento no quadro tem um <strong>peso visual</strong> — o quanto ele "puxa" a atenção e parece pesar na balança da imagem. Compor é equilibrar (ou desequilibrar de propósito) esses pesos.</p>
+
+  <h3>5.1 — O que torna um elemento pesado</h3>
+  <ul>
+    <li><strong>Tamanho:</strong> maior pesa mais (até certo ponto).</li>
+    <li><strong>Valor e contraste:</strong> alto contraste com o entorno pesa muito; um escuro num campo claro pesa mais que o mesmo escuro num campo escuro.</li>
+    <li><strong>Cor:</strong> quente e saturado pesa mais que frio e dessaturado; o vermelho é o mais "pesado".</li>
+    <li><strong>Complexidade/detalhe:</strong> uma região detalhada pesa mais que uma lisa do mesmo tamanho.</li>
+    <li><strong>Posição:</strong> elementos perto da borda pesam mais (alavanca maior a partir do centro); um elemento isolado pesa mais que um no meio de um grupo.</li>
+    <li><strong>Rostos, texto, olhos:</strong> têm peso desproporcional — o cérebro humano não consegue ignorá-los.</li>
+  </ul>
+
+  <figure>
+    <svg viewBox="0 0 720 240" role="img" aria-label="Equilíbrio simétrico versus assimétrico">
+      <!-- simétrico -->
+      <g transform="translate(20,20)">
+        <rect x="0" y="0" width="200" height="200" rx="3" fill="none" stroke="#3a4a48" stroke-width="1.5"/>
+        <line x1="100" y1="0" x2="100" y2="200" class="q-fino" stroke-dasharray="4 4"/>
+        <circle cx="55" cy="100" r="30" class="q-fill-d"/>
+        <circle cx="145" cy="100" r="30" class="q-fill-d"/>
+        <text x="100" y="226" text-anchor="middle" class="q-lbl">simétrico</text>
+        <text x="100" y="-6" text-anchor="middle" class="q-sub">ordem, calma, formalidade</text>
+      </g>
+      <!-- assimétrico equilibrado -->
+      <g transform="translate(260,20)">
+        <rect x="0" y="0" width="200" height="200" rx="3" fill="none" stroke="#3a4a48" stroke-width="1.5"/>
+        <polygon points="100,210 100,30" fill="none" stroke="var(--q-dim)" stroke-width="0"/>
+        <circle cx="60" cy="100" r="44" class="q-cine"/>
+        <circle cx="158" cy="80" r="16" class="q-foco-s"/><circle cx="158" cy="80" r="7" class="q-foco"/>
+        <text x="60" y="155" text-anchor="middle" class="q-sub">grande, neutro</text>
+        <text x="158" y="115" text-anchor="middle" class="q-sub">pequeno, intenso</text>
+        <text x="100" y="226" text-anchor="middle" class="q-lbl">assimétrico equilibrado</text>
+        <text x="100" y="-6" text-anchor="middle" class="q-sub">um pequeno intenso ≈ um grande neutro</text>
+      </g>
+      <!-- tensão -->
+      <g transform="translate(500,20)">
+        <rect x="0" y="0" width="200" height="200" rx="3" fill="none" stroke="#3a4a48" stroke-width="1.5"/>
+        <circle cx="168" cy="34" r="15" class="q-foco-s"/><circle cx="168" cy="34" r="6" class="q-foco"/>
+        <text x="100" y="226" text-anchor="middle" class="q-lbl">desequilíbrio (tensão)</text>
+        <text x="100" y="-6" text-anchor="middle" class="q-sub">peso jogado na borda = inquietação</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 5.1 — Três regimes de equilíbrio.</b> Simétrico transmite calma e ordem. Assimétrico equilibrado (a "balança" visual) é o mais usado: um elemento pequeno e intenso contrabalança um grande e neutro. Desequilíbrio proposital gera tensão e desconforto — útil quando a história pede.
+    </figcaption>
+  </figure>
+
+  <h3>5.2 — Equilíbrio simétrico vs. assimétrico</h3>
+  <p>O <strong>equilíbrio simétrico</strong> distribui pesos iguais dos dois lados de um eixo — estável, formal, às vezes monumental ou inquietante. O <strong>equilíbrio assimétrico</strong> é a "balança de braços": pesos diferentes a distâncias diferentes do centro que ainda se equilibram (um objeto grande e quieto perto do centro equilibra um pequeno e intenso lá na borda). É o regime mais versátil e natural — dinâmico sem ser caótico.</p>
+
+  <h3>5.3 — Espaço negativo e tensão</h3>
+  <p>O <strong>espaço negativo</strong> (as áreas "vazias") não é desperdício: é o silêncio que faz o som ser ouvido. Espaço generoso isola o sujeito, dá ar para respirar e pode comunicar solidão, escala ou elegância. Já a <strong>tensão</strong> é o desequilíbrio usado de propósito — sujeito espremido num canto, horizonte torto, peso todo de um lado. Cria desconforto, expectativa, energia. Saber quando acalmar (equilíbrio, espaço) e quando inquietar (tensão, aperto) é o que torna a composição expressiva e não apenas "correta".</p>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 5</div>
+    <p>Componha o mesmo objeto três vezes: (1) centralizado e simétrico — sinta a calma; (2) num ponto forte com um pequeno acento de cor contrabalançando do outro lado — sinta o equilíbrio dinâmico; (3) espremido contra a borda superior, com vasto espaço negativo abaixo — sinta a tensão. Renderize os três e observe como só a posição mudou a emoção.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 6 ===== -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Cor na composição: temperatura, harmonia, acento</h2>
+
+  <p class="lead">Depois do valor, a <strong>cor</strong> é a segunda força composicional. Ela cria atmosfera, separa planos de profundidade, conduz o olho e carrega significado emocional — tudo isso sem o espectador perceber conscientemente.</p>
+
+  <h3>6.1 — Os três atributos da cor</h3>
+  <table>
+    <tr><th>Atributo</th><th>O que é</th><th>Uso composicional</th></tr>
+    <tr><td><strong>Matiz (hue)</strong></td><td>A "cor" em si: vermelho, azul, verde</td><td>Harmonia geral, significado, temperatura</td></tr>
+    <tr><td><strong>Saturação</strong></td><td>Pureza/intensidade da cor</td><td>O acento saturado vira foco; dessaturar recua um plano</td></tr>
+    <tr><td><strong>Valor</strong> (luminosidade)</td><td>Quão clara/escura (Cap. 4)</td><td>A força dominante — sempre cheque o valor da cor</td></tr>
+  </table>
+  <p>Uma armadilha clássica: escolher cores lindas que têm o <em>mesmo valor</em>. A imagem fica "vibrante" mas ilegível, porque sem contraste de valor o olho não acha o foco. Cor nunca substitui valor — elas trabalham juntas.</p>
+
+  <h3>6.2 — Temperatura: quente vs. frio</h3>
+  <p>A divisão mais útil da cor é <strong>temperatura</strong>. Quentes (vermelho, laranja, amarelo) avançam, energizam, parecem próximos; frios (azul, ciano, verde-azulado) recuam, acalmam, parecem distantes. Essa física perceptual é ouro para o compositor:</p>
+  <ul>
+    <li><strong>Separar planos:</strong> sujeito quente contra fundo frio salta para frente (a base do popular "teal &amp; orange" do cinema). Funciona porque imita a perspectiva atmosférica (Cap. 14).</li>
+    <li><strong>Criar mood:</strong> uma cena dominada por azul é fria, solitária, noturna; dominada por âmbar é acolhedora, nostálgica, hora dourada.</li>
+    <li><strong>Contraste de temperatura como foco:</strong> um único ponto quente num mar de frios é um imã de atenção mais sutil — e mais sofisticado — que o brilho puro.</li>
+  </ul>
+
+  <h3>6.3 — Esquemas de harmonia</h3>
+  <table>
+    <tr><th>Esquema</th><th>Cores</th><th>Caráter</th></tr>
+    <tr><td><strong>Monocromático</strong></td><td>Um matiz, variando valor e saturação</td><td>Coeso, elegante, atmosférico</td></tr>
+    <tr><td><strong>Análogo</strong></td><td>Matizes vizinhos no círculo (azul-ciano-verde)</td><td>Harmonioso, natural, tranquilo</td></tr>
+    <tr><td><strong>Complementar</strong></td><td>Opostos no círculo (laranja/azul)</td><td>Vibrante, alto contraste, dinâmico</td></tr>
+    <tr><td><strong>Complementar dividido / tríade</strong></td><td>Um matiz + os dois vizinhos do seu oposto / três equidistantes</td><td>Equilíbrio entre contraste e harmonia</td></tr>
+  </table>
+
+  <div class="caixa olho">
+    <div class="rot">◉ A regra do acento</div>
+    <p>O uso mais eficaz de cor numa composição: <strong>uma paleta dominante dessaturada + um pequeno acento saturado no ponto focal</strong>. Pense numa cena inteira em tons frios e apagados de azul-acinzentado, com uma única luz âmbar quente na janela onde está o sujeito. O olho vai direto ao acento, e a sofisticação vem justamente da <em>contenção</em> do resto. Saturar tudo é o erro de iniciante equivalente a dar contraste máximo a tudo.</p>
+  </div>
+
+  <h3>6.4 — Significado emocional (com cautela)</h3>
+  <p>Cores carregam associações — vermelho (paixão, perigo, urgência), azul (calma, frieza, melancolia, confiança), verde (natureza, doença, inveja), amarelo (alegria, alerta), roxo (luxo, mistério). Mas essas associações são <strong>culturais e contextuais</strong>, não universais: branco é luto em algumas culturas e pureza em outras. Use-as como tempero consciente, ancoradas na intenção do plano, não como código fixo.</p>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 6</div>
+    <p>Renderize a mesma cena três vezes mudando só a cor da luz e do mundo: (1) tudo âmbar quente (hora dourada); (2) tudo azul frio (noite/luar); (3) fundo frio + um acento quente no sujeito. Repare como a emoção muda completamente sem alterar um único modelo — e como a versão (3) é a que melhor destaca o foco.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE II ===================== -->
+<div class="parte-cover" id="parte2">
+  <div class="pn">PARTE II</div>
+  <h2>A câmera</h2>
+  <p>A teoria das Partes I e IV diz <em>o que</em> queremos no quadro. A câmera é o instrumento que <em>realiza</em> esse quadro. Aqui entram a física das lentes, a profundidade de campo, o enquadramento e os controles concretos do Blender — a ponte entre a intenção e a imagem.</p>
+</div>
+
+<!-- ===== CAP 7 ===== -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Anatomia da câmera no Blender</h2>
+
+  <p class="lead">A câmera do Blender simula uma câmera fotográfica real — e por isso os mesmos princípios de fotografia e cinema se aplicam diretamente. Conhecer cada controle é conhecer o vocabulário do enquadramento.</p>
+
+  <h3>7.1 — Criar e navegar</h3>
+  <ul>
+    <li><strong>Adicionar:</strong> <kbd>Shift</kbd>+<kbd>A</kbd> ▸ Camera. Toda cena precisa de uma câmera ativa para renderizar.</li>
+    <li><strong>Olhar pela câmera:</strong> <kbd>Numpad 0</kbd> entra/sai da visão da câmera. O retângulo que aparece é exatamente o que será renderizado.</li>
+    <li><strong>Câmera ativa:</strong> selecione uma câmera e <kbd>Ctrl</kbd>+<kbd>Numpad 0</kbd> a torna a ativa. Uma cena pode ter várias câmeras (vários planos), mas só uma ativa por vez.</li>
+    <li><strong>"Voar" com a câmera:</strong> na visão da câmera, ative <span class="menupath">View ▸ Navigation ▸ Walk/Fly</span> (atalho padrão <kbd>Shift</kbd>+<kbd>`</kbd>) para pilotá-la como num jogo — ótimo para achar enquadramentos.</li>
+    <li><strong>Lock to View:</strong> no painel N ▸ aba View ▸ <em>Lock Camera to View</em> faz a câmera seguir sua navegação enquanto estiver na visão dela — você "pinta" o enquadramento orbitando normalmente. Desligue ao terminar para não mexer sem querer.</li>
+  </ul>
+
+  <h3>7.2 — O painel de dados da câmera</h3>
+  <p>Selecione a câmera e abra <span class="menupath">Properties ▸ Object Data (ícone de câmera)</span>. Os controles que importam para composição:</p>
+  <table>
+    <tr><th>Controle</th><th>O que faz</th><th>Capítulo</th></tr>
+    <tr><td><strong>Lens / Focal Length</strong></td><td>Distância focal em mm — define o campo de visão e a "compressão"</td><td>8</td></tr>
+    <tr><td><strong>Lens Unit</strong></td><td>Alterna entre mm (Focal Length) e graus (Field of View)</td><td>8</td></tr>
+    <tr><td><strong>Sensor Size / Fit</strong></td><td>Tamanho do sensor simulado; afeta o FOV junto da focal</td><td>8</td></tr>
+    <tr><td><strong>Type</strong></td><td>Perspective, Orthographic ou Panoramic</td><td>8, 10</td></tr>
+    <tr><td><strong>Depth of Field</strong></td><td>Liga o desfoque de foco, com distância e abertura (f-stop)</td><td>9</td></tr>
+    <tr><td><strong>Clip Start / End</strong></td><td>Distâncias mínima e máxima visíveis — objetos fora somem</td><td>—</td></tr>
+    <tr><td><strong>Shift X / Y</strong></td><td>Desloca a lente sem girar a câmera (correção de perspectiva)</td><td>11</td></tr>
+    <tr><td><strong>Composition Guides</strong></td><td>Sobreposições de terços, áurea, diagonais etc. na visão da câmera</td><td>19</td></tr>
+    <tr><td><strong>Passepartout</strong></td><td>Escurece a área fora do quadro para focar no enquadramento</td><td>19</td></tr>
+  </table>
+
+  <div class="caixa olho">
+    <div class="rot">◉ Câmera é objeto</div>
+    <p>A câmera é só mais um objeto: você a move (<kbd>G</kbd>), gira (<kbd>R</kbd>), parenteia, anima e restringe com constraints como qualquer outro. Isso significa que tudo que você sabe de transformação e hierarquia (e de rigging, do volume 1 desta coleção) vale para ela — inclusive prendê-la a um "trilho" ou fazê-la mirar um alvo automaticamente (Cap. 11 e 12).</p>
+  </div>
+</section>
+
+<!-- ===== CAP 8 ===== -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Distância focal, sensor e a linguagem das lentes</h2>
+
+  <p class="lead">A <strong>distância focal</strong> (em mm) é a escolha mais expressiva da câmera. Ela não muda só "o zoom" — muda a perspectiva, a sensação de espaço e a relação emocional com o sujeito. Cada faixa de focal tem uma linguagem própria.</p>
+
+  <h3>8.1 — O que a focal realmente faz</h3>
+  <p>Focal curta (grande-angular, ~14–35 mm) abrange um campo amplo e <strong>exagera a profundidade</strong>: o que está perto fica enorme, o que está longe encolhe rápido, as linhas divergem dramaticamente. Focal longa (teleobjetiva, ~85–200 mm+) abrange um campo estreito e <strong>comprime a profundidade</strong>: planos distantes parecem empilhados e próximos entre si, o fundo "vem para perto" do sujeito.</p>
+  <p>O detalhe crucial, que confunde quase todo iniciante: <strong>a perspectiva depende de onde a câmera está, não da focal em si.</strong> Mas como você normalmente reposiciona a câmera para reenquadrar o sujeito ao trocar de lente (afastando-se com a tele, aproximando-se com a wide), é essa <em>combinação de distância + focal</em> que produz o efeito característico de cada lente. Por isso falamos da "linguagem" de cada uma.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 280" role="img" aria-label="Grande-angular versus teleobjetiva: campo e compressão">
+      <!-- wide -->
+      <g transform="translate(20,24)">
+        <text x="160" y="-6" text-anchor="middle" class="q-lbl">Grande-angular (curta)</text>
+        <circle cx="20" cy="120" r="7" class="q-foco"/>
+        <path d="M20 120 L300 20 M20 120 L300 220" class="q-ouro"/>
+        <!-- objetos perto/longe -->
+        <rect x="70" y="95" width="34" height="50" class="q-cine"/>
+        <rect x="210" y="110" width="16" height="22" class="q-fill-d"/>
+        <text x="60" y="165" class="q-sub">perto: grande</text>
+        <text x="186" y="150" class="q-sub">longe: minúsculo</text>
+        <text x="160" y="250" text-anchor="middle" class="q-sub">campo amplo · profundidade exagerada</text>
+      </g>
+      <!-- tele -->
+      <g transform="translate(380,24)">
+        <text x="160" y="-6" text-anchor="middle" class="q-lbl">Teleobjetiva (longa)</text>
+        <circle cx="20" cy="120" r="7" class="q-foco"/>
+        <path d="M20 120 L300 92 M20 120 L300 148" class="q-ouro"/>
+        <rect x="150" y="96" width="30" height="48" class="q-cine"/>
+        <rect x="210" y="98" width="26" height="44" class="q-fill-d"/>
+        <text x="120" y="165" class="q-sub">perto e longe ≈ mesmo tamanho</text>
+        <text x="160" y="250" text-anchor="middle" class="q-sub">campo estreito · profundidade comprimida</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 8.1 — Duas linguagens de lente.</b> A grande-angular abre um cone amplo e separa dramaticamente os planos; a teleobjetiva recorta um cone estreito e empilha os planos, "achatando" o espaço. A mesma cena conta histórias diferentes só pela escolha de lente.</figcaption>
+  </figure>
+
+  <h3>8.2 — A linguagem das faixas focais</h3>
+  <table>
+    <tr><th>Faixa (em 35mm)</th><th>Tipo</th><th>Caráter / uso</th></tr>
+    <tr><td><strong>14–24 mm</strong></td><td>Ultra grande-angular</td><td>Paisagens vastas, interiores, drama, distorção; sujeito perto parece imponente/agressivo. Cuidado com distorção facial</td></tr>
+    <tr><td><strong>35 mm</strong></td><td>Grande-angular suave</td><td>Documental, "estar lá", contexto + sujeito. Lente narrativa por excelência</td></tr>
+    <tr><td><strong>50 mm</strong></td><td>Normal</td><td>Perspectiva próxima à do olho humano; neutra, natural, honesta</td></tr>
+    <tr><td><strong>85 mm</strong></td><td>Teleobjetiva curta</td><td>Retrato clássico: compressão lisonjeira, fundo desfocado, intimidade</td></tr>
+    <tr><td><strong>135–200 mm+</strong></td><td>Teleobjetiva</td><td>Isolar sujeito, espreitar de longe, achatar fundos em camadas, sensação de observação/voyeurismo</td></tr>
+  </table>
+
+  <h3>8.3 — Sensor, FOV e perspectiva vs. ortográfica</h3>
+  <ul>
+    <li><strong>Sensor Size</strong> trabalha junto da focal: o <em>field of view</em> real depende da razão entre os dois. Por isso 50 mm num sensor pequeno enquadra mais "fechado" que 50 mm num sensor grande. Para falar a mesma língua que fotógrafos, mantenha o sensor no padrão full-frame (36 mm) e pense em mm.</li>
+    <li><strong>Lens Unit</strong> permite digitar o FOV em graus em vez de mm — útil para grandes-angulares onde se pensa em "ângulo de cobertura".</li>
+    <li><strong>Orthographic</strong> remove toda perspectiva: linhas paralelas permanecem paralelas, sem ponto de fuga. Indispensável para vistas técnicas, isométricos, mockups de UI e um certo visual "diagrama". O controle de "zoom" vira <em>Orthographic Scale</em>.</li>
+    <li><strong>Panoramic</strong> (mais no Cycles) faz fisheye, equiretangular (360°) e outras projeções especiais.</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">◐ Blender 4.5 / 5.x — câmera OSL</div>
+    <p>No Cycles (4.5+), é possível criar <strong>projeções de câmera personalizadas via OSL</strong> (Open Shading Language), além de perspectiva, ortográfica e panorâmica — uma porta para lentes anamórficas, distorções autorais e efeitos que antes exigiam compositing. O 5.0 trouxe uma nova UI para essa câmera OSL. Para a maioria das cenas, porém, as três projeções clássicas resolvem tudo.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 8 — o "dolly zoom" mental</div>
+    <p>Coloque um objeto na cena e enquadre-o com 24 mm de bem perto. Anote o tamanho do fundo. Agora troque para 135 mm e <em>afaste a câmera</em> até o objeto voltar ao mesmo tamanho no quadro. Compare: o objeto está igual, mas o fundo mudou completamente de escala e os planos se reorganizaram. Você sentiu, na prática, por que a escolha de lente é uma escolha narrativa.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 9 ===== -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Profundidade de campo e foco</h2>
+
+  <p class="lead">A <strong>profundidade de campo</strong> (Depth of Field, DOF) é a faixa de distâncias que aparece nítida. Tudo fora dela borra. É uma das ferramentas mais poderosas para dirigir o olhar — o nítido é onde a história está.</p>
+
+  <h3>9.1 — A física, em uma frase</h3>
+  <p>Uma lente só foca perfeitamente um único plano de distância; o que está à frente ou atrás vira círculos de desfoque (os famosos <em class="term">bokeh</em>). Quanto <strong>maior a abertura</strong> (f-stop menor, ex.: f/1.4), <strong>mais raso</strong> o foco — uma fatia fininha nítida e o resto cremoso. Quanto <strong>menor a abertura</strong> (f/16), mais profundo: quase tudo nítido. Teleobjetivas e sujeitos próximos também afinam o foco.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 230" role="img" aria-label="Profundidade de campo: plano de foco e zonas borradas">
+      <circle cx="50" cy="120" r="8" class="q-foco"/>
+      <text x="50" y="150" text-anchor="middle" class="q-sub">câmera</text>
+      <!-- raios -->
+      <path d="M50 120 L680 40 M50 120 L680 200" class="q-fino"/>
+      <!-- plano de foco -->
+      <line x1="380" y1="48" x2="380" y2="192" class="q-ouro"/>
+      <text x="380" y="38" text-anchor="middle" class="q-lbl">plano de foco</text>
+      <!-- zona nítida -->
+      <rect x="320" y="50" width="120" height="140" fill="rgba(224,169,62,.12)" stroke="rgba(224,169,62,.5)" stroke-dasharray="4 4"/>
+      <text x="380" y="210" text-anchor="middle" class="q-sub">zona nítida (DOF)</text>
+      <!-- objetos -->
+      <circle cx="180" cy="120" r="16" fill="rgba(216,224,218,.25)"/>
+      <circle cx="380" cy="120" r="20" class="q-cine"/>
+      <circle cx="600" cy="120" r="22" fill="rgba(216,224,218,.18)"/>
+      <text x="180" y="78" text-anchor="middle" class="q-sub">borrado (perto)</text>
+      <text x="380" y="78" text-anchor="middle" class="q-sub" fill="#E0A93E">nítido</text>
+      <text x="600" y="78" text-anchor="middle" class="q-sub">borrado (fundo)</text>
+    </svg>
+    <figcaption><b>Figura 9.1 — A zona de foco.</b> Só o que cai dentro da faixa nítida (em torno do plano de foco) aparece definido; o resto borra progressivamente. Abertura larga estreita essa faixa; abertura fechada a alarga.</figcaption>
+  </figure>
+
+  <h3>9.2 — Ligar DOF no Blender</h3>
+  <ol class="passos">
+    <li><h4>Ative</h4><p>Câmera ▸ <span class="menupath">Object Data ▸ Depth of Field</span> ▸ marque <em>Enable</em>.</p></li>
+    <li><h4>Defina o foco</h4><p>Duas formas: digite a <em>Focus Distance</em> manualmente, ou — bem melhor — use <strong>Focus Object</strong> e aponte para o objeto/empty que deve ficar nítido. Assim o foco "gruda" no sujeito mesmo que ele (ou a câmera) se mova.</p></li>
+    <li><h4>Controle a quantidade</h4><p>Em <em>Aperture ▸ F-Stop</em>: valores baixos (1.2–2.8) = desfoque forte e cinematográfico; altos (8–16) = sutil. Comece em f/2.8 e ajuste no olho.</p></li>
+    <li><h4>Forma do bokeh</h4><p><em>Blades</em> define o número de lâminas do diafragma (5–8 dá bokeh poligonal realista); <em>Rotation</em> e <em>Ratio</em> ajustam o formato (Ratio cria bokeh oval, estilo anamórfico).</p></li>
+  </ol>
+
+  <div class="caixa dica">
+    <div class="rot">✔ DOF é composição, não enfeite</div>
+    <p>O reflexo de iniciante é "ligar DOF para ficar bonito". O uso maduro é <strong>compositivo</strong>: borrar o fundo separa o sujeito do entorno (contraste de nitidez = imã de atenção, Cap. 2) e simplifica uma cena bagunçada, transformando fundo ruidoso em campos suaves de cor. Use DOF para <em>dirigir o olhar</em>, com a mesma intenção com que usa luz e cor. E cuidado com o excesso: DOF rasa demais em planos amplos parece miniatura de brinquedo (efeito tilt-shift) — às vezes é o que você quer, mas raramente por acidente.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Performance e ruído</div>
+    <p>No Cycles, DOF forte exige mais amostras para limpar o ruído do bokeh — combine com denoise. No EEVEE, o DOF é uma aproximação rápida e pode mostrar artefatos em bordas de alto contraste; ajuste a qualidade nas configurações de render se notar serrilhado no desfoque.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 10 ===== -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Enquadramento, formato e tipos de plano</h2>
+
+  <p class="lead">O <strong>formato</strong> (proporção da tela) e o <strong>tipo de plano</strong> (quão perto, de que ângulo) são decisões de enquadramento que moldam a leitura antes de qualquer conteúdo. São o vocabulário de quem dirige a câmera.</p>
+
+  <h3>10.1 — Proporção de tela (aspect ratio)</h3>
+  <p>A proporção é definida em <span class="menupath">Output Properties ▸ Resolution X / Y</span>. Cada formato carrega uma associação cultural:</p>
+  <table>
+    <tr><th>Proporção</th><th>Onde vive</th><th>Sensação</th></tr>
+    <tr><td><strong>1:1</strong> (quadrado)</td><td>Redes sociais, álbum</td><td>Equilibrado, contido, gráfico</td></tr>
+    <tr><td><strong>4:3</strong> (1.33)</td><td>TV clássica, fotografia antiga</td><td>Nostálgico, intimista, "retrato"</td></tr>
+    <tr><td><strong>16:9</strong> (1.78)</td><td>Vídeo, web, monitores</td><td>Padrão moderno, versátil</td></tr>
+    <tr><td><strong>1.85:1</strong></td><td>Cinema "flat"</td><td>Cinematográfico clássico</td></tr>
+    <tr><td><strong>2.39:1</strong> (anamórfico/scope)</td><td>Épicos, blockbusters</td><td>Grandioso, panorâmico, "filme"</td></tr>
+    <tr><td><strong>9:16</strong> (vertical)</td><td>Celular, stories, reels</td><td>Íntimo, focado em figura, mobile-first</td></tr>
+  </table>
+  <p>A proporção muda a composição na raiz: um 2.39:1 largo pede composições horizontais com muito espaço lateral e funciona lindamente para paisagens e two-shots; um 9:16 vertical favorece um único sujeito empilhado e é hostil a panoramas. Escolha o formato <em>antes</em> de compor — ele é o tamanho da tela onde você vai pintar.</p>
+
+  <h3>10.2 — Tamanhos de plano (shot sizes)</h3>
+  <table>
+    <tr><th>Plano</th><th>Enquadra</th><th>Função narrativa</th></tr>
+    <tr><td><strong>Extreme Wide / Estabelecimento</strong></td><td>O ambiente inteiro; o sujeito é minúsculo ou ausente</td><td>Situar lugar e escala; isolar o sujeito no mundo</td></tr>
+    <tr><td><strong>Wide / Plano geral</strong></td><td>Sujeito de corpo inteiro + entorno</td><td>Relação do sujeito com o espaço; ação ampla</td></tr>
+    <tr><td><strong>Medium / Plano médio</strong></td><td>Da cintura para cima (ou o objeto e seu contexto imediato)</td><td>Conversa, observação neutra; o "plano de trabalho"</td></tr>
+    <tr><td><strong>Close-up</strong></td><td>Rosto / o detalhe central do objeto</td><td>Emoção, importância, intimidade</td></tr>
+    <tr><td><strong>Extreme close-up</strong></td><td>Olhos, uma textura, uma peça mínima</td><td>Tensão máxima, detalhe revelador, abstração</td></tr>
+  </table>
+
+  <h3>10.3 — Ângulo de câmera</h3>
+  <ul>
+    <li><strong>Nível do olho (eye-level):</strong> neutro, igualitário — vemos o sujeito "de igual para igual".</li>
+    <li><strong>Plongée (high angle, de cima):</strong> diminui o sujeito — vulnerável, pequeno, dominado.</li>
+    <li><strong>Contre-plongée (low angle, de baixo):</strong> engrandece o sujeito — poderoso, imponente, heroico ou ameaçador.</li>
+    <li><strong>Dutch angle (câmera torta):</strong> desequilíbrio, desconforto, instabilidade, loucura. Use com parcimônia.</li>
+    <li><strong>Plano picado total (top-down):</strong> abstrai e organiza — vira mapa, padrão, "olho de deus".</li>
+    <li><strong>Over-the-shoulder:</strong> coloca o espectador na cena, cria relação entre dois elementos.</li>
+  </ul>
+
+  <div class="caixa olho">
+    <div class="rot">◉ O ângulo é uma opinião</div>
+    <p>Onde você põe a câmera não é neutro — é uma afirmação sobre o sujeito. A mesma nave, fotografada de baixo, é uma ameaça colossal; do alto, um brinquedo vulnerável. Antes de posicionar, pergunte: "o que esta cena pensa do seu sujeito?" — e deixe o ângulo responder. Esse é o elo direto entre a intenção do Capítulo 1 e a câmera concreta.</p>
+  </div>
+
+  <h3>10.4 — Headroom, lead room e cortes</h3>
+  <ul>
+    <li><strong>Headroom:</strong> o espaço acima da cabeça/topo do sujeito. Demais "afoga" o sujeito na base; de menos "espreme" no topo. Em close, é normal cortar o topo da cabeça — colar o olhar na faixa superior dos terços.</li>
+    <li><strong>Lead room / nose room:</strong> deixe mais espaço do lado para onde o sujeito olha ou se move (Cap. 3). Sem isso, a imagem parece bloqueada por uma parede invisível.</li>
+    <li><strong>Cortar nas juntas, nunca:</strong> ao enquadrar figuras, evite cortar exatamente em articulações (joelho, pulso, tornozelo) — corte entre elas; cortar na junta parece amputação.</li>
+  </ul>
+</section>
+
+<!-- ===== CAP 11 ===== -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 11</div><div class="fio"></div></div>
+  <h2 class="titulo">Posicionar, mirar e travar a câmera</h2>
+
+  <p class="lead">Achar o enquadramento é metade artística, metade técnica. O Blender oferece várias formas de posicionar e, principalmente, de <strong>travar</strong> a câmera para que ela mire o sujeito automaticamente e não escorregue do quadro perfeito que você encontrou.</p>
+
+  <h3>11.1 — Quatro formas de enquadrar</h3>
+  <ol class="passos">
+    <li><h4>Align to View</h4><p>Navegue no viewport até a vista que você quer, selecione a câmera e use <span class="menupath">View ▸ Align View ▸ Align Active Camera to View</span> (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Numpad 0</kbd>). A câmera salta para a sua vista atual. Rápido e direto.</p></li>
+    <li><h4>Lock Camera to View</h4><p>Entre na visão da câmera (<kbd>Numpad 0</kbd>), abra o painel N ▸ View ▸ ligue <em>Lock Camera to View</em>. Agora orbitar/zoom move a câmera ao vivo — você compõe "pilotando" o enquadramento. Desligue ao achar o quadro.</p></li>
+    <li><h4>Walk/Fly</h4><p><span class="menupath">View ▸ Navigation ▸ Walk Navigation</span> para pilotar a câmera em primeira pessoa (WASD + mouse). Excelente para explorar enquadramentos em cenas grandes.</p></li>
+    <li><h4>Manual</h4><p>Mova (<kbd>G</kbd>) e gire (<kbd>R</kbd>) a câmera como qualquer objeto, usando <kbd>G</kbd>+<kbd>Z</kbd>+<kbd>Z</kbd> para deslizar no eixo local da lente (dolly).</p></li>
+  </ol>
+
+  <h3>11.2 — Travar a mira com constraints</h3>
+  <p>Manter a câmera apontada para um sujeito enquanto tudo se move é trabalho de <strong>constraint</strong> (o mesmo sistema do volume 1, Rigging):</p>
+  <ul>
+    <li><strong>Track To:</strong> adicione à câmera uma constraint <em>Track To</em> apontando para um Empty ou objeto-alvo. A câmera sempre encara o alvo, com um eixo "para cima" estável. Mova a câmera livremente — ela nunca tira o olho do sujeito. É o tripé virtual.</li>
+    <li><strong>Empty como alvo de mira:</strong> crie um Empty no ponto de interesse e use-o como alvo da Track To <em>e</em> como Focus Object do DOF (Cap. 9). Um único alvo controla mira e foco ao mesmo tempo.</li>
+    <li><strong>Follow Path:</strong> para movimento, restrinja a câmera a uma curva (Cap. 12).</li>
+    <li><strong>Child Of / parent:</strong> parenteie a câmera a um Empty "cabeça de tripé" e anime só o Empty — separa o posicionamento (o tripé) da mira (a cabeça).</li>
+  </ul>
+
+  <h3>11.3 — Lens Shift: corrigir a perspectiva</h3>
+  <p>Quando você inclina a câmera para cima para enquadrar um prédio alto, as linhas verticais convergem (o prédio "tomba para trás"). Os controles <strong>Shift X / Y</strong> deslocam a lente em vez de inclinar a câmera, mantendo as verticais paralelas — o equivalente digital de uma lente <em>tilt-shift</em> de arquitetura. Use também para descentralizar o sujeito sem girar a câmera (mantendo a perspectiva "reta") — um truque elegante de composição para arquitetura e produto.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Marque o plano</div>
+    <p>Quando achar um enquadramento que presta, <strong>proteja-o</strong>: desligue o Lock Camera to View imediatamente (para não estragá-lo sem querer) e, se a cena tiver vários planos, duplique a câmera e nomeie cada uma (<code>CAM-wide</code>, <code>CAM-closeup</code>). Marcar a câmera ativa de cada plano com <kbd>Ctrl</kbd>+<kbd>Numpad 0</kbd> deixa você alternar entre composições instantaneamente.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 12 ===== -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">Movimento de câmera</h2>
+
+  <p class="lead">Numa imagem animada, a câmera também se move — e o <strong>movimento</strong> é composição no tempo. Cada tipo de movimento tem nome, significado e um jeito de fazer no Blender.</p>
+
+  <h3>12.1 — O vocabulário do movimento</h3>
+  <table>
+    <tr><th>Movimento</th><th>O que é</th><th>Sensação</th></tr>
+    <tr><td><strong>Pan</strong></td><td>Girar a câmera horizontalmente no lugar</td><td>Revelar, acompanhar, varrer um espaço</td></tr>
+    <tr><td><strong>Tilt</strong></td><td>Girar verticalmente no lugar</td><td>Revelar altura, da base ao topo (ou o oposto)</td></tr>
+    <tr><td><strong>Dolly / Truck</strong></td><td>Deslocar a câmera para frente-trás / lateral</td><td>Aproximar-se fisicamente, acompanhar, paralaxe real</td></tr>
+    <tr><td><strong>Pedestal</strong></td><td>Subir/descer a câmera mantendo o ângulo</td><td>Mudar o nível do olhar; elevar ou rebaixar o ponto de vista</td></tr>
+    <tr><td><strong>Zoom</strong></td><td>Mudar a focal sem mover a câmera</td><td>Diferente do dolly! Aproxima sem paralaxe — artificial, datado, ou de suspense</td></tr>
+    <tr><td><strong>Orbit / arc</strong></td><td>Circular ao redor do sujeito</td><td>Heroico, revelador, "produto girando"</td></tr>
+    <tr><td><strong>Dolly zoom</strong></td><td>Dolly + zoom em sentidos opostos</td><td>Vertigem: o fundo "respira" enquanto o sujeito fica igual (Hitchcock)</td></tr>
+    <tr><td><strong>Handheld</strong></td><td>Tremor sutil e orgânico</td><td>Realismo, urgência, documentário, tensão</td></tr>
+  </table>
+
+  <h3>12.2 — Como fazer no Blender</h3>
+  <ul>
+    <li><strong>Keyframes diretos:</strong> anime posição/rotação da câmera com <kbd>I</kbd>. Para pan/tilt, anime só a rotação; para dolly, só a posição. Refine as curvas no Graph Editor (ease in/out suaviza partidas e paradas — câmera real tem inércia).</li>
+    <li><strong>Follow Path:</strong> crie uma curva como "trilho", adicione à câmera a constraint <em>Follow Path</em> e anime o <em>Offset</em> (ou use <em>Path Animation ▸ Evaluation Time</em> na curva). Movimentos suaves e repetíveis — o equivalente a um trilho de dolly real.</li>
+    <li><strong>Rig de câmera (Empty parent):</strong> parenteie a câmera a um Empty. Animar o Empty faz orbit/arc limpos; combine com Track To para a câmera mirar o sujeito durante todo o trajeto.</li>
+    <li><strong>Dolly zoom:</strong> anime a posição (afastando) e a <em>Focal Length</em> (aumentando) em sentidos opostos, ajustando para o sujeito manter o tamanho no quadro.</li>
+    <li><strong>Handheld/shake:</strong> adicione ruído às curvas de rotação (modificador <em>Noise</em> no Graph Editor) com amplitude pequena, ou use um rig de câmera com leve solavanco. Sutileza é tudo — excesso enjoa.</li>
+  </ul>
+
+  <div class="caixa olho">
+    <div class="rot">◉ Dolly ≠ Zoom (a confusão mais comum)</div>
+    <p>Ambos "aproximam o sujeito", mas são opostos perceptuais. O <strong>dolly</strong> move a câmera no espaço: a perspectiva muda, os planos se deslocam uns em relação aos outros (paralaxe), e parece que <em>você</em> está se aproximando — orgânico, imersivo. O <strong>zoom</strong> só recorta a imagem: nada de paralaxe, a perspectiva é congelada, parece que o mundo foi "puxado" até você — artificial, e por isso usado de propósito para estranheza ou nostalgia televisiva. Quando em dúvida sobre qual usar, dolly quase sempre parece mais natural.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Movimento com motivo</div>
+    <p>Câmera que se mexe "porque sim" distrai e enjoa. Todo movimento deve ter motivo: revelar algo, acompanhar uma ação, intensificar uma emoção, ou criar profundidade por paralaxe. Movimento lento e quase imperceptível (um leve push-in ao longo de toda a cena) costuma valer mais que um voo espetacular. E lembre o princípio de animação: <strong>antecipação e desaceleração</strong> — câmeras reais têm massa, então nunca partem ou param instantaneamente.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE III ===================== -->
+<div class="parte-cover" id="parte3">
+  <div class="pn">PARTE III</div>
+  <h2>Construir a profundidade</h2>
+  <p>O quadro é plano, mas a melhor composição finge três dimensões com convicção. Esta parte trata de como criar profundidade — camadas, atmosfera, escala — e como arranjar os elementos para que tudo no quadro se leia com clareza, o princípio que a animação chama de encenação.</p>
+</div>
+
+<!-- ===== CAP 13 ===== -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Camadas: primeiro plano, meio e fundo</h2>
+
+  <p class="lead">A forma mais confiável de dar profundidade a uma imagem plana é organizá-la em <strong>camadas</strong> distintas — primeiro plano (foreground), meio (midground) e fundo (background). O olho lê a separação entre elas como distância.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 260" role="img" aria-label="Camadas de profundidade: foreground, midground, background">
+      <rect x="20" y="20" width="680" height="220" rx="4" fill="#1a2625"/>
+      <!-- background -->
+      <rect x="20" y="20" width="680" height="220" fill="rgba(91,169,173,.10)"/>
+      <path d="M20 150 L180 110 L340 145 L500 105 L700 140 L700 240 L20 240 Z" fill="rgba(91,169,173,.18)"/>
+      <text x="600" y="64" class="q-sub" fill="#7C9690">FUNDO · claro, frio, sem detalhe</text>
+      <!-- midground -->
+      <path d="M20 200 L160 175 L320 205 L520 178 L700 200 L700 240 L20 240 Z" fill="rgba(43,110,114,.45)"/>
+      <rect x="250" y="150" width="46" height="60" class="q-cine"/>
+      <text x="120" y="195" class="q-sub" fill="#9fbfc0">MEIO · o sujeito vive aqui</text>
+      <!-- foreground -->
+      <path d="M20 240 L20 210 Q120 175 230 215 L320 240 Z" fill="#0c1413"/>
+      <ellipse cx="600" cy="240" rx="120" ry="44" fill="#0c1413"/>
+      <text x="120" y="232" class="q-sub" fill="#3a4a48">PRIMEIRO PLANO · escuro, recorta o quadro</text>
+      <!-- foco -->
+      <circle cx="273" cy="170" r="14" class="q-foco-s"/><circle cx="273" cy="170" r="5" class="q-foco"/>
+    </svg>
+    <figcaption><b>Figura 13.1 — Três camadas.</b> Um primeiro plano escuro que "emoldura" por baixo, o sujeito no meio (com o maior contraste, o foco), e um fundo claro e frio que recua. A simples existência de três planos separados já cria a ilusão de profundidade.</figcaption>
+  </figure>
+
+  <h3>13.1 — Os pistas de profundidade que você controla</h3>
+  <table>
+    <tr><th>Pista</th><th>Como funciona</th><th>No Blender</th></tr>
+    <tr><td><strong>Sobreposição (overlap)</strong></td><td>O que tapa o outro está na frente. A pista mais forte e barata</td><td>Arranjo dos objetos; deixe planos se cruzarem parcialmente</td></tr>
+    <tr><td><strong>Escala relativa</strong></td><td>Iguais conhecidos ficam menores ao longe</td><td>Posicione referências de tamanho em vários planos</td></tr>
+    <tr><td><strong>Paralaxe / perspectiva</strong></td><td>Linhas convergem; planos se deslocam ao mover a câmera</td><td>Lente e posição (Cap. 8); movimento (Cap. 12)</td></tr>
+    <tr><td><strong>Atmosfera</strong></td><td>O distante fica mais claro, frio e dessaturado</td><td>Névoa, mist pass, volume (Cap. 14)</td></tr>
+    <tr><td><strong>Foco</strong></td><td>O distante (ou o muito próximo) borra</td><td>Profundidade de campo (Cap. 9)</td></tr>
+    <tr><td><strong>Contraste decrescente</strong></td><td>O distante tem menos contraste de valor</td><td>Luz, atmosfera, material</td></tr>
+  </table>
+
+  <h3>13.2 — A receita de profundidade</h3>
+  <ol>
+    <li><strong>Planeje três planos</strong> antes de compor: o que está perto, o que é o sujeito, o que ambienta. Mesmo numa cena simples, force essa separação.</li>
+    <li><strong>Use o primeiro plano como moldura.</strong> Um galho escuro, uma silhueta desfocada, uma quina de parede no canto — recorta o quadro, dá escala e "puxa" o olho para dentro. É o truque mais subestimado para profundidade instantânea.</li>
+    <li><strong>Diferencie as camadas por valor e temperatura.</strong> Primeiro plano escuro, sujeito de médio contraste, fundo claro e frio — a separação tonal faz cada plano "descolar" do seguinte.</li>
+    <li><strong>Garanta sobreposição.</strong> Se as camadas não se tocam no quadro, a ilusão enfraquece. Posicione a câmera para que o sujeito cruze parcialmente o fundo e o primeiro plano cruze o sujeito.</li>
+  </ol>
+
+  <div class="caixa olho">
+    <div class="rot">◉ Por que pintores sempre usam isto</div>
+    <p>Paisagistas clássicos compunham quase toda tela em três ou quatro "planos" empilhados de valor decrescente. Não é estilo — é a maneira como o olho realmente reconstrói profundidade. Reproduza essa estrutura no 3D e suas imagens ganham profundidade que renders "planos" (tudo no mesmo plano de distância, sem foreground) nunca alcançam, por mais detalhados que sejam.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 14 ===== -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">Perspectiva atmosférica, névoa e volume</h2>
+
+  <p class="lead">A <strong>perspectiva atmosférica</strong> é a pista de profundidade mais poética: à distância, o ar entre você e o objeto acumula e o objeto fica mais claro, mais azulado e menos contrastado. Reproduzi-la transforma um render plano numa imagem com ar e espaço.</p>
+
+  <h3>14.1 — A física, e por que o longe é azul</h3>
+  <p>A luz atravessa quilômetros de atmosfera cheia de partículas que espalham os comprimentos de onda curtos (azul) — o mesmo motivo do céu ser azul. Resultado: montanhas distantes parecem azuladas, lavadas e suaves, enquanto o primeiro plano é nítido, contrastado e de cor saturada. Quanto mais longe, mais o objeto tende à cor do céu/atmosfera. Reproduzir isso é dizer ao olho "isto está longe" com total convicção.</p>
+
+  <h3>14.2 — Como fazer no Blender</h3>
+  <ol class="passos">
+    <li><h4>Névoa por volume de mundo</h4><p>No <span class="menupath">World ▸ Shader</span>, adicione um <em>Volume Scatter</em> (e/ou <em>Volume Absorption</em>) ao output de volume do mundo, com densidade baixíssima. A cena inteira ganha ar; o distante naturalmente clareia e perde contraste. Ajuste a cor do scatter para o tom da atmosfera (azulado de dia, alaranjado em poeira/pôr do sol).</p></li>
+    <li><h4>Volume numa caixa (mist localizado)</h4><p>Para névoa só numa região (vale enevoado, raios de luz numa janela), use um cubo com material de <em>Principled Volume</em>. Luzes atravessando ganham <strong>volumetria</strong> (god rays) — poderosíssimo para mood e profundidade.</p></li>
+    <li><h4>Mist Pass (controle no compositor)</h4><p>Ative <span class="menupath">View Layer ▸ Passes ▸ Mist</span> e ajuste o alcance em <span class="menupath">World ▸ Mist Pass</span> (Start/Depth). Você obtém uma máscara de profundidade em preto e branco para, no compositor, misturar uma cor de atmosfera por trás conforme a distância — sem custo de simulação de volume. Mais rápido e totalmente controlável.</p></li>
+    <li><h4>Fundo que ajuda</h4><p>Um HDRI ou um gradiente de céu já dá ao distante uma cor para "desbotar até ela". Combine com a névoa para coerência.</p></li>
+  </ol>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Atmosfera resolve composições</div>
+    <p>Fundo bagunçado roubando atenção? Uma leve névoa o empurra para longe, baixa seu contraste e o transforma em pano de fundo discreto — fazendo o sujeito (nítido, contrastado, no primeiro plano) saltar. Atmosfera é, ao mesmo tempo, profundidade <em>e</em> controle de hierarquia (Cap. 2). Comece sempre sutil: névoa de menos é invisível, de mais vira sopa de leite.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Custo de render</div>
+    <p>Volumes são caros, especialmente no Cycles (exigem amostras de volume e podem ruidar). Se a cena não precisa de god rays nem de interação real da luz com a névoa, prefira o <strong>Mist Pass + compositor</strong>: o efeito visual é quase idêntico para perspectiva atmosférica simples, a uma fração do custo. Reserve volumes de verdade para quando os feixes de luz forem protagonistas.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 15 ===== -->
+<section class="cap" id="cap15">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 15</div><div class="fio"></div></div>
+  <h2 class="titulo">Encenação (staging): silhuetas legíveis e arranjo</h2>
+
+  <p class="lead"><strong>Staging</strong> (encenação) é um dos doze princípios clássicos da animação, mas vale para qualquer imagem: é a apresentação de uma ideia de forma tão clara que o espectador a entende sem esforço. Composição e staging são a mesma disciplina vista de dois ângulos.</p>
+
+  <h3>15.1 — A clareza acima de tudo</h3>
+  <p>Encenar é garantir que <strong>uma coisa por vez</strong> seja comunicada com clareza, e que o essencial não se perca. Uma cena pode estar tecnicamente perfeita e ainda assim confusa: o sujeito se mistura ao fundo, dois elementos disputam atenção, a ação acontece num canto escuro. Staging conserta isso decidindo <em>o que</em> mostrar, <em>onde</em> e <em>como</em>, para que a leitura seja imediata.</p>
+
+  <h3>15.2 — O teste da silhueta</h3>
+  <p>O teste mais poderoso de encenação: <strong>a pose/arranjo lê em silhueta pura?</strong> Imagine tudo preenchido de preto sólido contra um fundo branco. Se você ainda reconhece o que é e o que está acontecendo, a encenação é boa. Animadores posam personagens "de perfil" e em silhueta justamente porque uma forma legível em preto chapado é legível em qualquer condição de luz. No 3D, cheque a silhueta da sua composição contra o fundo — se o sujeito se funde a ele, recomponha ou ajuste o contraste de valor (Cap. 4).</p>
+
+  <figure>
+    <svg viewBox="0 0 720 220" role="img" aria-label="Silhueta legível versus ilegível">
+      <!-- ruim: silhueta confusa -->
+      <g transform="translate(40,20)">
+        <rect x="0" y="0" width="260" height="170" rx="3" fill="#2a2a26"/>
+        <ellipse cx="130" cy="95" rx="55" ry="70" fill="#1f1f1c"/>
+        <rect x="60" y="40" width="90" height="120" fill="#242420"/>
+        <text x="130" y="206" text-anchor="middle" class="q-lbl">✗ funde no fundo</text>
+      </g>
+      <!-- bom: silhueta clara -->
+      <g transform="translate(420,20)">
+        <rect x="0" y="0" width="260" height="170" rx="3" fill="#cfcabb"/>
+        <path d="M110 20 q20 -8 40 0 l8 50 30 20 -6 18 -30 -10 0 60 -50 0 0 -60 -30 10 -6 -18 30 -20 z" fill="#15110d"/>
+        <text x="130" y="206" text-anchor="middle" class="q-lbl">✓ silhueta legível</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 15.1 — O teste da silhueta.</b> À esquerda, o sujeito escuro contra fundo escuro vira uma mancha indecifrável. À direita, a mesma forma recortada por contraste de valor lê instantaneamente, mesmo em preto chapado. Componha para a silhueta primeiro.</figcaption>
+  </figure>
+
+  <h3>15.3 — Princípios de arranjo</h3>
+  <ul>
+    <li><strong>Separe por contraste, não por sorte.</strong> Coloque o sujeito contra um fundo que o contraste em valor ou temperatura (Cap. 4 e 6). Nunca deixe o destaque ao acaso.</li>
+    <li><strong>Evite tangentes.</strong> Tangentes são quando bordas de objetos diferentes se tocam ou quase se tocam de forma ambígua (o topo de uma cabeça encostando exatamente na linha do horizonte, dois objetos cujas silhuetas se beijam). O olho fica incomodado sem saber por quê. Desloque levemente a câmera ou o objeto para criar sobreposição clara ou separação clara — nunca o meio-termo.</li>
+    <li><strong>Aponte para o foco.</strong> Use a direção dos objetos, olhares, linhas e luz para convergir no ponto focal (Cap. 2 e 3).</li>
+    <li><strong>Simplifique o entorno do sujeito.</strong> Deixe o espaço imediatamente ao redor do foco mais calmo (menos detalhe, menos contraste) para o sujeito respirar.</li>
+    <li><strong>Uma ideia por quadro.</strong> Se a cena precisa dizer duas coisas, considere dois planos. Tentar dizer tudo de uma vez é a receita da confusão.</li>
+  </ul>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 15</div>
+    <p>Componha uma cena e renderize. Depois, no compositor, jogue tudo para silhueta pura (um nó que mapeie a imagem para preto, sobre um fundo branco — ou simplesmente preencha o sujeito de preto num programa de pintura). A leitura sobrevive? Se não, identifique se o problema é falta de contraste, uma tangente ruim ou foco duplo — e conserte na cena 3D, não na pós.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE IV ===================== -->
+<div class="parte-cover" id="parte4">
+  <div class="pn">PARTE IV</div>
+  <h2>Luz e cor como composição</h2>
+  <p>Luz não é só o que torna a cena visível — é o que <em>esculpe</em> a forma, separa os planos, cria o ponto focal e define a emoção. Esta parte trata da luz e da cor não como técnica de iluminação, mas como ferramentas de composição: onde colocar o claro, o escuro e a cor para dirigir o olhar e o sentimento.</p>
+</div>
+
+<!-- ===== CAP 16 ===== -->
+<section class="cap" id="cap16">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 16</div><div class="fio"></div></div>
+  <h2 class="titulo">Luz que compõe: chave, fill, contorno, motivação</h2>
+
+  <p class="lead">A iluminação é a composição de valor (Cap. 4) realizada com luz de verdade. Antes de pensar em "bonito", pense no que cada luz <strong>faz pela composição</strong>: criar o foco, separar o sujeito do fundo, revelar a forma, definir o mood.</p>
+
+  <h3>16.1 — O esquema de três pontos (e além)</h3>
+  <table>
+    <tr><th>Luz</th><th>Função</th><th>Efeito composicional</th></tr>
+    <tr><td><strong>Key (principal)</strong></td><td>A luz dominante; define a direção e o caráter da iluminação</td><td>Cria o lado iluminado e as sombras que esculpem a forma; estabelece o valor do sujeito</td></tr>
+    <tr><td><strong>Fill (preenchimento)</strong></td><td>Suaviza as sombras da key, do lado oposto, mais fraca</td><td>Controla o <em>contraste</em>: pouco fill = dramático (low key); muito fill = suave (high key)</td></tr>
+    <tr><td><strong>Rim / Back (contorno)</strong></td><td>Por trás do sujeito, desenha uma borda de luz</td><td>Separa o sujeito do fundo — o recorte por contraste que faz a silhueta saltar (Cap. 15)</td></tr>
+    <tr><td><strong>Practical / motivada</strong></td><td>Fontes visíveis na cena (janela, lâmpada, tela)</td><td>Justifica a luz, ancora o mood, vira foco por si</td></tr>
+    <tr><td><strong>Ambiente / mundo</strong></td><td>Luz geral do céu/HDRI</td><td>Banho de base; define a temperatura ambiente e o piso de valor</td></tr>
+  </table>
+
+  <h3>16.2 — A razão de contraste (lighting ratio)</h3>
+  <p>A relação entre key e fill — a <em>razão de iluminação</em> — é o que controla o drama. Key muito mais forte que o fill cria sombras profundas e clima tenso, misterioso (low key). Key e fill próximos criam iluminação plana e suave, alegre ou clínica (high key). Esse único parâmetro reposiciona a cena inteira na escala de valores do Capítulo 4 — e é por isso que iluminar é compor, não só "acender luzes".</p>
+
+  <h3>16.3 — Luz motivada e direção</h3>
+  <ul>
+    <li><strong>Toda luz deve ter motivo.</strong> Mesmo numa cena fantástica, a luz parece real quando o olho consegue imaginar de onde vem (uma janela, o sol, uma fogueira, uma tela). Luz sem fonte plausível parece "CG". Coloque <em>practicals</em> (fontes visíveis) e faça a iluminação concordar com elas.</li>
+    <li><strong>Direção esculpe.</strong> Luz lateral revela textura e volume (sombras longas, relevo); luz frontal achata (apaga sombras, some o volume); luz de baixo é antinatural e sinistra; contraluz cria silhueta e drama. Escolha a direção pela forma que quer revelar.</li>
+    <li><strong>Luz como ponteiro.</strong> A região mais iluminada é, por padrão, o ponto focal (Cap. 2). Use isso: ilumine o que importa e deixe o resto cair na penumbra. "Pintar com luz" significa decidir o que merece estar no claro.</li>
+  </ul>
+
+  <h3>16.4 — Ferramentas de luz no Blender</h3>
+  <ul>
+    <li><strong>Tipos:</strong> <em>Sun</em> (sol direcional, raios paralelos — exteriores), <em>Area</em> (suave e controlável — a chave/fill mais usada), <em>Point</em> (lâmpada omnidirecional), <em>Spot</em> (foco cônico — practicals e holofotes).</li>
+    <li><strong>Tamanho = suavidade:</strong> luz grande/larga = sombras suaves (difusas); luz pequena = sombras duras (definidas). Esculpa a qualidade da sombra pelo tamanho da fonte.</li>
+    <li><strong>HDRI no mundo</strong> dá iluminação ambiente realista e reflexos de uma só vez — ótimo ponto de partida; depois acrescente Areas para dirigir key/fill/rim conforme a composição.</li>
+    <li><strong>Light Linking / coleções de exclusão</strong> permitem que uma luz afete só certos objetos — controle cirúrgico para iluminar o sujeito sem estourar o fundo.</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">◐ Blender 5.x — EEVEE e luz</div>
+    <p>O EEVEE foi renomeado (o "Next" virou o EEVEE padrão) e ganhou <strong>View Layer overrides</strong> (de material, mundo e samples) — útil para iluminar a mesma cena de formas diferentes em camadas distintas, sem duplicar tudo. O baking de Light Probe Volumes ficou mais rápido. Para composição, o ganho prático é iterar iluminação em tempo quase real no viewport, vendo a estrutura de valores se formar enquanto você posiciona as luzes.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 17 ===== -->
+<section class="cap" id="cap17">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 17</div><div class="fio"></div></div>
+  <h2 class="titulo">Mood, hora do dia e a paleta da cena</h2>
+
+  <p class="lead">A combinação de luz, cor e atmosfera produz o <strong>mood</strong> — a temperatura emocional da imagem. Aqui a teoria das Partes I e IV se junta numa decisão única: que sentimento esta cena transmite?</p>
+
+  <h3>17.1 — A hora do dia como paleta pronta</h3>
+  <table>
+    <tr><th>Momento</th><th>Luz</th><th>Cor / mood</th></tr>
+    <tr><td><strong>Hora dourada</strong> (amanhecer/entardecer)</td><td>Sol baixo, sombras longas, contraluz fácil</td><td>Âmbar quente, romântico, nostálgico — a "luz favorita" do cinema</td></tr>
+    <tr><td><strong>Meio-dia</strong></td><td>Sol a pino, sombras curtas e duras, alto contraste</td><td>Cru, honesto, quente, às vezes hostil/árido</td></tr>
+    <tr><td><strong>Hora azul</strong> (crepúsculo)</td><td>Sem sol direto, luz difusa do céu</td><td>Azul frio, melancólico, calmo, urbano-cinematográfico</td></tr>
+    <tr><td><strong>Noite</strong></td><td>Practicals dominam (luar, postes, janelas)</td><td>Contraste alto e localizado, mistério, intimidade, perigo</td></tr>
+    <tr><td><strong>Nublado</strong></td><td>Céu inteiro vira softbox gigante; sombras suaves</td><td>Neutro, plano, melancólico, "documentário"; ótimo para detalhe</td></tr>
+  </table>
+
+  <h3>17.2 — Construir uma paleta intencional</h3>
+  <ol>
+    <li><strong>Escolha a dominante.</strong> Uma temperatura (quente ou fria) deve reinar sobre ~70–80% do quadro. Indecisão entre as duas deixa a imagem "lavada".</li>
+    <li><strong>Reserve o contraste de temperatura para o foco.</strong> Se a cena é fria, o sujeito ganha um toque quente (e vice-versa). É o "teal &amp; orange" usado com propósito, não como filtro automático.</li>
+    <li><strong>Limite a paleta.</strong> Poucas famílias de cor, bem orquestradas, parecem mais sofisticadas que um arco-íris. Defina 2–3 matizes principais e seja disciplinado.</li>
+    <li><strong>Deixe o color management e o look fecharem o tom</strong> (Cap. 20): a curva de contraste e um leve color grade unificam tudo no fim.</li>
+  </ol>
+
+  <div class="caixa olho">
+    <div class="rot">◉ Mood é a soma, não uma camada</div>
+    <p>Iniciantes tentam "adicionar mood" no fim, com um filtro. Mas o mood nasce de decisões coerentes em <em>toda</em> a cadeia: a hora do dia escolhe a luz, a luz define o valor, o valor e a cor criam a atmosfera, a atmosfera dá profundidade, e a composição põe o foco onde a emoção mora. Quando todas essas decisões apontam para o mesmo sentimento, a imagem "fala" — e nenhum filtro de pós conserta uma cadeia que aponta para sentimentos contraditórios.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 17 — o mesmo set, três horas</div>
+    <p>Monte uma cena simples (um interior com uma janela, por exemplo) e ilumine-a três vezes: hora dourada (sol baixo âmbar pela janela), hora azul (luz fria difusa, talvez uma practical quente acesa dentro) e noite (escuro, só practicals). Não mude um único objeto. Compare os três renders lado a lado — é a prova definitiva de que luz e cor, não o modelo, carregam a emoção.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE V ===================== -->
+<div class="parte-cover" id="parte5">
+  <div class="pn">PARTE V</div>
+  <h2>Execução no Blender</h2>
+  <p>Teoria e câmera se encontram aqui: o fluxo concreto de compor um plano do zero, as ferramentas do viewport que ajudam a enquadrar, e a etapa final de color management, render e compositor — onde a imagem ganha o acabamento que amarra todas as decisões anteriores.</p>
+</div>
+
+<!-- ===== CAP 18 ===== -->
+<section class="cap" id="cap18">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 18</div><div class="fio"></div></div>
+  <h2 class="titulo">O workflow de compor um plano</h2>
+
+  <p class="lead">Tudo dos capítulos anteriores se organiza num processo. Compor não é "achar um ângulo bonito" — é uma sequência de decisões, do geral ao específico, cada uma estreitando as próximas.</p>
+
+  <ol class="passos">
+    <li><h4>Defina a intenção (1 frase)</h4><p>"O que esta imagem precisa dizer?" (Cap. 1). Escreva. Toda decisão seguinte se mede contra ela.</p></li>
+    <li><h4>Escolha o formato</h4><p>Proporção de tela conforme o destino e o caráter (Cap. 10). Defina Resolution X/Y antes de compor — é o tamanho da tela onde você vai pintar.</p></li>
+    <li><h4>Thumbnails / blocking de câmera</h4><p>Antes de detalhar a cena, procure o enquadramento com formas brutas. Use Lock Camera to View (Cap. 11) e teste vários ângulos e lentes rapidamente. Pense em miniaturas: a composição precisa funcionar pequena (Cap. 1).</p></li>
+    <li><h4>Posicione o ponto focal</h4><p>Coloque o sujeito num ponto forte (terços/áurea, Cap. 3). Escolha lente e ângulo pela linguagem que servem à intenção (Cap. 8, 10).</p></li>
+    <li><h4>Construa a profundidade</h4><p>Organize foreground / midground / background (Cap. 13); garanta sobreposição; planeje a atmosfera (Cap. 14).</p></li>
+    <li><h4>Resolva o valor em preto e branco</h4><p>Dessature e cheque: o foco salta? As massas se organizam? (Cap. 4). Conserte a estrutura de valor <em>antes</em> da cor.</p></li>
+    <li><h4>Ilumine para compor</h4><p>Key/fill/rim a serviço do foco e da separação (Cap. 16). Defina a razão de contraste pelo mood (Cap. 17). Cheque a silhueta (Cap. 15).</p></li>
+    <li><h4>Trabalhe a cor</h4><p>Dominante de temperatura + acento no foco (Cap. 6, 17). Mantenha a paleta limitada.</p></li>
+    <li><h4>Refine o foco</h4><p>Profundidade de campo para isolar (Cap. 9). Ajuste lens shift se precisar corrigir perspectiva ou descentralizar (Cap. 11).</p></li>
+    <li><h4>Trave e finalize</h4><p>Proteja a câmera (Cap. 11). Render + color management e compositor para o acabamento (Cap. 20). Faça o checklist final (Cap. 21).</p></li>
+  </ol>
+
+  <div class="caixa olho">
+    <div class="rot">◉ Do geral ao específico, sempre</div>
+    <p>O erro de processo mais comum é começar pelo detalhe: ajustar materiais e texturas antes de saber o enquadramento. Inverta. Resolva a composição com a cena ainda em cinza (blockout), depois iluminação, depois cor, e só então o detalhe fino. Decisões grandes primeiro; assim você nunca refina algo que vai ser recomposto. É o mesmo "70/20/10" do hard surface (volume 2), aplicado ao quadro.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Itere com renders rápidos</div>
+    <p>Componha com viewport em Material/Rendered Preview e renders de baixa amostragem. Você está avaliando <em>estrutura</em> — enquadramento, valor, profundidade, foco — não acabamento. Renders finais demorados são para o fim. Avaliar composição em imagens limpas e rápidas mantém o olho no que importa e o ciclo de iteração curto.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 19 ===== -->
+<section class="cap" id="cap19">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 19</div><div class="fio"></div></div>
+  <h2 class="titulo">Ferramentas do viewport e da câmera</h2>
+
+  <p class="lead">O Blender tem ajudas embutidas para compor com precisão — grades de composição, máscaras de enquadramento, áreas seguras. Ative-as e o enquadramento deixa de ser "no olho" e passa a ser deliberado.</p>
+
+  <h3>19.1 — Composition Guides (grades na câmera)</h3>
+  <p>Selecione a câmera ▸ <span class="menupath">Object Data ▸ Viewport Display ▸ Composition Guides</span>. As sobreposições disponíveis, desenhadas na visão da câmera:</p>
+  <table>
+    <tr><th>Guia</th><th>Para que serve</th></tr>
+    <tr><td><strong>Thirds (terços)</strong></td><td>A grade 3×3 e os pontos fortes (Cap. 3) — a mais usada</td></tr>
+    <tr><td><strong>Center / Center Diagonal</strong></td><td>Marca o centro e as diagonais do quadro — útil para simetria e alinhamentos</td></tr>
+    <tr><td><strong>Golden / Golden Triangle</strong></td><td>Proporção áurea e divisões diagonais por φ (Cap. 3)</td></tr>
+    <tr><td><strong>Harmonious Triangles</strong></td><td>Esquema de triângulos para arranjos diagonais equilibrados</td></tr>
+  </table>
+
+  <h3>19.2 — Passepartout, Safe Areas e Bounds</h3>
+  <ul>
+    <li><strong>Passepartout:</strong> escurece tudo fora do quadro da câmera (mesmo painel de Viewport Display). Ligue e ajuste a opacidade para concentrar o olho só no enquadramento — some a distração de ver a cena "transbordando" do quadro.</li>
+    <li><strong>Safe Areas (áreas seguras):</strong> marcam as margens de "ação" e "título" que TVs antigas cortavam. Hoje são úteis para garantir que elementos importantes não fiquem colados nas bordas e para alinhar texto/logos com folga.</li>
+    <li><strong>Camera Bounds / Limits:</strong> exibem o frustum, o plano de foco do DOF e os clip start/end no viewport — ajuda a enxergar o que a câmera "alcança" e onde está o foco.</li>
+    <li><strong>Background Images / Reference:</strong> carregue uma foto de referência ou um storyboard como fundo da câmera (<span class="menupath">Object Data ▸ Background Images</span>) para casar o enquadramento com uma referência exata.</li>
+  </ul>
+
+  <h3>19.3 — Render Region e overlays úteis</h3>
+  <ul>
+    <li><strong>Render Region</strong> (<kbd>Ctrl</kbd>+<kbd>B</kbd> na visão da câmera; limpe com <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd>): renderiza só um recorte — itera rápido numa região específica do quadro.</li>
+    <li><strong>Statistics e overlays</strong>: desligue overlays (<kbd>Shift</kbd>+<kbd>Z</kbd> alterna wireframe/solid; o botão de overlays some com grids e gizmos) ao avaliar composição — você quer ver a <em>imagem</em>, não os auxiliares.</li>
+    <li><strong>Quad/single view e proporções</strong>: bloqueie o viewport na proporção de render para enquadrar exatamente o que sairá.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Ligue terços + passepartout sempre</div>
+    <p>Deixe a grade de terços e o passepartout ligados como padrão na sua câmera. Compor sem ver as linhas-guia é como desenhar sem régua quando se tem uma à mão — você ainda acerta de vez em quando, mas erra muito mais. As linhas tornam visíveis as decisões que de outra forma você tomaria por intuição vaga.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 20 ===== -->
+<section class="cap" id="cap20">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 20</div><div class="fio"></div></div>
+  <h2 class="titulo">Color management, render e o compositor</h2>
+
+  <p class="lead">A última milha da composição acontece depois do render: o <strong>color management</strong> define como as cores e o contraste são exibidos, e o <strong>compositor</strong> aplica o acabamento — vinheta, glare, aberração, grade de cor — que amarra todas as decisões anteriores.</p>
+
+  <h3>20.1 — Color management: a base de tudo que você vê</h3>
+  <p>Em <span class="menupath">Render Properties ▸ Color Management</span>, o ponto crucial é o <strong>View Transform</strong>. O Blender usa por padrão um pipeline de alto alcance dinâmico (historicamente "Filmic", hoje <strong>AgX</strong> nas versões recentes) que comprime as altas luzes graciosamente, evitando o "branco estourado" e os tons saturados artificiais do antigo "Standard". Trabalhar com o view transform certo é o que faz a luz parecer cinematográfica em vez de "render de games antigo".</p>
+  <ul>
+    <li><strong>View Transform:</strong> AgX (padrão moderno, dessatura altas luzes de forma natural e fotográfica) ou Filmic (clássico). Evite "Standard" exceto para trabalho técnico/gráfico.</li>
+    <li><strong>Look:</strong> contrastes prontos (Medium/High Contrast etc.) — um color grade de base rápido.</li>
+    <li><strong>Exposure / Gamma:</strong> ajuste fino global de brilho e contraste antes da pós.</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">◐ Blender 5.x — compositor reformulado</div>
+    <p>O compositor do 5.0 ganhou um <strong>Asset Shelf com efeitos prontos</strong> que servem diretamente à composição final: <em>Vignette</em> (escurecer bordas), <em>Chromatic Aberration</em> (franja de cor das lentes), <em>Sensor Noise</em> (grão de câmera), <em>Sepia</em>, <em>Split Toning</em> (tingir luzes e sombras com cores diferentes), <em>Tune Image</em> (contraste/cor/clareza) e <em>Unsharp Mask</em>. O nó <strong>Glare</strong> ganhou um modo <em>Sun Beams</em> de alta qualidade fácil de usar. Há também um <strong>modifier de Compositor no Sequencer</strong>, permitindo aplicar árvores de composição diretamente na edição. Esses efeitos antes exigiam montagens manuais de nós — agora são um arrasta-e-solta.</p>
+  </div>
+
+  <h3>20.2 — O acabamento que reforça a composição</h3>
+  <table>
+    <tr><th>Efeito (compositor)</th><th>O que faz pela composição</th></tr>
+    <tr><td><strong>Vignette</strong></td><td>Escurece as bordas, empurrando o olho para o centro/foco — guia o olhar de graça</td></tr>
+    <tr><td><strong>Glare / Bloom</strong></td><td>Brilho difuso nas altas luzes; dá "vida" à luz e reforça o practical como foco</td></tr>
+    <tr><td><strong>Glare ▸ Sun Beams</strong></td><td>Raios de luz a partir de uma fonte — leading lines luminosas ao foco</td></tr>
+    <tr><td><strong>Chromatic Aberration</strong></td><td>Franja de cor sutil nas bordas; "lentes reais", quebra a perfeição CG</td></tr>
+    <tr><td><strong>Split Toning / color grade</strong></td><td>Unifica a paleta: sombras numa temperatura, luzes em outra — fecha o mood (Cap. 17)</td></tr>
+    <tr><td><strong>Sensor Noise / grão</strong></td><td>Textura fotográfica que integra os elementos e tira o aspecto "limpo demais"</td></tr>
+    <tr><td><strong>Mist / Z combinada</strong></td><td>Atmosfera por profundidade no pós (Cap. 14), sem custo de volume</td></tr>
+  </table>
+
+  <h3>20.3 — Passes e camadas para controle</h3>
+  <p>Renderizar em <strong>passes</strong> (View Layer ▸ Passes) — como Mist, Z (profundidade), Cryptomatte (máscaras por objeto), AO — dá controle total na pós: escurecer só o fundo, colorir só o sujeito, adicionar névoa por distância, tudo sem re-renderizar. Para composições mais elaboradas, separar a cena em <strong>view layers</strong> (foreground / sujeito / background) permite tratar cada plano de profundidade independentemente no compositor — o equivalente digital de pintar em camadas.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Pós não conserta composição</div>
+    <p>Vinheta, grade e glare <em>reforçam</em> uma boa composição; não <em>criam</em> uma. Se o enquadramento está errado, o foco é ambíguo ou o valor é chapado, nenhum efeito de compositor resolve — você só estará polindo um problema estrutural. A pós é a última camada de verniz sobre decisões que precisam estar certas na cena. Resolva a composição primeiro; o compositor é o acabamento, não o conserto.</p>
+  </div>
+</section>
+
+<!-- ===================== APÊNDICE ===================== -->
+<div class="parte-cover" id="apendice">
+  <div class="pn">APÊNDICE</div>
+  <h2>Referência rápida</h2>
+  <p>Material de consulta de bancada: o checklist para avaliar qualquer composição, os erros mais comuns e como evitá-los, e um glossário com os atalhos e as novidades do 5.x.</p>
+</div>
+
+<!-- ===== CAP 21 ===== -->
+<section class="cap" id="cap21">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 21</div><div class="fio"></div></div>
+  <h2 class="titulo">Checklist, erros comuns e como estudar</h2>
+
+  <h3>21.1 — Checklist da composição pronta</h3>
+  <ul>
+    <li>☐ Eu sei, em uma frase, o que esta imagem diz.</li>
+    <li>☐ Existe um único ponto focal claro; o olho sabe para onde ir primeiro.</li>
+    <li>☐ A imagem funciona em miniatura e em silhueta.</li>
+    <li>☐ Em preto e branco, o foco ainda salta (valor resolvido).</li>
+    <li>☐ O sujeito está num ponto forte (terços/áurea) ou centralizado de propósito.</li>
+    <li>☐ Há três planos de profundidade legíveis; existe sobreposição entre eles.</li>
+    <li>☐ A lente e o ângulo servem à intenção (não foram o padrão acidental).</li>
+    <li>☐ A profundidade de campo dirige o olhar, não só "embeleza".</li>
+    <li>☐ A paleta tem dominante de temperatura + acento no foco; nada de saturação geral.</li>
+    <li>☐ A luz tem motivo; a razão key/fill bate com o mood pretendido.</li>
+    <li>☐ Sem tangentes incômodas; sem fuga do olhar pela borda; sem foco duplo.</li>
+    <li>☐ Há lead room/headroom adequados; nada essencial colado na borda.</li>
+    <li>☐ View transform correto (AgX/Filmic); pós reforça, não conserta.</li>
+  </ul>
+
+  <h3>21.2 — Erros comuns e como evitá-los</h3>
+  <table>
+    <tr><th>Erro</th><th>Sintoma</th><th>Conserto</th></tr>
+    <tr><td>Sem ponto focal</td><td>O olho vaga sem pousar; "imagem sem assunto"</td><td>Crie um pico de contraste/nitidez/cor num só lugar; rebaixe o resto</td></tr>
+    <tr><td>Foco duplo</td><td>Dois elementos brigando; olho "pingando"</td><td>Subordine um: menos contraste, mais fundo, mais desfoque</td></tr>
+    <tr><td>Valor chapado</td><td>Cores bonitas mas imagem "morta", sem foco</td><td>Teste em P&amp;B; reserve o maior salto de valor ao foco</td></tr>
+    <tr><td>Tudo saturado</td><td>Vibrante mas amador, sem hierarquia</td><td>Dessature a base; acento saturado só no foco</td></tr>
+    <tr><td>Sem profundidade</td><td>Imagem "achatada", tudo no mesmo plano</td><td>Acrescente foreground; separe planos por valor/temperatura; atmosfera; DOF</td></tr>
+    <tr><td>Tangentes</td><td>Bordas se beijando de forma ambígua</td><td>Mova levemente câmera/objeto: sobreposição clara OU separação clara</td></tr>
+    <tr><td>Fuga pela borda</td><td>Linha/olhar leva o olho para fora</td><td>Reposicione; crie um elemento que rebata o olhar para dentro</td></tr>
+    <tr><td>Sujeito sufocado</td><td>Sem espaço para onde olha/se move</td><td>Adicione lead room na direção do movimento/olhar</td></tr>
+    <tr><td>Luz sem motivo</td><td>Iluminação "CG", artificial</td><td>Ancore em fontes plausíveis (practicals); concorde direção e cor</td></tr>
+    <tr><td>Lente acidental</td><td>Distorção facial ou fundo "errado"</td><td>Escolha a focal pela linguagem (Cap. 8); 50–85 mm para a maioria dos sujeitos</td></tr>
+  </table>
+
+  <h3>21.3 — Como treinar o olho</h3>
+  <ul>
+    <li><strong>Estude frames de filmes.</strong> Pause filmes que você admira e analise: ponto focal, terços/áurea, valor, paleta, profundidade. Sites de "movie frames" e a prática de "shot study" são ouro.</li>
+    <li><strong>Refaça composições.</strong> Recrie no Blender o enquadramento de um frame ou foto que você ama — você aprende as decisões por dentro.</li>
+    <li><strong>Pinte miniaturas.</strong> Antes de modelar, esboce 3–5 thumbnails da composição em manchas de valor. Decisões grandes em 2 minutos.</li>
+    <li><strong>Reduza e dessature seus próprios renders.</strong> Miniatura + preto e branco revelam problemas que o tamanho cheio e a cor escondem.</li>
+    <li><strong>Limite-se.</strong> Componha uma cena inteira com um só objeto, uma só luz, um só plano — restrição força criatividade composicional.</li>
+  </ul>
+</section>
+
+<!-- ===== CAP 22 ===== -->
+<section class="cap" id="cap22">
+  <div class="cap-tag"><div class="vfm"></div><div class="num">CAPÍTULO 22</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>22.1 — Glossário</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição</th></tr>
+    <tr><td><strong>Composição</strong></td><td>Organização deliberada dos elementos no quadro para guiar olhar, hierarquia e sensação</td></tr>
+    <tr><td><strong>Ponto focal</strong></td><td>O lugar onde o olho pousa primeiro e retorna</td></tr>
+    <tr><td><strong>Hierarquia visual</strong></td><td>A ordem de importância dos elementos no quadro</td></tr>
+    <tr><td><strong>Regra dos terços</strong></td><td>Grade 3×3; elementos fortes nas linhas e cruzamentos</td></tr>
+    <tr><td><strong>Proporção áurea (φ)</strong></td><td>Divisão ≈1,618; grade e espiral de leitura mais orgânicas</td></tr>
+    <tr><td><strong>Valor</strong></td><td>Luminosidade de uma região, independente da cor; a força composicional dominante</td></tr>
+    <tr><td><strong>Notan</strong></td><td>Arranjo de massas claras e escuras, planejado antes da cor</td></tr>
+    <tr><td><strong>Peso visual</strong></td><td>O quanto um elemento atrai atenção e "pesa" na balança do quadro</td></tr>
+    <tr><td><strong>Espaço negativo</strong></td><td>Áreas "vazias" que dão respiro e isolam o sujeito</td></tr>
+    <tr><td><strong>Lead room / headroom</strong></td><td>Espaço à frente do olhar/movimento / acima do sujeito</td></tr>
+    <tr><td><strong>Distância focal</strong></td><td>Lente em mm; define campo de visão e compressão de perspectiva</td></tr>
+    <tr><td><strong>Profundidade de campo (DOF)</strong></td><td>Faixa de distâncias nítidas; controlada pela abertura (f-stop)</td></tr>
+    <tr><td><strong>Bokeh</strong></td><td>O desfoque/círculos das áreas fora de foco</td></tr>
+    <tr><td><strong>Aspect ratio</strong></td><td>Proporção da tela (16:9, 2.39:1, 9:16...)</td></tr>
+    <tr><td><strong>Perspectiva atmosférica</strong></td><td>O distante clareia, azula e perde contraste — pista de profundidade</td></tr>
+    <tr><td><strong>Staging</strong></td><td>Encenação: apresentar a ideia com clareza total</td></tr>
+    <tr><td><strong>Tangente</strong></td><td>Bordas que se tocam de forma ambígua, incomodando o olho</td></tr>
+    <tr><td><strong>Key / Fill / Rim</strong></td><td>Luz principal / preenchimento / contorno</td></tr>
+    <tr><td><strong>Practical</strong></td><td>Fonte de luz visível dentro da cena (lâmpada, janela)</td></tr>
+    <tr><td><strong>View Transform</strong></td><td>Como o color management exibe o alcance dinâmico (AgX, Filmic)</td></tr>
+    <tr><td><strong>Dolly vs. Zoom</strong></td><td>Mover a câmera (paralaxe) vs. mudar a focal (sem paralaxe)</td></tr>
+  </table>
+
+  <h3>22.2 — Atalhos de câmera e viewport</h3>
+  <table>
+    <tr><th>Atalho</th><th>Ação</th></tr>
+    <tr><td><kbd>Numpad 0</kbd></td><td>Entrar/sair da visão da câmera ativa</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Numpad 0</kbd></td><td>Tornar o objeto selecionado a câmera ativa</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Numpad 0</kbd></td><td>Alinhar câmera ativa à vista atual</td></tr>
+    <tr><td>N ▸ View ▸ Lock Camera to View</td><td>Compor "pilotando" a câmera ao orbitar</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>`</kbd></td><td>Walk/Fly navigation (pilotar a câmera)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd> / <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd></td><td>Definir / limpar Render Region (na visão da câmera)</td></tr>
+    <tr><td><kbd>Numpad 5</kbd></td><td>Alternar perspectiva / ortográfica no viewport</td></tr>
+    <tr><td><kbd>Numpad .</kbd></td><td>Enquadrar o objeto selecionado</td></tr>
+    <tr><td><kbd>Z</kbd></td><td>Menu de modos de sombreamento (Wire/Solid/Material/Rendered)</td></tr>
+    <tr><td><kbd>G</kbd>,<kbd>Z</kbd>,<kbd>Z</kbd></td><td>Deslizar a câmera no eixo local da lente (dolly)</td></tr>
+    <tr><td><kbd>I</kbd></td><td>Inserir keyframe (animar câmera/luzes)</td></tr>
+  </table>
+
+  <h3>22.3 — Novidades 4.x → 5.x relevantes para composição</h3>
+  <ul>
+    <li><strong>Compositor reformulado (5.0):</strong> Asset Shelf com efeitos prontos — Vignette, Chromatic Aberration, Sensor Noise, Sepia, Split Toning, Tune Image, Unsharp Mask; nó Glare com modo <em>Sun Beams</em>; reuso de árvores de composição entre arquivos; mais nós (Convolve, etc.). No 5.2 o compositor interativo ficou mais confiável e ganhou suporte a objetos/câmera como entrada.</li>
+    <li><strong>Compositor no Sequencer (5.0):</strong> modifier de composição aplicável a strips na edição.</li>
+    <li><strong>EEVEE (5.0):</strong> identificador renomeado para BLENDER_EEVEE (o "Next" virou o padrão); View Layer overrides (material, mundo, samples); baking de Light Probe Volume mais rápido; compilação de shaders mais veloz — iteração de luz/composição quase em tempo real.</li>
+    <li><strong>Câmera OSL no Cycles (4.5/5.0):</strong> projeções de câmera personalizadas além de perspectiva/ortográfica/panorâmica.</li>
+    <li><strong>MatCaps novos (5.0)</strong> com especular opcional — leitura de forma melhor ao compor blockouts em viewport.</li>
+    <li><strong>Color management:</strong> AgX como view transform moderno para alto alcance dinâmico cinematográfico.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ A coleção completa</div>
+    <p>Este é o volume 4. Os anteriores se conectam diretamente: <strong>Hard Surface (vol. 2)</strong> e <strong>Boolean (vol. 3)</strong> constroem os objetos que você vai compor; <strong>Rigging (vol. 1)</strong> move tanto os objetos quanto a própria câmera (lembre: câmera é objeto, e o rig de câmera do Cap. 11–12 é puro rigging). O manual oficial (<a class="ext" href="https://docs.blender.org/manual/en/latest/">docs.blender.org/manual</a>) detalha cada painel citado. Próximos estudos: edição/montagem no Sequencer, layout de animação (animatic) e direção de fotografia de verdade — assistir filmes com olhos de compositor é o curso que nunca termina.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Composição de Cena no Blender 5.x · Livro de Bolso · volume 4 da coleção · 22 capítulos em 5 partes<br>
+  O espectador nunca vê a cena — vê o quadro. Dirija o quadro.
+</footer>
+
+</main>
+</div><!-- /layout -->
+</body>
+</html>

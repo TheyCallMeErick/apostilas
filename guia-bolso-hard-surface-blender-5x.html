@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Bolso — Hard Surface Modeling no Blender 5.x</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F4F4F1;
+  --tinta:#191C1E;
+  --tinta-suave:#4D5358;
+  --aco:#2E6FA8;            /* azul-aço: ferramenta/precisão */
+  --aco-escuro:#1F4E78;
+  --usinagem:#D98E04;       /* laranja-usinagem: avisos e destaques */
+  --usinagem-escuro:#A66A02;
+  --blueprint:#16334F;      /* fundo das figuras técnicas */
+  --bp-linha:#BFD7EE;
+  --bp-dim:#7FA8CC;
+  --verde:#3F7A4A;
+  --vermelho:#B3402E;
+  --linha:#D6D6CF;
+  --cartao:#FFFFFF;
+  --code-bg:#20262B;
+  --code-fg:#E8ECEF;
+  --sombra:0 1px 3px rgba(25,28,30,.08), 0 8px 24px rgba(25,28,30,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{
+  background:var(--papel);
+  color:var(--tinta);
+  font-family:"Source Serif 4", Georgia, serif;
+  font-size:16.5px;
+  line-height:1.62;
+}
+::selection{background:var(--aco);color:#fff}
+
+/* ===== layout ===== */
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+.sidebar{
+  border-right:1px solid var(--linha);
+  background:linear-gradient(180deg,#EDEEE9,#F4F4F1 240px);
+  padding:28px 22px 48px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.sidebar h2{
+  font-family:"Archivo",sans-serif;font-stretch:90%;
+  font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tinta-suave);margin:26px 0 10px;
+}
+.sidebar nav a{
+  display:block;text-decoration:none;color:var(--tinta-suave);
+  font-family:"Archivo",sans-serif;font-size:.84rem;line-height:1.35;
+  padding:5px 8px 5px 14px;border-left:2px solid transparent;border-radius:0 6px 6px 0;
+}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(46,111,168,.08);border-left-color:var(--aco)}
+.sidebar nav a .n{color:var(--aco);font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px}
+.logo-hs{display:flex;align-items:center;gap:10px}
+.logo-hs svg{flex:0 0 auto}
+.logo-hs .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.0rem;line-height:1.12;font-stretch:105%}
+.logo-hs .t2{font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--aco-escuro)}
+
+main{padding:0 0 120px}
+.miolo{max-width:780px;margin:0 auto;padding:0 36px}
+
+/* ===== capa ===== */
+.capa{
+  background:
+    repeating-linear-gradient(45deg, rgba(217,142,4,.10) 0 14px, transparent 14px 28px),
+    radial-gradient(1000px 460px at 80% -10%, rgba(46,111,168,.30), transparent 60%),
+    var(--blueprint);
+  color:#EDF2F7;
+  padding:84px 36px 72px;
+  position:relative;overflow:hidden;
+}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;
+  color:#F2C879;border:1px solid rgba(217,142,4,.55);border-radius:999px;
+  padding:6px 14px;margin-bottom:26px;background:rgba(22,51,79,.6);
+}
+.capa h1{
+  font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:880;
+  font-size:clamp(2.2rem,5.2vw,3.5rem);line-height:1.02;letter-spacing:-.015em;
+  max-width:16ch;margin-bottom:20px;
+}
+.capa h1 em{font-style:normal;color:#F2A33C}
+.capa p.sub{font-size:1.06rem;max-width:58ch;color:#C2D2E2;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{
+  font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;
+  border:1px solid rgba(237,242,247,.3);border-radius:6px;padding:6px 12px;color:#D6E1EC;
+}
+.capa-grade{position:absolute;inset:0;z-index:1;opacity:.5}
+
+/* ===== capítulos ===== */
+section.cap{padding-top:68px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .porca{width:15px;height:15px;background:var(--aco);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);flex:0 0 auto}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--aco-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{
+  font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;
+  font-size:clamp(1.65rem,3.3vw,2.25rem);line-height:1.08;letter-spacing:-.01em;
+  margin-bottom:20px;
+}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.2rem;margin:40px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:28px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+a.ext{color:var(--aco-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+
+/* ===== teclas e código ===== */
+kbd{
+  font-family:"JetBrains Mono",monospace;font-size:.78em;
+  background:#fff;border:1px solid #C4C6BE;border-bottom-width:2.5px;border-radius:5px;
+  padding:1.5px 7px;white-space:nowrap;color:var(--tinta);
+}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#E8E9E3;border-radius:4px;padding:1.5px 6px}
+pre{
+  background:var(--code-bg);color:var(--code-fg);
+  font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;
+  border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px;
+}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--aco-escuro)}
+
+/* ===== caixas ===== */
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{
+  display:flex;align-items:center;gap:8px;
+  font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;
+  letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;
+}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.oficina{border-left:4px solid var(--aco-escuro)}
+.caixa.oficina .rot{color:var(--aco-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--usinagem)}
+.caixa.exercicio .rot{color:var(--usinagem-escuro)}
+.caixa.v5{border-left:4px solid var(--usinagem);background:#FDF8EE}
+.caixa.v5 .rot{color:var(--usinagem-escuro)}
+
+/* ===== cartões de referência rápida ===== */
+.ficha{
+  background:var(--cartao);border:1px solid var(--linha);border-radius:12px;
+  box-shadow:var(--sombra);margin:22px 0;overflow:hidden;
+}
+.ficha .ficha-titulo{
+  background:var(--tinta);color:var(--papel);
+  font-family:"Archivo",sans-serif;font-weight:800;font-size:.78rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;
+  display:flex;align-items:center;gap:8px;
+}
+.ficha .ficha-titulo::before{content:"";width:10px;height:10px;background:var(--usinagem);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.ficha .ficha-corpo{padding:14px 18px}
+.ficha .ficha-corpo p:last-child{margin-bottom:0}
+
+/* ===== passos ===== */
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{
+  content:counter(passo);
+  position:absolute;left:0;top:1px;width:32px;height:32px;
+  background:var(--tinta);color:var(--papel);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;
+  display:flex;align-items:center;justify-content:center;
+}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+
+/* ===== tabelas ===== */
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.92rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{
+  font-family:"Archivo",sans-serif;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;
+  text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px;
+}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAFAF7}
+
+/* ===== figuras blueprint ===== */
+figure{margin:26px 0;background:var(--blueprint);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{
+  font-family:"Archivo",sans-serif;font-size:.82rem;color:#A9C2DB;
+  margin-top:14px;padding-top:12px;border-top:1px dashed rgba(191,215,238,.35);
+}
+figcaption b{color:#EDF2F7}
+.bp-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#EDF2F7}
+.bp-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--bp-dim)}
+.bp-tracado{fill:none;stroke:var(--bp-linha);stroke-width:1.8;stroke-linejoin:round}
+.bp-tracado-fino{fill:none;stroke:var(--bp-dim);stroke-width:1;stroke-dasharray:4 4}
+.bp-preench{fill:rgba(191,215,238,.10);stroke:var(--bp-linha);stroke-width:1.8;stroke-linejoin:round}
+.bp-acento{fill:none;stroke:#F2A33C;stroke-width:2.2;stroke-linejoin:round}
+.bp-acento-p{fill:#F2A33C}
+.bp-dim-l{stroke:var(--bp-dim);stroke-width:1}
+.bp-vert{fill:#F2A33C;stroke:#16334F;stroke-width:1}
+.bp-erro{fill:none;stroke:#E2574C;stroke-width:2.2}
+
+/* ===== sumário ===== */
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;margin:26px 0 10px}
+.sumario a{
+  display:flex;gap:12px;align-items:baseline;text-decoration:none;color:var(--tinta);
+  font-family:"Archivo",sans-serif;font-size:.92rem;padding:9px 12px;border-radius:8px;
+  border:1px solid transparent;
+}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--aco-escuro);font-size:.8rem}
+
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;
+  font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}
+  .sumario{grid-template-columns:1fr}
+  .miolo{padding:0 20px}
+  .capa{padding:64px 20px 56px}
+}
+@media print{
+  .sidebar{display:none}
+  .layout{display:block}
+  .capa{background:#fff;color:#000}
+  .capa h1 em{color:#000}
+  figure{background:#fff;border:1px solid #999}
+  figure,.caixa,table,.ficha{box-shadow:none}
+  section.cap{page-break-before:always}
+}
+:focus-visible{outline:3px solid var(--usinagem);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar">
+  <div class="logo-hs">
+    <svg width="38" height="42" viewBox="0 0 38 42" aria-hidden="true">
+      <polygon points="19,2 35,11 35,31 19,40 3,31 3,11" fill="none" stroke="#1F4E78" stroke-width="2.4" stroke-linejoin="round"/>
+      <circle cx="19" cy="21" r="6.5" fill="none" stroke="#D98E04" stroke-width="2.4"/>
+    </svg>
+    <div>
+      <div class="t1">Hard Surface<br>Guia de Bolso</div>
+      <div class="t2">Blender 5.x</div>
+    </div>
+  </div>
+
+  <h2>Base</h2>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é hard surface</a>
+    <a href="#cap2"><span class="n">02</span>Topologia que funciona</a>
+    <a href="#cap3"><span class="n">03</span>Ferramentas de bancada</a>
+    <a href="#cap4"><span class="n">04</span>Precisão e medidas</a>
+  </nav>
+
+  <h2>Sistema</h2>
+  <nav>
+    <a href="#cap5"><span class="n">05</span>Modifiers fundamentais</a>
+    <a href="#cap6"><span class="n">06</span>Shading: a alma do metal</a>
+  </nav>
+
+  <h2>Os 3 workflows</h2>
+  <nav>
+    <a href="#cap7"><span class="n">07</span>Workflow SubD</a>
+    <a href="#cap8"><span class="n">08</span>Workflow Boolean</a>
+    <a href="#cap9"><span class="n">09</span>Workflow Mid-poly</a>
+  </nav>
+
+  <h2>Prática</h2>
+  <nav>
+    <a href="#cap10"><span class="n">10</span>Curvas, cabos e detalhes</a>
+    <a href="#cap11"><span class="n">11</span>Projeto: câmera de vigilância</a>
+    <a href="#cap12"><span class="n">12</span>UVs e materiais</a>
+    <a href="#cap13"><span class="n">13</span>Checklist e socorro</a>
+    <a href="#cap14"><span class="n">14</span>Glossário e atalhos</a>
+  </nav>
+</aside>
+
+<!-- ============ CONTEÚDO ============ -->
+<main>
+
+<div class="capa">
+  <svg class="capa-grade" width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g stroke="rgba(191,215,238,.14)" stroke-width="1">
+      <path d="M0 80 H800 M0 160 H800 M0 240 H800 M0 320 H800 M100 0 V400 M200 0 V400 M300 0 V400 M400 0 V400 M500 0 V400 M600 0 V400 M700 0 V400"/>
+    </g>
+    <g stroke="rgba(191,215,238,.4)" fill="none" stroke-width="1.6">
+      <path d="M560 110 L680 110 L710 140 L710 250 L560 250 Z"/>
+      <circle cx="635" cy="180" r="34"/>
+      <circle cx="635" cy="180" r="14"/>
+      <path d="M540 90 v180 M540 90 h-14 M540 270 h-14" stroke="rgba(242,163,60,.6)"/>
+    </g>
+  </svg>
+  <div class="miolo">
+    <span class="selo">⬡ GUIA DE BOLSO · VOLUME 2 DA COLEÇÃO</span>
+    <h1>Hard Surface Modeling <em>do bloco à peça</em></h1>
+    <p class="sub">Referência compacta e completa para modelar máquinas, props, armas, veículos e produtos no Blender 5.x: topologia, bevels, booleans, shading de metal, os três workflows profissionais — e um projeto guiado de ponta a ponta.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>14 capítulos</span>
+      <span>Fichas de referência rápida</span>
+      <span>1 projeto guiado</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><div class="porca"></div><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como usar este guia de bolso</h2>
+  <p class="lead">Formato de bancada: capítulos curtos, fichas de referência rápida e tabelas para consulta no meio do trabalho. Leia 1–9 em ordem na primeira vez; depois, use como manual de consulta. O Capítulo 11 amarra tudo num projeto real.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é hard surface e os três workflows</a>
+    <a href="#cap2"><span class="n">02</span>Topologia que funciona em superfícies rígidas</a>
+    <a href="#cap3"><span class="n">03</span>Ferramentas de bancada: a caixa essencial</a>
+    <a href="#cap4"><span class="n">04</span>Precisão: unidades, snap e cursor 3D</a>
+    <a href="#cap5"><span class="n">05</span>Modifiers: a linha de montagem</a>
+    <a href="#cap6"><span class="n">06</span>Shading: smooth, sharp e weighted normals</a>
+    <a href="#cap7"><span class="n">07</span>Workflow SubD: loops de suporte e creases</a>
+    <a href="#cap8"><span class="n">08</span>Workflow Boolean: cortar como usinagem</a>
+    <a href="#cap9"><span class="n">09</span>Workflow Mid-poly: bevel + weighted normals</a>
+    <a href="#cap10"><span class="n">10</span>Curvas, cabos, parafusos e greebles</a>
+    <a href="#cap11"><span class="n">11</span>Projeto guiado: câmera de vigilância</a>
+    <a href="#cap12"><span class="n">12</span>UVs e materiais para superfícies duras</a>
+    <a href="#cap13"><span class="n">13</span>Checklist de qualidade e troubleshooting</a>
+    <a href="#cap14"><span class="n">14</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">⬡ Sobre a versão</div>
+    <p>Escrito para o <strong>Blender 5.x</strong>. Os pontos onde a interface mudou em relação a tutoriais antigos — o fim do Auto Smooth clássico (4.1), os novos solvers de Boolean (Float/Exact/<strong>Manifold</strong>), os modifiers novos baseados em Geometry Nodes do 5.0 — estão marcados em caixas como esta e resumidos no Capítulo 14.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 1 ================= -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é hard surface e os três workflows</h2>
+
+  <p class="lead"><strong>Hard surface</strong> é a modelagem de superfícies rígidas e manufaturadas: máquinas, armas, veículos, eletrônicos, móveis, props. O oposto do orgânico (corpos, rostos, criaturas), que deforma e respira.</p>
+
+  <p>A distinção não é só de tema — é de <strong>regras de fabricação</strong>. Objetos manufaturados obedecem à física e à economia da indústria, e o seu modelo só parece "real" se obedecer também:</p>
+  <ul>
+    <li><strong>Nenhuma aresta do mundo real é perfeitamente viva.</strong> Usinagem, fundição e injeção sempre deixam um raio mínimo — e é esse microchanfro que pega o brilho da luz. Um cubo sem bevel parece CG; um cubo com bevel de 1 mm parece uma peça. Este é o mandamento nº 1 do hard surface.</li>
+    <li><strong>Formas nascem de operações industriais:</strong> extrusão, corte, furação, dobra, revolução (torno), estampagem. Pensar "como esta peça seria fabricada?" gera decisões de modelagem melhores que pensar "que forma é essa?".</li>
+    <li><strong>Peças são montagens.</strong> Um drone real não é um bloco único: é casca + parafusos + juntas + cabos. Modelar em objetos separados é mais fácil, mais limpo e mais realista do que esculpir um monolito.</li>
+  </ul>
+
+  <h3>1.1 — Os três workflows (o mapa do guia)</h3>
+  <p>Quase todo hard surface profissional cai em um de três fluxos — ou numa mistura deles. Os capítulos 7, 8 e 9 detalham cada um:</p>
+  <table>
+    <tr><th>Workflow</th><th>Como funciona</th><th>Brilha em</th><th>Custo</th></tr>
+    <tr><td><strong>SubD</strong> (subdivision)</td><td>Malha de controle leve + Subdivision Surface; arestas seguradas por loops de suporte ou creases</td><td>Superfícies curvas contínuas: carros, capacetes, carenagens</td><td>Exige disciplina de topologia; mudanças tardias doem</td></tr>
+    <tr><td><strong>Boolean</strong></td><td>Cortar/unir volumes como uma fresadora; limpeza ou remesh depois</td><td>Formas mecânicas complexas, concepts, velocidade brutal</td><td>Gera n-gons e shading sujo se não tratado</td></tr>
+    <tr><td><strong>Mid-poly</strong></td><td>Malha média + Bevel modifier + Weighted Normals, sem subdivisão</td><td>Props de jogos e produção em escala; equilíbrio peso/visual</td><td>Não aguenta close-up extremo de curvatura</td></tr>
+  </table>
+
+  <div class="caixa oficina">
+    <div class="rot">⚙ Mentalidade de oficina</div>
+    <p>Trate o viewport como bancada: <strong>blocking primeiro</strong> (volumes brutos nas proporções certas, sem detalhe nenhum), depois formas secundárias (cortes, painéis), depois terciárias (parafusos, vincos, grelhas). Detalhar cedo é o erro nº 1 — é polir uma peça antes de saber se ela cabe na máquina. A regra 70/20/10: 70% do impacto visual vem das proporções, 20% das formas secundárias, 10% do detalhe fino.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 2 ================= -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">Topologia que funciona em superfícies rígidas</h2>
+
+  <p class="lead">Topologia é o desenho da malha: como vértices, arestas e faces se organizam. Em hard surface as regras são diferentes do orgânico — e mais permissivas do que dizem por aí.</p>
+
+  <h3>2.1 — Quads, tris e n-gons: a verdade prática</h3>
+  <table>
+    <tr><th>Face</th><th>Em superfície plana</th><th>Em superfície curva</th><th>Sob Subdivision</th></tr>
+    <tr><td><strong>Quad</strong> (4 lados)</td><td>Sempre ok</td><td>Sempre ok</td><td>Ideal — subdivide previsível</td></tr>
+    <tr><td><strong>Tri</strong> (3 lados)</td><td>Ok</td><td>Aceitável, pode pinçar o shading</td><td>Evite — cria pólos e pinçamento</td></tr>
+    <tr><td><strong>N-gon</strong> (5+ lados)</td><td><strong>Perfeitamente ok</strong></td><td>Perigoso — shading imprevisível</td><td>Proibido — subdivisão caótica</td></tr>
+  </table>
+  <p>A regra de bolso que resolve 90% das discussões: <strong>n-gon em face plana não machuca ninguém</strong> (a normal é única, o shading é trivial); n-gon em curvatura ou sob SubD é onde nascem as manchas. Mid-poly e Boolean toleram n-gons planos numa boa; SubD não tolera quase nenhum.</p>
+
+  <h3>2.2 — Pólos e fluxo de arestas</h3>
+  <p>Um <strong>pólo</strong> é um vértice onde chegam 3, 5 ou mais arestas (o normal são 4). Pólos são inevitáveis — todo cubo tem oito — mas a posição importa: <strong>pólo em área plana é invisível; pólo no meio de uma curvatura cria uma "covinha" no reflexo</strong>. Ao redirecionar o fluxo de arestas (em volta de um furo, por exemplo), empurre os pólos para as regiões planas vizinhas.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 280" role="img" aria-label="Furo em superfície: topologia ruim e boa">
+      <!-- lado ruim -->
+      <g>
+        <rect x="50" y="50" width="220" height="180" class="bp-tracado"/>
+        <circle cx="160" cy="140" r="44" class="bp-erro"/>
+        <path d="M160 50 V96 M160 184 V230 M50 140 H116 M204 140 H270" class="bp-erro"/>
+        <text x="160" y="262" text-anchor="middle" class="bp-lbl">✗ furo "estrelado"</text>
+        <text x="160" y="36" text-anchor="middle" class="bp-sub">4 arestas morrem no círculo → pinça</text>
+      </g>
+      <!-- lado bom -->
+      <g>
+        <rect x="450" y="50" width="220" height="180" class="bp-tracado"/>
+        <circle cx="560" cy="140" r="44" class="bp-tracado"/>
+        <rect x="492" y="72" width="136" height="136" rx="26" class="bp-acento"/>
+        <path d="M492 98 L450 78 M628 98 L670 78 M492 182 L450 202 M628 182 L670 202" class="bp-tracado-fino" stroke-dasharray="0"/>
+        <circle cx="492" cy="98" r="4" class="bp-vert"/>
+        <circle cx="628" cy="98" r="4" class="bp-vert"/>
+        <circle cx="492" cy="182" r="4" class="bp-vert"/>
+        <circle cx="628" cy="182" r="4" class="bp-vert"/>
+        <text x="560" y="262" text-anchor="middle" class="bp-lbl">✓ moldura quadrada ao redor</text>
+        <text x="560" y="36" text-anchor="middle" class="bp-sub">círculo → quadrado → grade; pólos (●) nos cantos planos</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 2.1 — O padrão círculo-no-quadrado.</b> Todo furo redondo em hard surface vira uma moldura de quads ao seu redor; os pólos ficam nos quatro cantos, em área plana, onde não estragam reflexo nenhum.</figcaption>
+  </figure>
+
+  <h3>2.3 — Densidade segue curvatura</h3>
+  <p>Distribua polígonos como um engenheiro distribui material: <strong>onde curva, adense; onde é plano, economize</strong>. Uma lateral plana de gabinete pode ser um único n-gon gigante; a borda arredondada ao lado pode precisar de 8 segmentos de bevel. Malha uniforme é desperdício em hard surface.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Higiene de malha — o trio de ouro</div>
+    <p>Três limpezas que evitam quase todos os bugs de modelagem: <kbd>M</kbd> ▸ <em>Merge by Distance</em> (funde vértices duplicados), <span class="menupath">Mesh ▸ Normals ▸ Recalculate Outside</span> (<kbd>Shift</kbd>+<kbd>N</kbd>, conserta faces "viradas" — ative a sobreposição <em>Face Orientation</em> para ver azul/vermelho), e <span class="menupath">Select ▸ All by Trait ▸ Non Manifold</span> (encontra buracos e arestas soltas). Rode o trio antes de qualquer Boolean e antes de entregar qualquer peça.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 3 ================= -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">Ferramentas de bancada: a caixa essencial</h2>
+
+  <p class="lead">Hard surface usa um arsenal pequeno com maestria grande. Esta é a caixa de ferramentas — memorize os atalhos e, principalmente, as opções escondidas de cada uma.</p>
+
+  <table>
+    <tr><th>Ferramenta</th><th>Atalho</th><th>O essencial</th><th>O segredo</th></tr>
+    <tr><td><strong>Extrude</strong></td><td><kbd>E</kbd></td><td>Puxa nova geometria de faces/arestas</td><td><kbd>Alt</kbd>+<kbd>E</kbd> abre variações: Along Normals, Manifold (refaz interseções ao afundar)</td></tr>
+    <tr><td><strong>Inset</strong></td><td><kbd>I</kbd></td><td>Cria face menor dentro da face</td><td><kbd>I</kbd>,<kbd>I</kbd> = inset individual por face; <kbd>B</kbd> durante = inset com borda externa</td></tr>
+    <tr><td><strong>Bevel</strong></td><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Chanfra arestas (a ferramenta-assinatura do hard surface)</td><td>Scroll = segmentos; <kbd>P</kbd> = perfil (0.5 redondo, 1.0 quadrado); <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> = bevel de vértice. No 5.1+, <kbd>Ctrl</kbd> snapa e <kbd>Shift</kbd> dá precisão durante o arrasto</td></tr>
+    <tr><td><strong>Loop Cut</strong></td><td><kbd>Ctrl</kbd>+<kbd>R</kbd></td><td>Anel de arestas ao redor da malha</td><td>Scroll = nº de cortes; clique direito após criar = corte exatamente no meio</td></tr>
+    <tr><td><strong>Knife</strong></td><td><kbd>K</kbd></td><td>Corte livre desenhado</td><td><kbd>C</kbd> = restringe a ângulos; <kbd>Z</kbd> = corta através (cut through); <kbd>A</kbd> = corte por ângulo fixo</td></tr>
+    <tr><td><strong>Edge Slide</strong></td><td><kbd>G</kbd>,<kbd>G</kbd></td><td>Desliza aresta sobre a superfície</td><td>Não destrói a forma — é como ajustar loops de suporte sem deformar</td></tr>
+    <tr><td><strong>Fill / Grid Fill</strong></td><td><kbd>F</kbd> / menu</td><td>Fecha buracos</td><td><span class="menupath">Face ▸ Grid Fill</span> fecha com grade de quads perfeita (precisa de nº par de arestas)</td></tr>
+    <tr><td><strong>Bridge Edge Loops</strong></td><td>menu Edge</td><td>Conecta dois anéis com um túnel de faces</td><td>Faz furos passantes: delete as duas tampas e bridge entre os anéis</td></tr>
+    <tr><td><strong>Shear / To Sphere</strong></td><td><kbd>Shift</kbd>+<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> / <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd></td><td>Cisalha / esferiza seleção</td><td>To Sphere a 1.0 transforma qualquer anel bagunçado num círculo perfeito</td></tr>
+    <tr><td><strong>Select Loop/Ring</strong></td><td><kbd>Alt</kbd>+clique / <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+clique</td><td>Seleciona anel inteiro</td><td>No 5.1+, delimitadores controlam onde a seleção de loop para (cantos, n-gons)</td></tr>
+  </table>
+
+  <div class="caixa oficina">
+    <div class="rot">⚙ A física do bevel</div>
+    <p>Por que o bevel é tão importante? <strong>Reflexo é informação de normal.</strong> Uma aresta matematicamente viva tem mudança instantânea de normal — largura zero — e por isso não reflete nada: é invisível para a luz. O chanfro de fabricação real (0.2–2 mm) cria uma faixa estreita de normais intermediárias que captura um fio de highlight contínuo percorrendo a peça. É esse fio de luz nas quinas que o cérebro lê como "objeto fabricado". Sem bevel, sem realismo — não importa o material.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 3 — caligrafia de bancada</div>
+    <p>Num cubo: (1) Inset na face de cima, (2) Extrude para baixo criando um rebaixo, (3) Loop Cut duplo numa lateral, (4) Bevel de 2 segmentos em todas as arestas externas, (5) Grid Fill num buraco que você abrir. Dez minutos por dia dessa "caligrafia" e os atalhos viram reflexo.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 4 ================= -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">Precisão: unidades, snap e cursor 3D</h2>
+
+  <p class="lead">Hard surface é a área da modelagem onde "mais ou menos ali" não serve. Peças se encaixam, furos se alinham, espessuras existem. O Blender tem um kit de precisão quase-CAD escondido à vista de todos.</p>
+
+  <h3>4.1 — Unidades de verdade</h3>
+  <ul>
+    <li>Configure em <span class="menupath">Scene Properties ▸ Units</span>: sistema métrico, e ajuste <em>Unit Scale</em>/<em>Length</em> para a escala do objeto (milímetros para eletrônicos, metros para veículos).</li>
+    <li>Digite medidas exatas durante as operações: <kbd>G</kbd>, <kbd>X</kbd>, <code>0.05</code> move 5 cm no eixo X. Funciona em E, S, bevel, inset — em tudo.</li>
+    <li>Veja medidas reais: sobreposição <span class="menupath">Overlays ▸ Measurement ▸ Edge Length</span> no Edit Mode, e a ferramenta <strong>Measure</strong> (toolbar) para tirar cotas na cena, com snap.</li>
+  </ul>
+
+  <h3>4.2 — Snapping: o ímã da bancada</h3>
+  <ul>
+    <li><kbd>Shift</kbd>+<kbd>Tab</kbd> liga/desliga; o ímã na barra superior configura o alvo: <strong>Vertex</strong> (encaixe exato), <strong>Edge</strong>, <strong>Face Project</strong> (gruda na superfície — ótimo para posicionar parafusos em cascos), <strong>Increment</strong> com <em>Absolute Grid Snap</em> (grade absoluta, estilo CAD).</li>
+    <li>Segure <kbd>Ctrl</kbd> durante qualquer transformação para snap temporário (o inverso do estado atual).</li>
+    <li><strong>Auto Merge</strong> (ímã com "fusão", no menu de snap) funde vértices automaticamente ao soltá-los uns sobre os outros — no 5.0 passou a valer também para Symmetrize e Bevel.</li>
+  </ul>
+
+  <h3>4.3 — Cursor 3D e origens: o sistema de referência</h3>
+  <ul>
+    <li>O cursor 3D é seu ponto de referência móvel: <kbd>Shift</kbd>+<kbd>S</kbd> abre a torta de snap (<em>Cursor to Selected</em>, <em>Selection to Cursor</em>...). Novo objeto sempre nasce no cursor.</li>
+    <li>Pivô de transformação: tecla <kbd>.</kbd> (ponto) abre o menu — <em>3D Cursor</em> como pivô permite rotacionar uma alavanca em torno do eixo certo, <em>Individual Origins</em> permite insetar/escalar dezenas de faces cada uma em torno de si.</li>
+    <li>Origem do objeto: <span class="menupath">Object ▸ Set Origin</span>. Peças que giram (dobradiças, rodas) precisam da origem exatamente no eixo físico de rotação — pense onde estaria o parafuso real.</li>
+    <li><strong>Aplique transformações</strong> (<kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms) antes de usar modifiers: escala não aplicada distorce bevel, solidify e booleans. É a causa nº 1 de "modifier com resultado maluco". No 5.1+, aplicar escala negativa pode corrigir as normais automaticamente.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Dica — alinhamento de vértices estilo CAD</div>
+    <p>Para achatar uma fileira de vértices num plano exato: selecione-os e use <kbd>S</kbd>, <kbd>X</kbd>, <code>0</code> (escala zero no eixo) — todos colapsam para a mesma coordenada. Com o pivô no cursor 3D, você escolhe <em>qual</em> coordenada. Esse truque substitui metade das ferramentas de alinhamento de um CAD.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 5 ================= -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">Modifiers: a linha de montagem</h2>
+
+  <p class="lead">Modifiers são operações <strong>não destrutivas</strong> empilhadas sobre a malha: a geometria base fica intacta e o resultado é calculado ao vivo, de cima para baixo. Pense numa linha de montagem — a ordem das estações muda o produto.</p>
+
+  <table>
+    <tr><th>Modifier</th><th>O que faz</th><th>Uso em hard surface</th></tr>
+    <tr><td><strong>Mirror</strong></td><td>Espelha pela origem (ou outro objeto)</td><td>Quase tudo manufaturado é simétrico. Ligue <em>Clipping</em> para soldar a costura central</td></tr>
+    <tr><td><strong>Bevel</strong></td><td>Chanfra arestas proceduralmente</td><td>O coração do mid-poly. Modo <em>Angle</em> (pega tudo acima de 30°) ou <em>Weight</em> (você marca aresta por aresta com <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Edge Bevel Weight)</td></tr>
+    <tr><td><strong>Solidify</strong></td><td>Dá espessura a cascas</td><td>Chapas, carenagens, canos. Nada fabricado tem espessura zero — modele a superfície e solidifique</td></tr>
+    <tr><td><strong>Array</strong></td><td>Repete a malha em fileiras</td><td>Trilhos, correntes, fileiras de rebites. Com <em>Object Offset</em> + um Empty rotacionado = arrays circulares (parafusos em flange)</td></tr>
+    <tr><td><strong>Screw</strong></td><td>Revoluciona um perfil em torno de um eixo</td><td>O torno do Blender: rodas, vasos, molas e roscas de parafuso de verdade</td></tr>
+    <tr><td><strong>Boolean</strong></td><td>União/diferença/interseção entre volumes</td><td>Capítulo 8 inteiro</td></tr>
+    <tr><td><strong>Subdivision Surface</strong></td><td>Suaviza subdividindo</td><td>Capítulo 7 inteiro</td></tr>
+    <tr><td><strong>Weighted Normal</strong></td><td>Recalcula normais priorizando faces grandes</td><td>O molho secreto do shading limpo — Capítulo 6</td></tr>
+    <tr><td><strong>Shrinkwrap</strong></td><td>Projeta a malha sobre outra superfície</td><td>Painéis e recortes que "vestem" um casco curvo</td></tr>
+    <tr><td><strong>Lattice / Simple Deform</strong></td><td>Deformações de gaiola / dobra-torce</td><td>Curvar uma grade modelada reta; afunilar um casco inteiro</td></tr>
+  </table>
+
+  <div class="caixa v5">
+    <div class="rot">⬡ Blender 5.0</div>
+    <p>O 5.0 introduziu uma leva de <strong>modifiers novos baseados em Geometry Nodes</strong> — incluindo um novo modifier de Array para distribuir cópias — e abriu a manipulação de volumes/SDF por nodes, permitindo booleans volumétricos para concepts de formas complexas. Os modifiers clássicos da tabela continuam existindo e sendo o padrão da produção.</p>
+  </div>
+
+  <h3>5.1 — A ordem da pilha (decore este padrão)</h3>
+  <p>A ordem clássica que funciona para a maioria das peças mid-poly:</p>
+  <pre><code>1. Mirror        (espelha primeiro: tudo abaixo vale para os dois lados)
+2. Boolean(s)    (cortes na geometria já espelhada)
+3. Bevel         (chanfra inclusive as arestas criadas pelos cortes)
+4. Subdivision   (se for SubD — e aí o Bevel acima costuma sair)
+5. Weighted Normal  (sempre por último: limpa o shading do resultado final)</code></pre>
+  <p>Inverter Mirror e Bevel, por exemplo, faz o chanfro da costura central dobrar de largura. Quando algo parecer errado, arraste os modifiers e observe — a pilha é ao vivo.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Atenção</div>
+    <p>Modifiers leem a malha <em>com a escala do objeto</em>. Objeto com escala 2.0 não aplicada = bevel com o dobro da largura visual. Antes de estranhar qualquer modifier: <kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ <em>All Transforms</em>.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 5</div>
+    <p>Monte uma flange de tubulação só com modifiers: um cilindro achatado (o disco), um parafuso simples (cilindro pequeno + cabeça), e no parafuso um <strong>Array com Object Offset</strong> apontando para um Empty no centro do disco, rotacionado 45° em Z — oito parafusos perfeitamente distribuídos. Gire o Empty e veja o anel inteiro acompanhar, ao vivo.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 6 ================= -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Shading: smooth, sharp e weighted normals</h2>
+
+  <p class="lead">Em hard surface, metade da "qualidade do modelo" que o olho percebe não é geometria — é <strong>shading</strong>: como as normais espalham a luz pela superfície. Dominar este capítulo separa o modelo amador do profissional.</p>
+
+  <h3>6.1 — Flat, smooth e o problema</h3>
+  <p><strong>Shade Flat</strong> dá a cada face uma normal única: visual facetado, honesto, de poliedro. <strong>Shade Smooth</strong> interpola as normais entre faces vizinhas: a superfície parece contínua — mas aplicado a um objeto inteiro, ele tenta suavizar até as quinas de 90°, criando os infames <em>gradientes escuros</em> vazando pelas faces. A solução é o meio-termo: suavizar só onde o ângulo entre faces é pequeno.</p>
+
+  <div class="caixa v5">
+    <div class="rot">⬡ Blender 4.1+ / 5.x — o fim do "Auto Smooth" clássico</div>
+    <p>O checkbox <em>Auto Smooth</em> das versões antigas foi removido no 4.1. O caminho atual: <span class="menupath">Object ▸ Shade Auto Smooth</span>, que aplica Shade Smooth + um modifier <strong>Smooth by Angle</strong> (baseado em Geometry Nodes) com o ângulo configurável no próprio modifier. Vantagem: agora é parte da pilha — pode ser reordenado, aplicado ou removido como qualquer modifier. Tutoriais antigos que mandam "ativar Auto Smooth no painel da malha" estão se referindo a isso.</p>
+  </div>
+
+  <h3>6.2 — A receita de shading limpo</h3>
+  <ol class="passos">
+    <li><h4>Shade Auto Smooth</h4><p>Clique direito no objeto ▸ <em>Shade Auto Smooth</em>. Ângulo padrão de 30° resolve a maioria; peças muito facetadas pedem menos.</p></li>
+    <li><h4>Marque o que é quina de verdade</h4><p>Onde o ângulo sozinho erra, decida à mão: selecione as arestas e <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ <strong>Mark Sharp</strong> (força quebra de normal) ou <em>Clear Sharp</em>. Sharp marcado vence o ângulo.</p></li>
+    <li><h4>Weighted Normal por cima</h4><p>Adicione o modifier <strong>Weighted Normal</strong> (modo Face Area, e ative <em>Keep Sharp</em>). Ele recalcula as normais dando peso às faces grandes — os microchanfros deixam de "puxar" o shading das faces planas, e os gradientes sujos somem.</p></li>
+  </ol>
+
+  <figure>
+    <svg viewBox="0 0 720 250" role="img" aria-label="Normais em aresta viva, chanfrada e com weighted normals">
+      <!-- 1: aresta viva -->
+      <g>
+        <path d="M40 180 L130 180 L130 90" class="bp-tracado"/>
+        <path d="M85 180 L85 150 M130 135 L160 135" class="bp-acento" marker-end="none"/>
+        <text x="100" y="222" text-anchor="middle" class="bp-lbl">aresta viva</text>
+        <text x="100" y="240" text-anchor="middle" class="bp-sub">normal salta 90° — luz "não vê"</text>
+      </g>
+      <!-- 2: chanfro smooth -->
+      <g>
+        <path d="M280 180 L350 180 L380 150 L380 90" class="bp-tracado"/>
+        <path d="M315 180 L315 152 M365 165 L385 145 M380 120 L408 120" class="bp-acento"/>
+        <text x="345" y="222" text-anchor="middle" class="bp-lbl">chanfro + smooth</text>
+        <text x="345" y="240" text-anchor="middle" class="bp-sub">faixa de normais → fio de highlight</text>
+      </g>
+      <!-- 3: weighted -->
+      <g>
+        <path d="M520 180 L590 180 L620 150 L620 90" class="bp-tracado"/>
+        <path d="M545 180 L545 150 M575 180 L575 150 M605 163 L622 146 M620 130 L650 130 M620 105 L650 105" class="bp-acento"/>
+        <text x="585" y="222" text-anchor="middle" class="bp-lbl">+ weighted normal</text>
+        <text x="585" y="240" text-anchor="middle" class="bp-sub">faces grandes mandam: planos ficam planos</text>
+      </g>
+      <text x="40" y="46" class="bp-lbl">As setas são normais — a direção que cada ponto "encara" a luz</text>
+    </svg>
+    <figcaption><b>Figura 6.1 — Por que chanfro + weighted normals funciona.</b> A aresta viva é invisível para a luz; o chanfro cria o fio de reflexo; o weighted normal impede que esse chanfro contamine as faces planas vizinhas com gradientes.</figcaption>
+  </figure>
+
+  <div class="caixa oficina">
+    <div class="rot">⚙ Inspecione como um inspetor de pintura</div>
+    <p>Funileiros avaliam lataria olhando o reflexo de uma lâmpada fluorescente deslizar pela chapa — qualquer onda aparece na hora. Faça igual: viewport em <em>Material Preview</em> com um HDRI de estúdio (ou MatCap reflexivo), e <strong>orbite</strong>. Manchas, ondulações e pinches aparecem no reflexo em movimento muito antes de aparecerem num render parado.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 7 ================= -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Workflow SubD: loops de suporte e creases</h2>
+
+  <p class="lead">O <strong>Subdivision Surface</strong> transforma uma malha de controle leve numa superfície lisa e contínua — ideal para carenagens, capacetes, eletrodomésticos e tudo que tem curvatura fluida. O preço: a subdivisão arredonda <em>tudo</em>, inclusive as quinas que deviam ficar firmes. Todo o workflow SubD é a arte de <strong>segurar arestas</strong>.</p>
+
+  <h3>7.1 — As duas formas de segurar uma aresta</h3>
+  <table>
+    <tr><th>Técnica</th><th>Como</th><th>Prós</th><th>Contras</th></tr>
+    <tr><td><strong>Loops de suporte</strong></td><td>Loop cuts (<kbd>Ctrl</kbd>+<kbd>R</kbd>) ou bevel fino (<kbd>Ctrl</kbd>+<kbd>B</kbd>) colados dos dois lados da aresta</td><td>Controle total do raio; o padrão da indústria; exporta para qualquer software</td><td>Mais geometria; loops viajam pela malha inteira e podem adensar onde você não quer</td></tr>
+    <tr><td><strong>Crease</strong></td><td>Selecione a aresta, <kbd>Shift</kbd>+<kbd>E</kbd> e arraste (0 a 1), ou painel N ▸ Crease</td><td>Zero geometria extra; rápido; ótimo para blocking</td><td>Crease 1.0 = aresta infinitamente viva (irreal); transição de raio menos controlável; suporte irregular fora do Blender</td></tr>
+  </table>
+  <p>Receita prática: <strong>creases no blocking</strong> (explorar a forma sem sujar a malha) e <strong>conversão para loops de suporte na finalização</strong> (controle fino do raio de cada quina). A distância do loop até a aresta define o raio aparente: loop colado = quina dura; loop afastado = ombro suave.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 260" role="img" aria-label="Efeito dos loops de suporte na subdivisão">
+      <!-- sem suporte -->
+      <g>
+        <rect x="60" y="70" width="120" height="120" class="bp-tracado-fino"/>
+        <path d="M120 70 C 180 70 180 130 180 130 C 180 190 120 190 120 190 C 60 190 60 130 60 130 C 60 70 120 70 120 70 Z" class="bp-tracado" transform="translate(0,0)"/>
+        <text x="120" y="226" text-anchor="middle" class="bp-lbl">sem suporte</text>
+        <text x="120" y="244" text-anchor="middle" class="bp-sub">o cubo vira sabonete</text>
+      </g>
+      <!-- com suporte -->
+      <g>
+        <rect x="300" y="70" width="120" height="120" class="bp-tracado-fino"/>
+        <rect x="308" y="78" width="104" height="104" class="bp-tracado-fino"/>
+        <path d="M312 70 H408 Q420 70 420 82 V178 Q420 190 408 190 H312 Q300 190 300 178 V82 Q300 70 312 70 Z" class="bp-tracado"/>
+        <text x="360" y="226" text-anchor="middle" class="bp-lbl">loops colados</text>
+        <text x="360" y="244" text-anchor="middle" class="bp-sub">quina firme, raio pequeno</text>
+      </g>
+      <!-- afastado -->
+      <g>
+        <rect x="540" y="70" width="120" height="120" class="bp-tracado-fino"/>
+        <rect x="562" y="92" width="76" height="76" class="bp-tracado-fino"/>
+        <path d="M572 70 H628 Q660 70 660 102 V158 Q660 190 628 190 H572 Q540 190 540 158 V102 Q540 70 572 70 Z" class="bp-tracado"/>
+        <text x="600" y="226" text-anchor="middle" class="bp-lbl">loops afastados</text>
+        <text x="600" y="244" text-anchor="middle" class="bp-sub">ombro arredondado generoso</text>
+      </g>
+      <text x="60" y="42" class="bp-lbl">Mesma malha de controle, raios diferentes — a distância do loop é o raio</text>
+    </svg>
+    <figcaption><b>Figura 7.1 — Loops de suporte controlam o raio.</b> Sob subdivisão, a superfície é "puxada" pelas arestas próximas: quanto mais perto o loop está da quina, mais firme ela fica.</figcaption>
+  </figure>
+
+  <h3>7.2 — Regras de sobrevivência no SubD</h3>
+  <ul>
+    <li><strong>Só quads</strong> (na prática: 95%+ quads, tris escondidos em áreas planas, n-gons zero).</li>
+    <li><strong>Comece leve.</strong> A malha de controle ideal é a mais leve que descreve a forma — cada vértice extra é um vértice que pode ondular a superfície.</li>
+    <li><strong>Curvatura precisa de geometria base.</strong> Um cilindro de 8 lados subdividido nunca vira um cilindro perfeito — vira um octógono gordo. Para tubos sob SubD, comece com 16–24 lados.</li>
+    <li><strong>Furos em curvatura</strong> são o chefe final do SubD: use o padrão círculo-no-quadrado (Fig. 2.1) com loops de suporte ao redor — e se possível, faça o furo <em>antes</em> de curvar a superfície (modele plano, dobre com Simple Deform depois).</li>
+    <li>No modifier, use <em>Levels Viewport</em> 1–2 e <em>Render</em> 2–3; ligue <em>Optimal Display</em> para enxergar a gaiola.</li>
+  </ul>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Sintomas e diagnósticos</div>
+    <ul>
+      <li><strong>Pinch (pinçamento)</strong> — estrela escura no reflexo: pólo ou tri em área de curvatura. Redirecione o fluxo para mandar o pólo ao plano.</li>
+      <li><strong>Onda na lateral lisa</strong> — loop de suporte atravessou área plana com espaçamento irregular. Deslize com <kbd>G</kbd>,<kbd>G</kbd> ou termine o loop num pólo proposital antes da área limpa.</li>
+      <li><strong>Quina derretendo</strong> — faltou suporte de um dos lados da aresta: o suporte precisa "abraçar" a quina pelos dois lados.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= CAP 8 ================= -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Workflow Boolean: cortar como usinagem</h2>
+
+  <p class="lead">Booleans tratam malhas como <strong>volumes sólidos</strong> e operam entre eles: subtrair, unir, intersectar. É a fresadora e a furadeira do Blender — o jeito mais rápido de criar formas mecânicas complexas, e o mais próximo de "pensar como fabricação".</p>
+
+  <h3>8.1 — As três operações e os três solvers</h3>
+  <table>
+    <tr><th>Operação</th><th>Resultado</th><th>Equivalente industrial</th></tr>
+    <tr><td><strong>Difference</strong></td><td>Cortador removido do alvo</td><td>Furar, fresar, usinar</td></tr>
+    <tr><td><strong>Union</strong></td><td>Os dois volumes fundidos, sem faces internas</td><td>Soldar, fundir em peça única</td></tr>
+    <tr><td><strong>Intersect</strong></td><td>Só o volume comum aos dois</td><td>Recortar pelo gabarito</td></tr>
+  </table>
+  <table>
+    <tr><th>Solver</th><th>Caráter</th><th>Quando usar</th></tr>
+    <tr><td><strong>Float</strong> (ex-"Fast")</td><td>Rápido, tropeça em geometria sobreposta/coplanar</td><td>Cortes simples sem faces encostadas</td></tr>
+    <tr><td><strong>Exact</strong></td><td>Aritmética exata; lida com sobreposições e coplanares</td><td>O padrão seguro quando o Float falhar</td></tr>
+    <tr><td><strong>Manifold</strong></td><td>Normalmente o mais rápido — mas exige malhas 100% manifold (estanques)</td><td>Produção com cortadores limpos e fechados; novo na era 4.5/5.x</td></tr>
+  </table>
+
+  <div class="caixa v5">
+    <div class="rot">⬡ Blender 5.x</div>
+    <p>O solver "Fast" foi renomeado para <strong>Float</strong> no 5.0, e o solver <strong>Manifold</strong> entrou como a opção de alta performance (no 5.1 ambos ficaram ainda mais rápidos). Regra de bolso: cortadores fechados e limpos → Manifold; geometria encostada/coplanar → Exact; legado → Float.</p>
+  </div>
+
+  <h3>8.2 — Boolean não destrutivo: o setup profissional</h3>
+  <ol class="passos">
+    <li><h4>Crie o cortador</h4><p>Qualquer malha <em>fechada</em> (estanque). Posicione atravessando o alvo — o corte só funciona se o cortador realmente atravessa o volume.</p></li>
+    <li><h4>Modifier no alvo</h4><p>Boolean ▸ Difference ▸ aponte o cortador. O corte aparece, mas o cortador continua na frente.</p></li>
+    <li><h4>Esconda sem remover</h4><p>No cortador: <span class="menupath">Object Properties ▸ Viewport Display ▸ Display As: Wire</span> e desligue <em>Show in Renders</em>. Agora ele é um aramado fantasma, editável a qualquer momento — mova-o e o furo acompanha.</p></li>
+    <li><h4>Organize</h4><p>Cortadores numa collection <code>cutters</code> própria. Em peças com muitos cortes, o modifier aceita <strong>Collection</strong> como operando — uma coleção inteira de cortadores num único modifier.</p></li>
+    <li><h4>Trave o shading</h4><p>Marque Sharp (ou confie no Smooth by Angle) nas arestas novas e mantenha um <strong>Bevel (Angle) + Weighted Normal</strong> abaixo do Boolean na pilha: os cortes já saem chanfrados e com shading limpo.</p></li>
+  </ol>
+  <p>Para fluidez extra, ative a extensão oficial <strong>Bool Tool</strong> (<span class="menupath">Preferences ▸ Get Extensions</span>): atalhos de corte instantâneo, carve tools de caixa/círculo/polilinha e gestão automática da coleção de cortadores. Add-ons pagos famosos do nicho (HardOps/Boxcutter) são aceleradores do mesmíssimo fluxo descrito aqui.</p>
+
+  <h3>8.3 — A limpeza pós-boolean</h3>
+  <p>Boolean aplicado gera n-gons e vértices ao longo das interseções. O protocolo:</p>
+  <ul>
+    <li>Em <strong>face plana</strong>: n-gon pode ficar (Capítulo 2). Resista à compulsão de "quadificar" o que não precisa.</li>
+    <li>Em <strong>superfície curva</strong>: reconstrua o local — dissolva o excesso (<kbd>X</kbd> ▸ <em>Limited Dissolve</em>), redirecione com Knife para devolver quads, aplique o padrão círculo-no-quadrado em furos.</li>
+    <li>Rode o trio de higiene (Merge by Distance, Recalculate Normals, busca de non-manifold) <em>antes e depois</em> de aplicar booleans definitivos.</li>
+  </ul>
+
+  <div class="caixa oficina">
+    <div class="rot">⚙ Pense como o fresador</div>
+    <p>Na usinagem real, cada operação tem custo: o programador CNC minimiza fixações e trocas de ferramenta. Adote a mesma economia: poucos cortadores bem pensados (um cortador com Array fura a fileira inteira) batem vinte cortadores improvisados — e mantêm a pilha leve e editável.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 8</div>
+    <p>Num bloco arredondado (cubo + bevel), monte não destrutivamente: uma fileira de furos de ventilação (1 cilindro cortador + Array), um rebaixo retangular para "tela" e um corte diagonal de estilo. Tudo com cortadores em wire numa collection própria, Bevel(Angle) + Weighted Normal no fim da pilha. Depois mova os cortadores e veja o design inteiro se reconfigurar ao vivo — esse é o superpoder do fluxo.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 9 ================= -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Workflow Mid-poly: bevel + weighted normals</h2>
+
+  <p class="lead">O fluxo dominante em props de jogos e produção em volume: <strong>sem subdivisão</strong>. A malha final tem densidade média, as quinas são chanfros reais de poucos segmentos, e o shading é domado por weighted normals. Rápido, leve e bonito de perto o suficiente.</p>
+
+  <h3>9.1 — A receita completa</h3>
+  <ol class="passos">
+    <li><h4>Modele com arestas vivas</h4><p>Construa a forma inteira sem se preocupar com chanfros — blocos, cortes booleanos, extrusões. Mantenha n-gons só em áreas planas.</p></li>
+    <li><h4>Bevel modifier em modo Angle</h4><p>Width pequeno (alguns milímetros na escala do objeto), 1–2 segmentos, <em>Harden Normals</em> ligado, <em>Miter Outer: Arc</em> para cantos de três chanfros se encontrando. O modo Angle pega tudo automaticamente.</p></li>
+    <li><h4>Promova exceções para Weight</h4><p>Onde o ângulo erra (uma aresta de 40° que não deve chanfrar, ou uma de 20° que deve), troque o modifier para <em>Weight</em> — ou use dois modifiers Bevel, um Angle geral e um Weight para casos especiais — e pinte os pesos com <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Edge Bevel Weight.</p></li>
+    <li><h4>Weighted Normal no fim</h4><p>Sempre o último da pilha, <em>Keep Sharp</em> ligado. (Se Harden Normals do Bevel já resolveu, ele pode ser dispensável — compare.)</p></li>
+    <li><h4>Congele para o engine</h4><p>Para exportar a jogo: aplique a pilha numa cópia, triangule conscientemente (<kbd>Ctrl</kbd>+<kbd>T</kbd> ou modifier Triangulate) e confira as normais importadas no engine — os custom normals viajam pelo FBX/glTF.</p></li>
+  </ol>
+
+  <h3>9.2 — Quando cada workflow vence (cola de decisão)</h3>
+  <table>
+    <tr><th>Situação</th><th>Use</th></tr>
+    <tr><td>Carro, capacete, eletrodoméstico de linhas fluidas, close-up de cinema</td><td>SubD</td></tr>
+    <tr><td>Concept rápido, peça mecânica recortada, exploração de design</td><td>Boolean (não destrutivo)</td></tr>
+    <tr><td>Prop de jogo, kit de fábrica, cenário industrial em quantidade</td><td>Mid-poly</td></tr>
+    <tr><td>Casco curvo COM muitos cortes mecânicos</td><td>Híbrido: SubD para o casco; booleans aplicados sobre a malha já subdividida e densa</td></tr>
+  </table>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Dica</div>
+    <p>Os três workflows compartilham o mesmo fundamento: <strong>chanfro nas quinas + normais sob controle</strong>. Quem domina os capítulos 6 e 3 transita entre os três sem dor — a diferença é só <em>quando</em> e <em>como</em> o chanfro entra na pilha.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 10 ================= -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Curvas, cabos, parafusos e greebles</h2>
+
+  <p class="lead">O detalhe terciário é o que vende a escala e a função do objeto: cabos dizem "energia passa por aqui", parafusos dizem "isto se desmonta", grelhas dizem "isto esquenta". Um arsenal pequeno gera tudo isso em minutos.</p>
+
+  <h3>10.1 — Cabos e mangueiras com curvas</h3>
+  <ol class="passos">
+    <li><h4>Trace o caminho</h4><p><kbd>Shift</kbd>+<kbd>A</kbd> ▸ <span class="menupath">Curve ▸ Bezier</span>. No Edit Mode, mova os pontos e alças; <kbd>E</kbd> estende a curva. Snap em Face Project gruda o traçado no casco do objeto.</p></li>
+    <li><h4>Engorde</h4><p>Em <span class="menupath">Curve Properties ▸ Geometry ▸ Bevel</span>, defina <em>Depth</em> (raio do cabo) e <em>Resolution</em>. A curva vira um tubo — ainda 100% editável pelo traçado.</p></li>
+    <li><h4>Caimento físico</h4><p>Cabo real obedece à gravidade: entre os pontos de fixação ele desenha uma <strong>catenária</strong> — a curva do varal de roupas. Dê uma barriga para baixo em todo vão livre; cabo reto esticado parece arame, não fio.</p></li>
+    <li><h4>Conectores</h4><p>Termine cada cabo num plugue/prensa-cabo modelado (cilindro + bevel). Cabo que entra "pelado" na parede denuncia o CG na hora.</p></li>
+  </ol>
+
+  <h3>10.2 — Parafusos: a fábrica de fixadores</h3>
+  <ul>
+    <li><strong>Cabeça sextavada:</strong> cilindro de 6 lados + bevel no topo. <strong>Phillips:</strong> cilindro + boolean de uma cruz. <strong>Allen:</strong> boolean de um cilindro de 6 lados afundado.</li>
+    <li><strong>Rosca de verdade</strong> (só para close-up): modifier <strong>Screw</strong> num pequeno perfil de "dente" — Screw + Angle 360° + Steps + Iterations gera a hélice; ajuste <em>Screw</em> (o passo) para a rosca subir.</li>
+    <li><strong>Distribuição:</strong> Array linear para fileiras; Array + Object Offset com Empty rotacionado para padrões circulares (Exercício 5); snap Face Project para assentar cada um na superfície.</li>
+    <li><strong>Física do aperto:</strong> parafusos reais nunca ficam todos com a fenda no mesmo ângulo — gire cada cabeça aleatoriamente alguns graus. Detalhe bobo, realismo gigante.</li>
+  </ul>
+
+  <h3>10.3 — Greebles e painelização</h3>
+  <p><em>Greebles</em> são os detalhes sem função específica que cobrem naves e máquinas de ficção — a textura tecnológica. Receitas rápidas: insets + extrusões aleatórias sobre uma grade; uma <strong>biblioteca pessoal de kit-bash</strong> (10–20 peças pequenas suas: ventoinhas, caixas, dutos, antenas) reusada por instância (<kbd>Alt</kbd>+<kbd>D</kbd>) sobre os cascos; linhas de painel cortadas com Knife + bevel fino para dentro (ou boolean de lâminas finas). Regra de composição: greeble se concentra em <strong>zonas</strong> (faixas, recortes), com áreas de respiro lisas entre elas — máquina real alterna densidade e silêncio.</p>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 10</div>
+    <p>Monte sua primeira biblioteca kit-bash: 8 peças de até 5 minutos cada (ventoinha, conector, dobradiça, trava, duto, antena, display, pé de borracha), todas com bevel + auto smooth corretos, numa collection <code>KIT</code>. Você vai usá-la pelo resto da vida.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 11 ================= -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 11 · PROJETO GUIADO</div><div class="fio"></div></div>
+  <h2 class="titulo">Projeto: câmera de vigilância de ponta a ponta</h2>
+
+  <p class="lead">Uma câmera de segurança tipo bullet é o prop perfeito para amarrar o guia: corpo em revolução, viseira boolean, braço articulado, flange com parafusos em array, cabo em curva — cada capítulo aparece uma vez.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 330" role="img" aria-label="Blueprint da câmera de vigilância">
+      <!-- parede -->
+      <path d="M80 40 V300" class="bp-tracado"/>
+      <path d="M80 60 l-18 14 M80 100 l-18 14 M80 140 l-18 14 M80 180 l-18 14 M80 220 l-18 14 M80 260 l-18 14" stroke="#7FA8CC" stroke-width="1"/>
+      <!-- flange -->
+      <rect x="80" y="130" width="16" height="90" rx="4" class="bp-preench"/>
+      <circle cx="88" cy="145" r="4" class="bp-tracado"/>
+      <circle cx="88" cy="205" r="4" class="bp-tracado"/>
+      <!-- braco -->
+      <path d="M96 172 L185 160" stroke="#BFD7EE" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <circle cx="185" cy="160" r="13" class="bp-preench"/>
+      <!-- corpo -->
+      <g>
+        <path d="M198 132 L420 118 Q450 116 452 144 L454 176 Q452 204 422 204 L206 196 Q190 194 190 164 Q190 134 198 132 Z" class="bp-preench"/>
+        <path d="M420 118 L470 108 L474 184 L422 204" class="bp-tracado"/>
+        <ellipse cx="472" cy="146" rx="9" ry="38" class="bp-acento"/>
+        <path d="M214 132 V198 M236 131 V199" class="bp-tracado-fino"/>
+      </g>
+      <!-- cabo -->
+      <path d="M200 196 C 180 250, 130 240, 110 220" class="bp-acento" fill="none"/>
+      <!-- cotas -->
+      <g class="bp-dim-l">
+        <path d="M190 232 H474 M190 226 V238 M474 226 V238" stroke="#7FA8CC"/>
+        <path d="M510 110 H522 M510 204 H522 M516 110 V204" stroke="#7FA8CC"/>
+      </g>
+      <text x="330" y="252" text-anchor="middle" class="bp-sub">corpo: cilindro revolução · 24 lados</text>
+      <text x="534" y="162" class="bp-sub">viseira:</text>
+      <text x="534" y="178" class="bp-sub">boolean</text>
+      <text x="116" y="118" class="bp-sub">flange + 2 parafusos (array)</text>
+      <text x="120" y="282" class="bp-sub">cabo: curva bezier, catenária</text>
+      <text x="190" y="92" class="bp-lbl">CAM-01 · vista lateral</text>
+    </svg>
+    <figcaption><b>Figura 11.1 — O plano da peça.</b> Cinco subconjuntos: flange de parede, braço com rótula, corpo, viseira/lente e cabo. Modele como montagem — cada subconjunto é um objeto.</figcaption>
+  </figure>
+
+  <h3>11.1 — Blocking (15 min)</h3>
+  <ol class="passos">
+    <li><h4>Cena calibrada</h4><p>Unidades em metros, peça de ~30 cm. Referências de câmeras reais num ImagesAsPlanes ou num canto do viewport, se tiver.</p></li>
+    <li><h4>Volumes brutos</h4><p>Cilindro (24 lados) deitado para o corpo; cubo achatado para a flange na "parede"; cilindro fino para o braço; esfera pequena na junção (a rótula). Só proporção — nenhum detalhe.</p></li>
+    <li><h4>Origens funcionais</h4><p>Origem do corpo na rótula (é onde ele giraria de verdade); da flange, na face da parede. Pense no objeto sendo instalado por um técnico.</p></li>
+  </ol>
+
+  <h3>11.2 — Corpo e viseira (cap. 3 + 8 em ação)</h3>
+  <ol class="passos">
+    <li><h4>Perfil do corpo</h4><p>No cilindro: loop cuts para criar as "estações" do perfil (traseira, corpo, boca) e escale cada anel (<kbd>S</kbd>) para afinar a traseira e alargar a boca — uma revolução esculpida anel a anel.</p></li>
+    <li><h4>Viseira</h4><p>Cortador: cilindro maior, inclinado, atravessando só o topo da boca. Boolean Difference (solver Manifold ou Exact), cortador em Wire na collection <code>cutters</code>. A viseira clássica de câmera bullet aparece num único corte.</p></li>
+    <li><h4>Lente</h4><p>Na boca: Inset duplo (anel da moldura + vidro), com o vidro levemente recuado e abaulado (<kbd>O</kbd> proportional editing ou To Sphere leve). Material à parte depois.</p></li>
+    <li><h4>Vincos de carcaça</h4><p>Duas linhas de painel atrás da boca: loop cut ▸ bevel fino (2 mm) ▸ extrude para dentro 1 mm. É a junção das duas metades da carcaça injetada — todo produto real tem.</p></li>
+    <li><h4>Shading</h4><p>Shade Auto Smooth 30° ▸ Mark Sharp onde precisar ▸ Bevel(Angle, 1.5 mm, 2 seg, Harden Normals) ▸ Weighted Normal. Orbite no Material Preview e cace manchas.</p></li>
+  </ol>
+
+  <h3>11.3 — Flange, braço e parafusos (cap. 4 + 5)</h3>
+  <ol class="passos">
+    <li><h4>Flange</h4><p>Cubo achatado ▸ bevel generoso nas 4 arestas verticais ▸ 2 furos de fixação (um cilindro cortador + Mirror). Solidify se quiser a chapa com espessura visível na borda.</p></li>
+    <li><h4>Braço e rótula</h4><p>Cilindro + esfera na ponta; na flange, um "copo" que abraça a esfera (esfera maior cortada por boolean). Articulação esférica de verdade — e se um dia quiser, é só riggar com um bone (volume 1 desta coleção!).</p></li>
+    <li><h4>Parafusos</h4><p>Um parafuso allen da sua biblioteca KIT (Exercício 10) ▸ snap Face Project para assentar na flange ▸ <kbd>Alt</kbd>+<kbd>D</kbd> para instanciar o segundo ▸ gire as fendas em ângulos diferentes.</p></li>
+  </ol>
+
+  <h3>11.4 — Cabo e acabamento (cap. 10)</h3>
+  <ol class="passos">
+    <li><h4>Cabo</h4><p>Curva Bezier saindo da traseira do corpo, barriga de catenária, entrando na parede ao lado da flange. Bevel Depth ~4 mm. Prensa-cabo (cilindro + bevel) nas duas pontas.</p></li>
+    <li><h4>Passe de inspeção</h4><p>Checklist do Capítulo 13 inteiro: higiene de malha, escalas aplicadas, shading orbitado, nomenclatura (<code>cam-corpo</code>, <code>cam-flange</code>...), collections (<code>CAM</code>, <code>cutters</code>, <code>KIT</code>).</p></li>
+    <li><h4>Render de bancada</h4><p>HDRI de estúdio + material metálico cinza neutro + um chão. Se a peça convence em cinza neutro, ela convence em qualquer material — nunca use textura para esconder modelagem.</p></li>
+  </ol>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Desafio de variação</div>
+    <p>Com a pilha não destrutiva montada, gere uma <strong>segunda câmera</strong> em 20 minutos movendo só cortadores e anéis do perfil: corpo mais curto, viseira mais agressiva, quatro parafusos. Design iterável é exatamente o que o fluxo não destrutivo compra.</p>
+  </div>
+</section>
+
+<!-- ================= CAP 12 ================= -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">UVs e materiais para superfícies duras</h2>
+
+  <p class="lead">Hard surface facilita os UVs: as quebras naturais do objeto (quinas marcadas, junções de peças) são exatamente onde as costuras (seams) podem se esconder.</p>
+
+  <h3>12.1 — Receita de unwrap</h3>
+  <ol class="passos">
+    <li><h4>Seams nas quinas</h4><p>Selecione arestas vivas/marcadas como Sharp e <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ <strong>Mark Seam</strong>. Atalho de ouro: selecione por ângulo (<span class="menupath">Select ▸ Select Sharp Edges</span>) e converta em seams de uma vez. Costura escondida na quina é invisível na textura.</p></li>
+    <li><h4>Unwrap e confira</h4><p><kbd>U</kbd> ▸ Unwrap. Ative a sobreposição de <em>stretching</em> no UV Editor: azul = ok, vermelho = esticado (faltou seam ali).</p></li>
+    <li><h4>Texel density e packing</h4><p>Ilhas com escala consistente entre si (peças vizinhas com a mesma densidade de pixels); <kbd>U</kbd> ▸ Pack Islands com margem para o bake. Peças repetidas (parafusos!) podem sobrepor UVs e compartilhar o mesmo espaço de textura.</p></li>
+  </ol>
+
+  <h3>12.2 — Material de avaliação e o realismo dos metais</h3>
+  <ul>
+    <li><strong>Clay/cinza neutro primeiro:</strong> Principled BSDF cinza 0.5, roughness 0.4 — o material de inspeção universal.</li>
+    <li><strong>Roughness conta a história.</strong> Metal real nunca é espelho uniforme: variação sutil de roughness (digitais, desgaste de borda, poeira em recessos) é o que separa render de foto. Em pipelines de jogos isso vem do texturizador (Substance/Quixel) usando exatamente os seus bevels e sharps como máscaras de borda.</li>
+    <li><strong>Cavity/AO de viewport</strong> (<span class="menupath">Render Properties ▸ EEVEE ▸ Ambient Occlusion</span> ou opção Cavity no shading do viewport) é um raio-X de leitura de formas — ligue durante a modelagem de detalhe.</li>
+    <li>Para o <strong>bake high→low</strong> (jogos): a versão com bevels/SubD vira o high; uma cópia simplificada vira o low; o normal map transfere os chanfros. O fluxo mid-poly do Capítulo 9 muitas vezes elimina essa etapa — os chanfros já estão na malha.</li>
+  </ul>
+</section>
+
+<!-- ================= CAP 13 ================= -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Checklist de qualidade e troubleshooting</h2>
+
+  <h3>13.1 — Checklist da peça pronta</h3>
+  <ul>
+    <li>☐ Escalas e rotações aplicadas (<kbd>Ctrl</kbd>+<kbd>A</kbd>); escala = 1.0 em tudo.</li>
+    <li>☐ Nenhuma aresta visível 100% viva — bevel ou chanfro em toda quina externa.</li>
+    <li>☐ Shade Auto Smooth + Sharps conferidos orbitando em Material Preview/MatCap.</li>
+    <li>☐ Normais para fora (sobreposição Face Orientation toda azul).</li>
+    <li>☐ Sem vértices duplicados (Merge by Distance reporta 0) nem geometria non-manifold não intencional.</li>
+    <li>☐ N-gons apenas em faces planas; nenhum sob SubD.</li>
+    <li>☐ Espessura em toda chapa visível de canto (Solidify ou modelada).</li>
+    <li>☐ Origens em posições funcionais; nomenclatura e collections limpas; cortadores na collection própria.</li>
+    <li>☐ Peça lê bem em cinza neutro, sem depender de textura.</li>
+  </ul>
+
+  <h3>13.2 — Tabela de socorro</h3>
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável</th><th>Remédio</th></tr>
+    <tr><td>Boolean não corta / resultado vazio</td><td>Cortador aberto (não estanque), normais invertidas, ou não atravessa o volume</td><td>Feche o cortador, <kbd>Shift</kbd>+<kbd>N</kbd>, atravesse de verdade; troque o solver para Exact</td></tr>
+    <tr><td>Boolean deixa faces fantasma/z-fighting</td><td>Faces coplanares entre alvo e cortador</td><td>Desloque o cortador 0.1 mm; ou solver Exact, que tolera coplanar</td></tr>
+    <tr><td>Bevel cruza/explode em cantos</td><td>Width maior que a face vizinha, ou vértices duplicados</td><td>Reduza o width; Merge by Distance; ative Clamp Overlap</td></tr>
+    <tr><td>Bevel com larguras desiguais</td><td>Escala não aplicada</td><td><kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms</td></tr>
+    <tr><td>Manchas escuras varrendo faces planas</td><td>Smooth sem quebras + normais de chanfro contaminando</td><td>Shade Auto Smooth, Mark Sharp, Weighted Normal no fim da pilha</td></tr>
+    <tr><td>Listras pretas/sujeira no shading</td><td>Faces invertidas ou geometria duplicada empilhada</td><td>Face Orientation ligado; Recalculate Outside; Merge by Distance</td></tr>
+    <tr><td>Pinch no reflexo de superfície curva</td><td>Pólo/tri em curvatura (SubD)</td><td>Redirecionar fluxo; mandar o pólo para área plana (Fig. 2.1)</td></tr>
+    <tr><td>Mirror com fresta ou sobreposição no meio</td><td>Vértices centrais fora do eixo / Clipping desligado</td><td>Vértices centrais em X=0 (<kbd>S</kbd>,<kbd>X</kbd>,<code>0</code>), ligue Clipping</td></tr>
+    <tr><td>Viewport pesado com a pilha</td><td>Booleans + bevels recalculando ao vivo</td><td>Desligue modifiers no viewport (monitorzinho), reative só ao final; solver Manifold ajuda</td></tr>
+  </table>
+</section>
+
+<!-- ================= CAP 14 ================= -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><div class="porca"></div><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>14.1 — Glossário essencial</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição curta</th></tr>
+    <tr><td><strong>Hard surface</strong></td><td>Modelagem de superfícies rígidas e manufaturadas</td></tr>
+    <tr><td><strong>Topologia</strong></td><td>A organização de vértices/arestas/faces da malha</td></tr>
+    <tr><td><strong>N-gon</strong></td><td>Face com 5+ lados; ok em plano, perigosa em curva</td></tr>
+    <tr><td><strong>Pólo</strong></td><td>Vértice com ≠4 arestas; esconda-o em áreas planas</td></tr>
+    <tr><td><strong>Edge flow</strong></td><td>A direção que os anéis de arestas percorrem a forma</td></tr>
+    <tr><td><strong>Loop de suporte</strong></td><td>Anel extra colado a uma aresta para segurá-la sob SubD</td></tr>
+    <tr><td><strong>Crease</strong></td><td>Peso (0–1) que enrijece uma aresta na subdivisão sem geometria extra</td></tr>
+    <tr><td><strong>Boolean</strong></td><td>Operação de volumes: união, diferença, interseção</td></tr>
+    <tr><td><strong>Manifold / estanque</strong></td><td>Malha que fecha um volume sem buracos, bordas soltas ou faces internas</td></tr>
+    <tr><td><strong>Normal</strong></td><td>Direção "para fora" de cada face/vértice; governa o shading</td></tr>
+    <tr><td><strong>Weighted normals</strong></td><td>Normais recalculadas dando peso a faces grandes; shading limpo</td></tr>
+    <tr><td><strong>Mid-poly</strong></td><td>Workflow sem SubD: bevels reais + normais controladas</td></tr>
+    <tr><td><strong>Kit-bash</strong></td><td>Biblioteca de peças prontas recombinadas em modelos novos</td></tr>
+    <tr><td><strong>Greeble</strong></td><td>Detalhe técnico decorativo que dá escala e complexidade</td></tr>
+    <tr><td><strong>Catenária</strong></td><td>Curva natural de um cabo suspenso entre dois pontos</td></tr>
+    <tr><td><strong>Texel density</strong></td><td>Pixels de textura por unidade de superfície; deve ser consistente</td></tr>
+  </table>
+
+  <h3>14.2 — Atalhos de bancada</h3>
+  <table>
+    <tr><th>Atalho</th><th>Ação</th></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd></td><td>Bevel de aresta / de vértice</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>R</kbd></td><td>Loop cut (scroll = quantidade)</td></tr>
+    <tr><td><kbd>I</kbd> / <kbd>I</kbd>,<kbd>I</kbd></td><td>Inset / inset individual</td></tr>
+    <tr><td><kbd>E</kbd> / <kbd>Alt</kbd>+<kbd>E</kbd></td><td>Extrude / menu de extrusões</td></tr>
+    <tr><td><kbd>K</kbd></td><td>Knife (<kbd>Z</kbd>: atravessar, <kbd>C</kbd>: ângulos)</td></tr>
+    <tr><td><kbd>G</kbd>,<kbd>G</kbd></td><td>Edge/vertex slide</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>E</kbd></td><td>Crease (em Edit Mode)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>Menu de arestas: Mark Sharp, Seam, Bevel Weight, Bridge</td></tr>
+    <tr><td><kbd>M</kbd> / <kbd>Shift</kbd>+<kbd>N</kbd></td><td>Merge / recalcular normais</td></tr>
+    <tr><td><kbd>X</kbd> ▸ Limited Dissolve</td><td>Funde faces coplanares (limpeza pós-boolean)</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>Tab</kbd> / <kbd>Ctrl</kbd> segurando</td><td>Snap liga/desliga / snap temporário</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>S</kbd> / <kbd>.</kbd></td><td>Torta do cursor 3D / menu de pivô</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>Aplicar transformações (Object Mode)</td></tr>
+    <tr><td><kbd>Alt</kbd>+<kbd>D</kbd> / <kbd>Shift</kbd>+<kbd>D</kbd></td><td>Duplicar instanciado / duplicar cópia</td></tr>
+    <tr><td><kbd>Alt</kbd>+clique / <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+clique</td><td>Selecionar loop / ring</td></tr>
+  </table>
+
+  <h3>14.3 — Resumo das mudanças 4.x → 5.x para hard surface</h3>
+  <ul>
+    <li><strong>Auto Smooth clássico removido (4.1):</strong> agora é <em>Shade Auto Smooth</em> + modifier <strong>Smooth by Angle</strong> na pilha.</li>
+    <li><strong>Boolean:</strong> solver "Fast" renomeado para <strong>Float</strong> (5.0); solver <strong>Manifold</strong> disponível como opção de alta performance para malhas estanques; Exact e Manifold mais rápidos no 5.1.</li>
+    <li><strong>Bevel (ferramenta):</strong> snap com <kbd>Ctrl</kbd> e precisão com <kbd>Shift</kbd> durante o arrasto (5.1); Auto Merge passou a valer para Bevel e Symmetrize (5.0).</li>
+    <li><strong>Novos modifiers de Geometry Nodes (5.0)</strong>, incluindo novo Array para distribuição de cópias; volumes/SDF manipuláveis por nodes para booleans volumétricos de concept.</li>
+    <li><strong>Seleção de loops com delimitadores (5.1):</strong> controle de onde a seleção de loop/ring para (cantos, n-gons).</li>
+    <li>Extensões pela plataforma oficial (<span class="menupath">Preferences ▸ Get Extensions</span>): <strong>Bool Tool</strong> e companhia, atualizadas para 5.x.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Para continuar</div>
+    <p>O manual oficial de modelagem (<a class="ext" href="https://docs.blender.org/manual/en/latest/modeling/index.html">docs.blender.org ▸ Modeling</a>) detalha cada ferramenta citada. Bons próximos degraus: refazer o projeto do Capítulo 11 em SubD puro (close-up de cinema), montar um prop com bake high→low completo, e estudar Geometry Nodes para greebles procedurais. E quando a sua máquina precisar se mover — o volume 1 desta coleção (Rigging) assume dali.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Guia de Bolso — Hard Surface Modeling no Blender 5.x · volume 2 da coleção · capítulos 1–14<br>
+  Regra da bancada: nenhuma quina viva sai da oficina.
+</footer>
+
+</main>
+</div><!-- /layout -->
+</body>
+</html>
