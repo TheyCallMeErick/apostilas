@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iluminação no Blender 5.x — EEVEE e Cycles · A Apostila Completa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F2EFE8;--tinta:#1A1712;--tinta-suave:#57534A;
+  --luz:#E0982C;--luz-escuro:#9C6410;
+  --frio:#3B79C9;--frio-escuro:#235394;
+  --verde:#4F8A45;--vermelho:#B23A2C;--glow:#F2C44A;
+  --linha:#DCD6C9;--cartao:#FFFFFF;--quadro:#14110C;
+  --q-base:#D2CBBC;--q-dim:#867E6E;--q-luz:#F2C24E;--q-frio:#6FA0E8;--q-cream:#F0E8D6;
+  --code-bg:#1E1A12;--code-fg:#EEE8DA;
+  --sombra:0 1px 3px rgba(26,23,18,.1), 0 8px 24px rgba(26,23,18,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{background:var(--papel);color:var(--tinta);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.64}
+::selection{background:var(--luz);color:#1A1712}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+.sidebar{border-right:1px solid var(--linha);background:linear-gradient(180deg,#EBE7DC,#F2EFE8 260px);padding:28px 20px 56px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar .parte{font-family:"Archivo",sans-serif;font-stretch:88%;font-size:.64rem;letter-spacing:.15em;text-transform:uppercase;color:var(--luz-escuro);margin:22px 0 7px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sidebar .parte::before{content:"";width:13px;height:1.5px;background:var(--frio)}
+.sidebar nav a{display:block;text-decoration:none;color:var(--tinta-suave);font-family:"Archivo",sans-serif;font-size:.81rem;line-height:1.32;padding:4px 8px 4px 13px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(224,152,44,.11);border-left-color:var(--luz)}
+.sidebar nav a .n{color:var(--luz-escuro);font-weight:700;font-variant-numeric:tabular-nums;margin-right:5px}
+.logo-l{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.logo-l .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.0rem;line-height:1.05;font-stretch:104%}
+.logo-l .t2{font-family:"JetBrains Mono",monospace;font-size:.62rem;color:var(--frio-escuro)}
+main{padding:0 0 120px}
+.miolo{max-width:800px;margin:0 auto;padding:0 38px}
+.capa{background:radial-gradient(680px 480px at 30% 28%, rgba(242,196,74,.5), transparent 56%),radial-gradient(900px 560px at 88% 96%, rgba(59,121,201,.32), transparent 60%),var(--quadro);color:#EEE8DA;padding:90px 38px 78px;position:relative;overflow:hidden}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;color:var(--q-luz);border:1px solid rgba(242,196,74,.42);border-radius:999px;padding:6px 14px;margin-bottom:26px;background:rgba(20,17,12,.5)}
+.capa h1{font-family:"Archivo",sans-serif;font-stretch:112%;font-weight:880;font-size:clamp(2.1rem,5.2vw,3.6rem);line-height:1.0;letter-spacing:-.02em;max-width:15ch;margin-bottom:22px}
+.capa h1 em{font-style:normal;color:var(--q-luz)}
+.capa p.sub{font-size:1.08rem;max-width:62ch;color:#C9C2B2;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;border:1px solid rgba(238,232,218,.26);border-radius:6px;padding:6px 12px;color:#D4CDBD}
+.capa-art{position:absolute;right:-10px;top:50%;transform:translateY(-50%);z-index:1;opacity:.62}
+.parte-cover{padding:62px 0 8px;border-bottom:1px solid var(--linha);margin-top:38px}
+.parte-cover .pn{font-family:"JetBrains Mono",monospace;font-size:.8rem;letter-spacing:.2em;color:var(--luz-escuro)}
+.parte-cover h2{font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:870;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.04;letter-spacing:-.015em;margin:8px 0 12px}
+.parte-cover p{font-size:1.04rem;color:var(--tinta-suave);max-width:62ch;margin-bottom:18px}
+section.cap{padding-top:58px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .sun{width:20px;height:20px;flex:0 0 auto}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--luz-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;font-size:clamp(1.55rem,3.2vw,2.15rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:20px}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.18rem;margin:38px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:26px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+em.term{font-style:italic;color:var(--luz-escuro);font-weight:600}
+a.ext{color:var(--frio-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+kbd{font-family:"JetBrains Mono",monospace;font-size:.78em;background:#fff;border:1px solid #C7C0B0;border-bottom-width:2.5px;border-radius:5px;padding:1.5px 7px;white-space:nowrap;color:var(--tinta)}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#E8E2D5;border-radius:4px;padding:1.5px 6px}
+pre{background:var(--code-bg);color:var(--code-fg);font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--frio-escuro)}
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{display:flex;align-items:center;gap:8px;font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.conceito{border-left:4px solid var(--luz)}
+.caixa.conceito .rot{color:var(--luz-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--frio)}
+.caixa.exercicio .rot{color:var(--frio-escuro)}
+.caixa.v5{border-left:4px solid var(--luz);background:#FBF3E6}
+.caixa.v5 .rot{color:var(--luz-escuro)}
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{content:counter(passo);position:absolute;left:0;top:1px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;display:flex;align-items:center;justify-content:center}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.9rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{font-family:"Archivo",sans-serif;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAF7EF}
+figure{margin:26px 0;background:var(--quadro);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:"Archivo",sans-serif;font-size:.82rem;color:#A9A18E;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(210,203,188,.3)}
+figcaption b{color:#EEE8DA}
+.q-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#EEE8DA}
+.q-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--q-dim)}
+.q-wire{fill:none;stroke:var(--q-base);stroke-width:1.3;stroke-linejoin:round}
+.q-obj{fill:rgba(210,203,188,.1);stroke:var(--q-base);stroke-width:1.5}
+.q-ray{fill:none;stroke:var(--q-luz);stroke-width:1.8;stroke-linecap:round}
+.q-ray-c{fill:none;stroke:var(--q-frio);stroke-width:1.8;stroke-linecap:round}
+.q-glow{fill:var(--q-luz)}
+.q-coolf{fill:rgba(111,160,232,.16);stroke:var(--q-frio);stroke-width:1.4}
+.q-warmf{fill:rgba(242,194,78,.16);stroke:var(--q-luz);stroke-width:1.4}
+.q-shadow{fill:rgba(20,17,12,.55)}
+.q-axis{fill:none;stroke:var(--q-dim);stroke-width:1.2}
+.q-bad{fill:none;stroke:var(--vermelho);stroke-width:2.2}
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin:24px 0 10px}
+.sumario a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--tinta);font-family:"Archivo",sans-serif;font-size:.87rem;padding:7px 11px;border-radius:8px;border:1px solid transparent;line-height:1.22}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--luz-escuro);font-size:.76rem;flex:0 0 auto}
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}.sumario{grid-template-columns:1fr}.miolo{padding:0 20px}.capa{padding:60px 20px 52px}.capa-art{display:none}}
+@media print{.sidebar{display:none}.layout{display:block}.capa{background:#fff;color:#000}.capa h1 em{color:#000}.capa-art{display:none}figure{background:#fff;border:1px solid #999}figure,.caixa,table{box-shadow:none}section.cap{page-break-inside:avoid}.parte-cover{page-break-before:always}}
+:focus-visible{outline:3px solid var(--luz);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-l">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="20" r="7" fill="#E0982C"/>
+      <g stroke="#F2C44A" stroke-width="2" stroke-linecap="round">
+        <path d="M20 4 V10 M20 30 V36 M4 20 H10 M30 20 H36 M9 9 L13 13 M27 27 L31 31 M31 9 L27 13 M13 27 L9 31"/>
+      </g>
+      <circle cx="20" cy="20" r="3" fill="#3B79C9" opacity=".85"/>
+    </svg>
+    <div>
+      <div class="t1">Iluminação</div>
+      <div class="t2">A Apostila Completa · 5.x</div>
+    </div>
+  </div>
+
+  <div class="parte">I · Fundamentos</div>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>Como a luz funciona em 3D</a>
+    <a href="#cap2"><span class="n">02</span>EEVEE vs Cycles</a>
+    <a href="#cap3"><span class="n">03</span>EEVEE Next: o motor reescrito</a>
+    <a href="#cap4"><span class="n">04</span>Color management e AgX</a>
+  </nav>
+  <div class="parte">II · As luzes</div>
+  <nav>
+    <a href="#cap5"><span class="n">05</span>Os quatro tipos de luz</a>
+    <a href="#cap6"><span class="n">06</span>Potência, unidades e intensidade</a>
+    <a href="#cap7"><span class="n">07</span>Tamanho da luz e sombras suaves</a>
+    <a href="#cap8"><span class="n">08</span>Cor e temperatura (Blackbody)</a>
+  </nav>
+  <div class="parte">III · Sombras</div>
+  <nav>
+    <a href="#cap9"><span class="n">09</span>Sombras em EEVEE</a>
+    <a href="#cap10"><span class="n">10</span>Sombras em Cycles e shadow catcher</a>
+  </nav>
+  <div class="parte">IV · Mundo e ambiente</div>
+  <nav>
+    <a href="#cap11"><span class="n">11</span>O World e a luz ambiente</a>
+    <a href="#cap12"><span class="n">12</span>HDRIs e image-based lighting</a>
+    <a href="#cap13"><span class="n">13</span>Sky texture (Nishita)</a>
+  </nav>
+  <div class="parte">V · Global Illumination</div>
+  <nav>
+    <a href="#cap14"><span class="n">14</span>O que é GI</a>
+    <a href="#cap15"><span class="n">15</span>GI no Cycles (path tracing)</a>
+    <a href="#cap16"><span class="n">16</span>Light probes e GI no EEVEE</a>
+  </nav>
+  <div class="parte">VI · Cycles a fundo</div>
+  <nav>
+    <a href="#cap17"><span class="n">17</span>Path tracing, samples e ruído</a>
+    <a href="#cap18"><span class="n">18</span>Denoising</a>
+    <a href="#cap19"><span class="n">19</span>Light paths, bounces e clamping</a>
+    <a href="#cap20"><span class="n">20</span>Caustics, portals e o difícil</a>
+    <a href="#cap21"><span class="n">21</span>Otimização de render</a>
+  </nav>
+  <div class="parte">VII · EEVEE a fundo</div>
+  <nav>
+    <a href="#cap22"><span class="n">22</span>A pipeline do EEVEE Next</a>
+    <a href="#cap23"><span class="n">23</span>Reflexos, refrações e probes</a>
+    <a href="#cap24"><span class="n">24</span>Volumetrics e otimização</a>
+  </nav>
+  <div class="parte">VIII · A arte da luz</div>
+  <nav>
+    <a href="#cap25"><span class="n">25</span>Luz volumétrica e god rays</a>
+    <a href="#cap26"><span class="n">26</span>Three-point e estúdio</a>
+    <a href="#cap27"><span class="n">27</span>Natural, interior, cinema</a>
+    <a href="#cap28"><span class="n">28</span>Light linking, groups, comp</a>
+  </nav>
+  <div class="parte">IX · Domínio</div>
+  <nav>
+    <a href="#cap29"><span class="n">29</span>Troubleshooting</a>
+    <a href="#cap30"><span class="n">30</span>Glossário e novidades 5.x</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="capa">
+  <svg class="capa-art" width="430" height="450" viewBox="0 0 430 450" aria-hidden="true">
+    <!-- sun/key light with rays -->
+    <circle cx="150" cy="150" r="44" fill="rgba(242,196,74,.85)"/>
+    <g stroke="rgba(242,196,74,.55)" stroke-width="3" stroke-linecap="round">
+      <path d="M150 70 V30 M150 230 V270 M70 150 H30 M230 150 H270 M95 95 L66 66 M205 205 L234 234 M205 95 L234 66 M95 205 L66 234"/>
+    </g>
+    <!-- object lit warm/cool -->
+    <g transform="translate(250,250)">
+      <path d="M0 0 a60 60 0 0 1 60 60 a60 60 0 0 1 -60 60 Z" fill="rgba(242,194,78,.4)"/>
+      <path d="M0 0 a60 60 0 0 0 -60 60 a60 60 0 0 0 60 60 Z" fill="rgba(59,121,201,.4)"/>
+      <circle cx="0" cy="60" r="60" fill="none" stroke="rgba(238,232,218,.25)" stroke-width="1.4"/>
+    </g>
+    <text x="310" y="240" font-family="JetBrains Mono" font-size="11" fill="rgba(242,194,78,.8)">key</text>
+    <text x="150" y="395" font-family="JetBrains Mono" font-size="11" fill="rgba(111,160,232,.8)">fill (frio)</text>
+  </svg>
+  <div class="miolo">
+    <span class="selo">✷ A APOSTILA COMPLETA · VOLUME 10 DA COLEÇÃO</span>
+    <h1>Iluminação no Blender: <em>EEVEE</em> e <em>Cycles</em></h1>
+    <p class="sub">A obra mais completa da coleção: da física da luz e dos quatro tipos de lâmpada às sombras, ao World e HDRIs, à global illumination, ao path tracing do Cycles e ao novo EEVEE Next (ray tracing, light probes, Virtual Shadow Maps) — e à arte de iluminar: three-point, estúdio, natural, interior, cinema, light linking e luz no compositing. Os dois motores, lado a lado, do fundamento ao domínio.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>30 capítulos · 9 partes</span>
+      <span>EEVEE Next · Cycles</span>
+      <span>AgX · Ray Tracing</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como ler esta apostila</h2>
+  <p class="lead">Iluminação tem duas metades que esta obra entrelaça: a <strong>técnica</strong> (como os motores resolvem a luz — e são dois, EEVEE e Cycles, com filosofias diferentes) e a <strong>arte</strong> (como dispor as luzes para contar algo). A <strong>Parte I é a base comum</strong>; as Partes II–V valem para os dois motores; as Partes VI e VII mergulham em cada motor; a Parte VIII é a arte que costura tudo. Leia em ordem para construir do zero, ou salte para o motor e a técnica que precisa.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>Como a luz funciona em 3D</a>
+    <a href="#cap2"><span class="n">02</span>EEVEE vs Cycles: dois caminhos</a>
+    <a href="#cap3"><span class="n">03</span>EEVEE Next: o motor reescrito</a>
+    <a href="#cap4"><span class="n">04</span>Color management, AgX e exposição</a>
+    <a href="#cap5"><span class="n">05</span>Os quatro tipos de luz</a>
+    <a href="#cap6"><span class="n">06</span>Potência, unidades e intensidade</a>
+    <a href="#cap7"><span class="n">07</span>Tamanho da luz e sombras suaves</a>
+    <a href="#cap8"><span class="n">08</span>Cor e temperatura (Blackbody)</a>
+    <a href="#cap9"><span class="n">09</span>Sombras em EEVEE</a>
+    <a href="#cap10"><span class="n">10</span>Sombras em Cycles e shadow catcher</a>
+    <a href="#cap11"><span class="n">11</span>O World e a luz ambiente</a>
+    <a href="#cap12"><span class="n">12</span>HDRIs e image-based lighting</a>
+    <a href="#cap13"><span class="n">13</span>Sky texture (Nishita): sol e céu</a>
+    <a href="#cap14"><span class="n">14</span>O que é global illumination</a>
+    <a href="#cap15"><span class="n">15</span>GI no Cycles (path tracing)</a>
+    <a href="#cap16"><span class="n">16</span>Light probes e GI no EEVEE Next</a>
+    <a href="#cap17"><span class="n">17</span>Path tracing, samples e ruído</a>
+    <a href="#cap18"><span class="n">18</span>Denoising</a>
+    <a href="#cap19"><span class="n">19</span>Light paths, bounces e clamping</a>
+    <a href="#cap20"><span class="n">20</span>Caustics, portals e fenômenos difíceis</a>
+    <a href="#cap21"><span class="n">21</span>Otimização de render no Cycles</a>
+    <a href="#cap22"><span class="n">22</span>A pipeline do EEVEE Next</a>
+    <a href="#cap23"><span class="n">23</span>Reflexos, refrações e probes na prática</a>
+    <a href="#cap24"><span class="n">24</span>Volumetrics e otimização do EEVEE</a>
+    <a href="#cap25"><span class="n">25</span>Luz volumétrica, névoa e god rays</a>
+    <a href="#cap26"><span class="n">26</span>Three-point lighting e estúdio</a>
+    <a href="#cap27"><span class="n">27</span>Natural, interior e cinematográfica</a>
+    <a href="#cap28"><span class="n">28</span>Light linking, groups e compositing</a>
+    <a href="#cap29"><span class="n">29</span>Troubleshooting</a>
+    <a href="#cap30"><span class="n">30</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">✷ Sobre a versão</div>
+    <p>Escrita para o <strong>Blender 5.x</strong>, na era em que a iluminação deu seu maior salto: o <strong>EEVEE Next</strong> (o EEVEE reescrito desde o 4.2) trouxe <strong>ray tracing por BSDF</strong>, <strong>global illumination real</strong>, <strong>Virtual Shadow Maps</strong>, luzes ilimitadas e <strong>light probes</strong> renovados; o <strong>Cycles</strong> ganhou <strong>light/shadow linking</strong>, <strong>ray portals</strong>, thin film, volumes mais limpos; e o <strong>AgX</strong> virou o view transform padrão. As novidades 5.x estão em caixas âmbar e resumidas no Capítulo 30.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE I ===================== -->
+<div class="parte-cover" id="parte1">
+  <div class="pn">PARTE I</div>
+  <h2>Fundamentos da luz e dos motores</h2>
+  <p>Antes de acender qualquer lâmpada, é preciso entender o que a luz faz e como o Blender a calcula. Esta parte cobre a física essencial da luz em 3D, a diferença profunda entre os dois motores (EEVEE e Cycles), o novo EEVEE Next reescrito, e o color management — porque a luz que você ajusta só vira imagem depois de passar pelo view transform.</p>
+</div>
+
+<!-- ===== CAP 1 ===== -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">Como a luz funciona em 3D</h2>
+
+  <p class="lead">Iluminar em 3D é simular como a luz real viaja, atinge superfícies e chega ao olho. Quanto melhor você entende o comportamento físico da luz, mais previsível e expressiva fica sua iluminação — porque os motores do Blender foram construídos para imitar essa física.</p>
+
+  <h3>1.1 — A jornada de um raio de luz</h3>
+  <p>A luz parte de uma <strong>fonte</strong>, viaja pelo espaço, atinge <strong>superfícies</strong> (onde parte é absorvida, parte refletida, parte transmitida), ricocheteia para outras superfícies (a <em>luz indireta</em>), e finalmente uma fração chega à <strong>câmera</strong>, formando a imagem. Cada etapa dessa jornada é um parâmetro que você controla: a intensidade e a cor da fonte, como a superfície responde (o material), quantos ricochetes o motor calcula, e como a câmera traduz tudo em pixels.</p>
+
+  <h3>1.2 — A lei do inverso do quadrado</h3>
+  <p>A regra física mais importante para iluminar: a intensidade da luz cai com o <strong>quadrado da distância</strong>. Dobrar a distância da fonte não reduz a luz pela metade — reduz a <em>um quarto</em>. É por isso que aproximar uma luz do objeto a clareia dramaticamente, e por que uma luz precisa de muito mais potência para iluminar algo longe.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 180" role="img" aria-label="A lei do inverso do quadrado">
+      <g transform="translate(40,30)">
+        <circle cx="20" cy="70" r="10" class="q-glow"/>
+        <g class="q-ray" opacity=".7"><path d="M30 70 L640 30"/><path d="M30 70 L640 110"/><path d="M30 70 L640 70"/></g>
+        <line x1="160" y1="52" x2="160" y2="88" class="q-axis"/>
+        <line x1="340" y1="40" x2="340" y2="100" class="q-axis"/>
+        <line x1="620" y1="24" x2="620" y2="116" class="q-axis"/>
+        <text x="160" y="135" text-anchor="middle" class="q-sub" fill="#f2c24e">1×</text>
+        <text x="160" y="150" text-anchor="middle" class="q-sub">brilho 100%</text>
+        <text x="340" y="135" text-anchor="middle" class="q-sub" fill="#f2c24e">2×</text>
+        <text x="340" y="150" text-anchor="middle" class="q-sub">brilho 25%</text>
+        <text x="620" y="135" text-anchor="middle" class="q-sub" fill="#f2c24e">3×</text>
+        <text x="620" y="150" text-anchor="middle" class="q-sub">brilho 11%</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 1.1 — A queda com a distância.</b> A mesma luz se espalha por uma área cada vez maior conforme se afasta — a 2× a distância, sobre 4× a área (¼ do brilho); a 3×, sobre 9× (⅑). Esta lei governa por que a posição da luz importa tanto quanto a sua potência.</figcaption>
+  </figure>
+
+  <h3>1.3 — Difusa, especular e o ângulo</h3>
+  <p>Quando a luz atinge uma superfície, ela se reparte em dois comportamentos: a reflexão <strong>difusa</strong> (espalhada em todas as direções — o que dá a cor e a forma básica do objeto) e a <strong>especular</strong> (concentrada num ângulo — os brilhos e reflexos). Quanto a superfície favorece uma ou outra é o que o material define (roughness, metallic — vol. 9). E o <strong>ângulo</strong> entre a luz, a superfície e a câmera decide tudo: a mesma luz revela ou esconde forma conforme incide rasante ou de frente.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Luz revela forma</div>
+    <p>A função fundamental da iluminação não é "clarear" — é <strong>revelar forma</strong>. Uma esfera iluminada de frente parece um disco chapado; iluminada de lado, ganha volume pelo gradiente de luz a sombra. A luz rasante (em ângulo) mostra textura e relevo; a luz frontal os apaga. Antes de pensar em "está claro o suficiente?", pergunte "esta luz mostra a forma que eu quero?". Iluminar é esculpir com luz e sombra — e a sombra é tão importante quanto a luz.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Pense em luz real ao iluminar</div>
+    <p>O melhor atalho para iluminação convincente é <strong>observar e imitar a luz real</strong>. De onde vem a luz nesta cena — uma janela, o sol, uma lâmpada? Que cor ela tem? Quão dura ou suave é a sombra? A física que os motores simulam é a mesma do mundo, então uma referência fotográfica vale mais que mil ajustes às cegas. Iluminadores profissionais são, antes de tudo, observadores atentos de como a luz se comporta na realidade.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 2 ===== -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">EEVEE vs Cycles: dois caminhos para a luz</h2>
+
+  <p class="lead">O Blender tem dois motores de render, e eles resolvem a luz de formas fundamentalmente diferentes. Entender essa diferença é a decisão mais importante de qualquer projeto — ela define velocidade, realismo, e como você vai trabalhar.</p>
+
+  <h3>2.1 — Path tracing vs. rasterização</h3>
+  <table>
+    <tr><th></th><th>Cycles</th><th>EEVEE</th></tr>
+    <tr><td><strong>Método</strong></td><td>Path tracing — traça raios de luz fisicamente</td><td>Rasterização + ray tracing em tela (real-time)</td></tr>
+    <tr><td><strong>Filosofia</strong></td><td>Simular a física da luz com precisão</td><td>Aproximar o resultado o mais rápido possível</td></tr>
+    <tr><td><strong>Velocidade</strong></td><td>Mais lento (minutos por frame)</td><td>Quase instantâneo (tempo real)</td></tr>
+    <tr><td><strong>Realismo</strong></td><td>Referência: GI, caustics, tudo "de graça" e correto</td><td>Muito bom (EEVEE Next), com aproximações</td></tr>
+    <tr><td><strong>Ruído</strong></td><td>Sim — precisa de samples e denoise</td><td>Não tem ruído de path tracing</td></tr>
+    <tr><td><strong>Ideal para</strong></td><td>Render final fotorrealista, still, VFX</td><td>Animação, viewport, prazos curtos, estilizado</td></tr>
+  </table>
+
+  <h3>2.2 — Por que a diferença existe</h3>
+  <p>O <strong>Cycles</strong> simula a luz traçando milhares de raios por pixel, seguindo cada um pelos ricochetes pela cena — é fisicamente correto, então global illumination, sombras suaves, reflexos e caustics surgem naturalmente. O preço é tempo e ruído (cada pixel é uma média estatística de raios, que precisa de muitas amostras para ficar limpo).</p>
+  <p>O <strong>EEVEE</strong> nasceu como um motor de <em>rasterização</em> (a técnica dos games, que desenha a cena rápido sem traçar cada raio), usando aproximações e truques para imitar o resultado do Cycles em tempo real. Historicamente isso significava limitações (reflexos e GI falsos ou ausentes) — mas o EEVEE Next (Cap. 3) mudou esse quadro radicalmente, trazendo ray tracing real para dentro do motor rápido.</p>
+
+  <h3>2.3 — Como escolher</h3>
+  <ul>
+    <li><strong>Cycles</strong> quando o realismo físico é prioridade e há tempo de render: produtos, arquitetura fotorrealista, VFX, stills de portfólio.</li>
+    <li><strong>EEVEE</strong> quando a velocidade importa: animação longa, motion graphics, previsualização, estilos não-fotorrealistas, prazos apertados.</li>
+    <li><strong>Os dois juntos:</strong> muitos artistas iluminam e iteram no EEVEE (instantâneo) e fazem o render final no Cycles — e o EEVEE Next aproximou tanto os resultados que essa transição ficou muito mais previsível.</li>
+  </ul>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ O mesmo conceito, dois resolvedores</div>
+    <p>A boa notícia desta apostila: <strong>as luzes, o World, os princípios e a arte são os mesmos nos dois motores</strong>. Uma Area light, um HDRI, a temperatura de cor, o three-point lighting — tudo funciona igual em EEVEE e Cycles. O que muda é <em>como o motor resolve</em> a luz por baixo (e os ajustes específicos de cada um, nas Partes VI e VII). Por isso as Partes II a V deste livro servem aos dois: você aprende a iluminar uma vez, e aplica no motor que o projeto pedir.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 3 ===== -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">EEVEE Next: o motor reescrito</h2>
+
+  <p class="lead">O EEVEE que você usa hoje no Blender 5.x não é o EEVEE original — é o <strong>EEVEE Next</strong>, uma reescrita completa que estreou no 4.2 LTS e transformou o motor rápido num concorrente sério do Cycles. Saber o que ele trouxe é entender por que iluminar em tempo real ficou tão melhor.</p>
+
+  <h3>3.1 — O que mudou (e por que importa)</h3>
+  <table>
+    <tr><th>Novidade</th><th>O que significa para a luz</th></tr>
+    <tr><td><strong>Ray tracing por BSDF</strong></td><td>Reflexos e GI por traçado de raios em tela, para todo material — não mais truques limitados</td></tr>
+    <tr><td><strong>Global Illumination real</strong></td><td>A luz ricocheteia de verdade entre superfícies (luz indireta), em tempo real</td></tr>
+    <tr><td><strong>Virtual Shadow Maps</strong></td><td>Sombras de resolução muito maior (4096 vs 1024), mais nítidas e estáveis, sem comer memória</td></tr>
+    <tr><td><strong>Luzes ilimitadas</strong></td><td>Sem o antigo limite de luzes; até 4096 visíveis ao mesmo tempo</td></tr>
+    <tr><td><strong>Objetos emissivos iluminam</strong></td><td>Materiais que emitem luz agora iluminam o entorno (mesh lights de verdade)</td></tr>
+    <tr><td><strong>Displacement de shader</strong></td><td>Mapas de displacement funcionam no EEVEE</td></tr>
+    <tr><td><strong>Light probes renovados</strong></td><td>Sistema de probes (Volume/Sphere/Plane) reescrito para capturar luz indireta</td></tr>
+  </table>
+
+  <h3>3.2 — Aproximou-se do Cycles</h3>
+  <p>O efeito combinado dessas mudanças é que o EEVEE ficou <strong>visualmente muito mais próximo do Cycles</strong>. Materiais emissivos iluminam a cena, reflexos são mais realistas, a luz indireta preenche as sombras, e as sombras são de alta qualidade. Para muitos trabalhos — animação, arquitetura em tempo real, motion graphics — o EEVEE Next entrega resultado de produção sem o tempo de render do path tracing. A escolha entre os motores (Cap. 2) deixou de ser "rápido e feio vs. lento e bonito" para "rápido e ótimo vs. lento e perfeito".</p>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — o EEVEE em evolução contínua</div>
+    <p>O EEVEE Next continua avançando no 5.x. O <strong>5.1</strong> trouxe o <strong>nó Raycast</strong> (traça raios contra a cena em tela, abrindo efeitos de estilização/NPR e projeções), <strong>controles de intensidade de light path</strong> (rebalancear luz direta e indireta sem mexer no sampling — parecido com compositing, mas leve), e <strong>reflexões planares com glossy e refração</strong>. Houve também ganhos de memória de textura e compilação de shaders mais rápida. O EEVEE deixou de ser o "motor de preview" para ser um motor de produção em ritmo acelerado de melhorias.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Cenas antigas precisam de migração</div>
+    <p>A reescrita do EEVEE Next foi <strong>incompatível com o EEVEE antigo</strong> — cenas criadas em versões anteriores ao 4.2 podem não abrir com a mesma aparência (sombras, reflexos, blend modes e o antigo Bloom mudaram). O Blender oferece um guia de migração, mas espere ajustar a iluminação ao portar projetos antigos. Recursos como o antigo <em>Bloom</em> agora se fazem no compositor (via Glare, vol. 4); a refração de tela virou <em>Raytraced Transmission</em>; e a profundidade de refração virou o output <em>Thickness</em>. Ao abrir algo antigo no 5.x, confira a luz antes de assumir que está como era.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 4 ===== -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">Color management, AgX e exposição</h2>
+
+  <p class="lead">Há um passo invisível entre a luz que você ajusta e a imagem que você vê: o <strong>view transform</strong>, parte do color management. Ignorá-lo é a causa de luzes que "estouram" feio e cores que parecem erradas. Entendê-lo é metade de uma iluminação bonita.</p>
+
+  <h3>4.1 — Por que o view transform existe</h3>
+  <p>Os motores calculam a luz em <strong>alto alcance dinâmico</strong> (HDR) — valores que vão muito além do branco de uma tela. Mas o seu monitor só mostra de 0 a 1 (preto a branco). O <strong>view transform</strong> é o tradutor: ele "mapeia" o enorme alcance da luz física para o que a tela consegue exibir, decidindo como os brancos estouram e como as cores saturadas se comportam. É o equivalente digital de como um filme fotográfico responde à luz.</p>
+
+  <h3>4.2 — AgX: o padrão moderno</h3>
+  <p>Desde o Blender 4.0, o view transform padrão é o <strong>AgX</strong> (substituiu o Filmic). Ele lida muito mais graciosamente com <strong>luzes muito brilhantes e cores saturadas</strong>: em vez de estourar para um branco duro e "queimado", as áreas muito claras <em>dessaturam</em> suavemente em direção ao branco, como o olho e a câmera reais fazem. O resultado é uma imagem mais natural, com destaques que não "quebram" e cores intensas que não viram manchas chapadas.</p>
+  <table>
+    <tr><th>View transform</th><th>Característica</th></tr>
+    <tr><td><strong>AgX</strong> (padrão)</td><td>Destaques e cores saturadas se comportam naturalmente; visual cinematográfico moderno</td></tr>
+    <tr><td><strong>Filmic</strong></td><td>O padrão antigo; bom alcance, mas dessaturação menos elegante</td></tr>
+    <tr><td><strong>Standard</strong></td><td>Sem curva — mapeamento direto; estoura cedo. Útil para texturas/UI, não para render realista</td></tr>
+    <tr><td><strong>Khronos PBR Neutral</strong></td><td>Para preservar cores de material fielmente (assets, e-commerce)</td></tr>
+  </table>
+
+  <h3>4.3 — Exposição e Look</h3>
+  <p>Em <span class="menupath">Render Properties ▸ Color Management</span>, dois controles moldam a imagem final sem mexer nas luzes:</p>
+  <ul>
+    <li><strong>Exposure:</strong> clareia ou escurece a imagem inteira (como o ISO/exposição de uma câmera) — ajuste fino do brilho geral sem reequilibrar cada luz.</li>
+    <li><strong>Look:</strong> variações de contraste prontas (de "Very Low Contrast" a "High Contrast") aplicadas sobre o view transform — um "grade" rápido.</li>
+    <li><strong>Gamma / White balance:</strong> ajustes finos de tom.</li>
+  </ul>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Ilumine para o AgX, não contra ele</div>
+    <p>Um erro comum de quem vem de outros softwares: lutar contra o view transform, tentando forçar cores e brilhos como se a tela fosse linear. Em vez disso, <strong>ilumine confiando no AgX</strong>: deixe as luzes brilhantes serem brilhantes (o AgX vai tratar o estouro lindamente), use cores de luz saturadas sem medo (elas dessaturam graciosamente no brilho), e ajuste o brilho geral pela Exposure. Trabalhar <em>com</em> o color management — e não contra — é o que separa renders que parecem "CG" de renders que parecem fotografia.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ "Standard" engana a sua iluminação</div>
+    <p>Se você trocar o view transform para <strong>Standard</strong> achando que vê "as cores de verdade", cuidado: o Standard estoura os destaques cedo e bruscamente, fazendo você compensar baixando as luzes — e aí a imagem fica subiluminada e sem alcance. Para render realista, mantenha o <strong>AgX</strong> e ilumine sob ele. O Standard tem usos legítimos (conferir uma textura, exportar uma máscara, UI), mas iluminar uma cena sob Standard leva a decisões erradas que desmoronam quando o AgX volta.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE II ===================== -->
+<div class="parte-cover" id="parte2">
+  <div class="pn">PARTE II</div>
+  <h2>As luzes</h2>
+  <p>Agora as ferramentas em si: os quatro tipos de luz do Blender, como medir e ajustar sua intensidade nas unidades certas, como o tamanho da fonte controla a dureza da sombra, e como a cor e a temperatura dão clima. Estes capítulos valem igual nos dois motores — é o vocabulário básico de toda iluminação.</p>
+</div>
+
+<!-- ===== CAP 5 ===== -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">Os quatro tipos de luz</h2>
+
+  <p class="lead">O Blender oferece quatro objetos de luz (<span class="menupath">Add ▸ Light</span>), cada um modelando um tipo de fonte real. Escolher o tipo certo para cada papel é o primeiro passo de qualquer setup.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Os quatro tipos de luz">
+      <g transform="translate(20,20)">
+        <!-- Point -->
+        <g transform="translate(0,0)">
+          <text x="80" y="12" text-anchor="middle" class="q-lbl">Point</text>
+          <circle cx="80" cy="60" r="6" class="q-glow"/>
+          <g class="q-ray" opacity=".6"><path d="M80 60 L40 30"/><path d="M80 60 L120 30"/><path d="M80 60 L35 90"/><path d="M80 60 L125 90"/><path d="M80 60 L80 25"/><path d="M80 60 L80 100"/></g>
+          <text x="80" y="125" text-anchor="middle" class="q-sub">lâmpada / ponto</text>
+        </g>
+        <!-- Sun -->
+        <g transform="translate(180,0)">
+          <text x="80" y="12" text-anchor="middle" class="q-lbl">Sun</text>
+          <g class="q-ray" opacity=".6"><path d="M40 25 L65 95"/><path d="M70 25 L95 95"/><path d="M100 25 L125 95"/><path d="M130 25 L155 95"/></g>
+          <text x="80" y="125" text-anchor="middle" class="q-sub">paralela / sol</text>
+        </g>
+        <!-- Spot -->
+        <g transform="translate(360,0)">
+          <text x="80" y="12" text-anchor="middle" class="q-lbl">Spot</text>
+          <circle cx="80" cy="28" r="5" class="q-glow"/>
+          <path d="M80 28 L45 100 L115 100 Z" class="q-warmf" opacity=".5"/>
+          <text x="80" y="125" text-anchor="middle" class="q-sub">cone / holofote</text>
+        </g>
+        <!-- Area -->
+        <g transform="translate(540,0)">
+          <text x="80" y="12" text-anchor="middle" class="q-lbl">Area</text>
+          <rect x="50" y="25" width="60" height="14" rx="2" class="q-warmf"/>
+          <g class="q-ray" opacity=".5"><path d="M55 40 L50 95"/><path d="M80 40 L80 98"/><path d="M105 40 L110 95"/><path d="M68 40 L62 96"/><path d="M92 40 L98 96"/></g>
+          <text x="80" y="125" text-anchor="middle" class="q-sub">painel / softbox</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption><b>Figura 5.1 — Quatro fontes, quatro comportamentos.</b> O Point irradia de um ponto em todas as direções; o Sun manda raios paralelos (vem do infinito); o Spot projeta um cone; a Area emite de uma superfície (a fonte mais versátil e realista para a maioria das cenas).</figcaption>
+  </figure>
+
+  <h3>5.1 — O catálogo</h3>
+  <table>
+    <tr><th>Tipo</th><th>Como emite</th><th>Modela / usa para</th></tr>
+    <tr><td><strong>Point</strong></td><td>De um ponto, em todas as direções; cai com a distância</td><td>Lâmpadas, velas, fontes pontuais; luz que se espalha de um lugar</td></tr>
+    <tr><td><strong>Sun</strong></td><td>Raios paralelos de direção fixa; não cai com a distância (vem do "infinito")</td><td>Sol, luar; iluminação de exteriores; sombras paralelas</td></tr>
+    <tr><td><strong>Spot</strong></td><td>Cone de luz a partir de um ponto, com ângulo e suavidade de borda</td><td>Holofotes, lanternas, luz de palco, feixes direcionados</td></tr>
+    <tr><td><strong>Area</strong></td><td>De uma superfície (retângulo, disco...); sombras naturalmente suaves</td><td>Janelas, softboxes, telas, painéis; a fonte mais realista e usada</td></tr>
+  </table>
+
+  <h3>5.2 — O Sun é especial</h3>
+  <p>O <strong>Sun</strong> se comporta diferente dos outros: sua posição não importa, só a sua <strong>rotação</strong> (a direção dos raios). Como modela uma fonte infinitamente distante, ele não obedece à lei do inverso do quadrado (Cap. 1) — ilumina tudo na cena com a mesma intensidade, em raios paralelos. É por isso que o Sun é a escolha para luz solar e exteriores: o sol real é tão distante que seus raios chegam praticamente paralelos.</p>
+
+  <h3>5.3 — A Area é a mais versátil</h3>
+  <p>A <strong>Area light</strong> é a preferida para a maioria das cenas porque é a mais <em>realista</em>: como emite de uma superfície (não de um ponto matemático), ela produz <strong>sombras suaves naturalmente</strong> e brilhos especulares com forma (um reflexo retangular, como uma janela ou softbox). Quase toda iluminação de estúdio, produto e personagem se constrói com Area lights — é a "fonte com tamanho" que o próximo capítulo de sombras vai explicar.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Na dúvida, comece com uma Area</div>
+    <p>Se você não sabe que tipo de luz usar, comece com uma <strong>Area light</strong>. Ela é a mais perdoadora e realista: sombras suaves agradáveis, brilhos com forma, fácil de dimensionar. Use Sun para o sol de uma cena externa, Spot para um feixe dramático específico, Point para uma fonte pequena e pontual — mas a Area resolve a maioria dos casos com o visual mais natural. Muitos setups profissionais são quase inteiramente feitos de Area lights de tamanhos diferentes.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 6 ===== -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Potência, unidades e intensidade</h2>
+
+  <p class="lead">"Quão forte deve ser a luz?" depende de entender as <strong>unidades</strong> que o Blender usa. Acertar a intensidade nas unidades certas faz a luz se comportar de forma física e previsível — e evita o vai-e-vem de números arbitrários.</p>
+
+  <h3>6.1 — Watts e a física da potência</h3>
+  <p>A intensidade das luzes Point, Spot e Area é medida em <strong>Watts (W)</strong> — a potência radiante real, como a de uma lâmpada. Uma lâmpada doméstica gira em torno de dezenas de watts; um refletor potente, centenas ou milhares. Como a luz obedece ao inverso do quadrado (Cap. 1), a potência necessária cresce rápido com a distância e o tamanho da cena. O <strong>Sun</strong> é diferente: sua força é medida em <strong>irradiância (W/m²)</strong>, porque não cai com a distância — valores típicos de luz solar ficam na casa de poucas unidades.</p>
+
+  <h3>6.2 — Os controles de intensidade</h3>
+  <table>
+    <tr><th>Controle</th><th>O que faz</th></tr>
+    <tr><td><strong>Power (W)</strong></td><td>A potência da fonte (Point/Spot/Area)</td></tr>
+    <tr><td><strong>Strength (W/m²)</strong></td><td>A irradiância do Sun (independente de distância)</td></tr>
+    <tr><td><strong>Color</strong></td><td>A cor da luz (multiplica a intensidade por canal)</td></tr>
+    <tr><td><strong>Custom Distance / Cutoff</strong></td><td>Limite além do qual a luz é ignorada (otimização)</td></tr>
+    <tr><td><strong>Exposure</strong> (cena)</td><td>Reescala o brilho geral sem mexer em cada luz (Cap. 4)</td></tr>
+  </table>
+
+  <h3>6.3 — Pensar em proporção, não em números absolutos</h3>
+  <p>O segredo prático: o número absoluto de watts importa menos que a <strong>proporção entre as luzes</strong>. Uma key light duas vezes mais forte que a fill cria um certo contraste, independentemente de serem 100 W e 50 W ou 1000 W e 500 W (o brilho geral você ajusta depois pela Exposure). Ilumine pensando em <em>relações</em> — "esta luz é a principal, esta é o preenchimento mais fraco, esta é o realce sutil" — e use a Exposure da cena para acertar o nível geral. Isso liberta você de caçar números mágicos.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Use a Exposure para o brilho geral</div>
+    <p>Quando a cena toda está clara ou escura demais, não saia reescalando todas as luzes uma a uma — ajuste a <strong>Exposure</strong> em Color Management (Cap. 4). Ela reescala o brilho global de uma vez, preservando a proporção entre as luzes (o seu contraste cuidadosamente montado). Reserve os ajustes de potência individual para mudar o <em>equilíbrio</em> entre as luzes, e a Exposure para o <em>nível</em> geral. Separar essas duas decisões deixa a iluminação muito mais controlável.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 7 ===== -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Tamanho da luz e sombras suaves</h2>
+
+  <p class="lead">O controle que mais transforma o <em>caráter</em> de uma luz não é a intensidade — é o <strong>tamanho da fonte</strong>. Ele decide se as sombras são duras e dramáticas ou suaves e delicadas, e é o segredo por trás de quase toda iluminação bonita.</p>
+
+  <h3>7.1 — Por que o tamanho cria a suavidade</h3>
+  <p>Uma fonte <strong>pequena</strong> (um ponto) produz sombras <strong>duras</strong>, com bordas nítidas — porque cada ponto da cena ou "vê" a luz inteira ou não vê nada. Uma fonte <strong>grande</strong> produz sombras <strong>suaves</strong>, com bordas difusas — porque nas bordas da sombra a superfície vê <em>parte</em> da luz (a penumbra). Quanto maior a fonte em relação ao objeto, mais macia a transição de luz para sombra.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Fonte pequena vs grande e a dureza da sombra">
+      <g transform="translate(40,20)">
+        <text x="150" y="10" text-anchor="middle" class="q-lbl">Fonte pequena → sombra dura</text>
+        <circle cx="60" cy="40" r="5" class="q-glow"/>
+        <rect x="130" y="70" width="14" height="50" class="q-obj"/>
+        <rect x="60" y="130" width="220" height="10" fill="rgba(210,203,188,.15)"/>
+        <path d="M144 120 L210 132 L230 132 L144 116 Z" class="q-shadow"/>
+        <text x="200" y="160" text-anchor="middle" class="q-sub">borda nítida</text>
+      </g>
+      <g transform="translate(400,20)">
+        <text x="150" y="10" text-anchor="middle" class="q-lbl">Fonte grande → sombra suave</text>
+        <rect x="30" y="32" width="70" height="16" rx="3" class="q-warmf"/>
+        <rect x="130" y="70" width="14" height="50" class="q-obj"/>
+        <rect x="60" y="130" width="220" height="10" fill="rgba(210,203,188,.15)"/>
+        <path d="M144 120 L200 132 L245 132 L144 116 Z" fill="rgba(20,17,12,.4)"/>
+        <path d="M144 120 L185 132 L210 132 L144 116 Z" fill="rgba(20,17,12,.25)"/>
+        <text x="205" y="160" text-anchor="middle" class="q-sub">penumbra difusa</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 7.1 — O segredo da sombra macia.</b> A mesma cena, mudando só o tamanho da fonte: a luz pequena dá sombra de borda nítida (sol num dia limpo); a luz grande dá sombra de borda difusa (céu nublado, softbox). O tamanho — não a intensidade — controla a suavidade.</figcaption>
+  </figure>
+
+  <h3>7.2 — Os controles de tamanho</h3>
+  <table>
+    <tr><th>Luz</th><th>Controle de tamanho</th></tr>
+    <tr><td><strong>Point</strong></td><td>Radius — um raio maior = fonte maior = sombra mais suave</td></tr>
+    <tr><td><strong>Sun</strong></td><td>Angle — o tamanho angular do sol no céu (sombras mais ou menos duras)</td></tr>
+    <tr><td><strong>Spot</strong></td><td>Radius (e Blend, para a suavidade da borda do cone)</td></tr>
+    <tr><td><strong>Area</strong></td><td>Size — as dimensões do painel; maior = sombra mais suave e brilho maior</td></tr>
+  </table>
+
+  <h3>7.3 — Tamanho e brilho especular</h3>
+  <p>O tamanho da fonte também molda os <strong>reflexos especulares</strong> (os brilhos em superfícies lisas). Uma fonte pequena cria um brilho pequeno e intenso (um ponto de luz); uma fonte grande cria um reflexo amplo e suave (a "janela" refletida num objeto metálico ou num olho). Por isso fotógrafos de produto usam softboxes grandes: para que o reflexo na superfície seja um retângulo suave e elegante, não um ponto duro. No Blender é igual — aumente a Area para reflexos mais macios.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Dureza conta uma história</div>
+    <p>A dureza da sombra é uma escolha narrativa, não só técnica. Sombras <strong>duras</strong> (fonte pequena) são dramáticas, tensas, de meio-dia escaldante ou de uma lâmpada nua — film noir, deserto, interrogatório. Sombras <strong>suaves</strong> (fonte grande) são gentis, calmas, de céu nublado ou luz de janela difusa — retrato delicado, manhã serena, beleza. Antes de ajustar o tamanho, pergunte que <em>sensação</em> a cena pede. A sombra é metade da mensagem da sua luz.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 7</div>
+    <p>Coloque uma esfera e um cubo sobre um plano, com uma única Area light. Renderize com a Area bem pequena (sombra dura), depois aumente o Size progressivamente e observe a sombra amolecer e os brilhos se espalharem. Sem mudar a intensidade nem a posição — só o tamanho — você verá a cena passar de "sol forte" a "dia nublado". É a lição mais importante deste capítulo, sentida na prática.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 8 ===== -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Cor e temperatura (Blackbody)</h2>
+
+  <p class="lead">A cor da luz é tão expressiva quanto a sua direção. Entender a <strong>temperatura de cor</strong> — medida em Kelvin — e o contraste entre quente e frio é o que dá clima, realismo e apelo emocional à iluminação.</p>
+
+  <h3>8.1 — Temperatura de cor em Kelvin</h3>
+  <p>A luz real tem uma <strong>temperatura</strong>, medida em Kelvin (K), que descreve sua cor — contraintuitivamente, números <em>baixos</em> são <em>quentes</em> (alaranjados) e números <em>altos</em> são <em>frios</em> (azulados):</p>
+  <table>
+    <tr><th>Kelvin</th><th>Fonte</th><th>Cor</th></tr>
+    <tr><td><strong>1500–2000 K</strong></td><td>Chama de vela, fogo</td><td>Laranja profundo</td></tr>
+    <tr><td><strong>2700–3200 K</strong></td><td>Lâmpada incandescente, "luz quente"</td><td>Âmbar acolhedor</td></tr>
+    <tr><td><strong>4000–4500 K</strong></td><td>Luz neutra, fluorescente branca</td><td>Branco neutro</td></tr>
+    <tr><td><strong>5500–6500 K</strong></td><td>Luz do dia, sol ao meio-dia</td><td>Branco/levemente frio</td></tr>
+    <tr><td><strong>7000–10000 K</strong></td><td>Céu nublado, sombra azulada</td><td>Azul frio</td></tr>
+  </table>
+
+  <h3>8.2 — O nó Blackbody</h3>
+  <p>Para definir a cor de uma luz pela temperatura física (em vez de escolher um tom à mão), use o nó <strong>Blackbody</strong>: você informa a temperatura em Kelvin e ele gera a cor exata daquele "corpo negro" aquecido. Plugado na cor da luz (ou de um material emissivo), ele garante temperaturas fisicamente corretas — uma lâmpada a 3000 K, o sol a 5500 K. É a forma profissional e precisa de colorir luz por temperatura.</p>
+
+  <h3>8.3 — Contraste quente-frio: o tempero do clima</h3>
+  <p>A técnica de cor mais poderosa da iluminação é o <strong>contraste entre quente e frio</strong>. Uma luz principal quente (key, ~3200 K) com um preenchimento frio (fill, ~6500 K) cria profundidade, dimensão e apelo visual instantâneos — é o "golden hour" em que o sol quente contrasta com a sombra azul do céu. Esse contraste de temperatura (não só de brilho) é o que dá aquele visual cinematográfico e tridimensional. Quase todo render atraente tem alguma versão do diálogo quente × frio.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 150" role="img" aria-label="Contraste quente e frio sobre uma esfera">
+      <g transform="translate(200,15)">
+        <circle cx="160" cy="60" r="55" fill="rgba(210,203,188,.12)"/>
+        <path d="M160 5 A55 55 0 0 1 160 115 Z" fill="rgba(242,194,78,.32)"/>
+        <path d="M160 5 A55 55 0 0 0 160 115 Z" fill="rgba(59,121,201,.3)"/>
+        <circle cx="160" cy="60" r="55" fill="none" stroke="rgba(238,232,218,.3)" stroke-width="1.4"/>
+        <text x="60" y="40" text-anchor="middle" class="q-sub" fill="#6fa0e8">fill frio</text>
+        <text x="60" y="55" text-anchor="middle" class="q-sub" fill="#6fa0e8">~6500 K</text>
+        <text x="270" y="40" text-anchor="middle" class="q-sub" fill="#f2c24e">key quente</text>
+        <text x="270" y="55" text-anchor="middle" class="q-sub" fill="#f2c24e">~3200 K</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 8.1 — O diálogo quente × frio.</b> A key quente de um lado, o fill frio do outro: o objeto ganha dimensão e clima só pela diferença de temperatura. Esse contraste de cor é uma das ferramentas mais eficientes para um render parecer "fotografado".</figcaption>
+  </figure>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Nunca use luz 100% branca pura</div>
+    <p>Luz branca pura (RGB 1,1,1, sem temperatura) parece estéril e "CG". A luz real <em>sempre</em> tem uma temperatura — mesmo a luz do dia puxa levemente para o frio, mesmo uma lâmpada "branca" puxa para o quente. Dê a cada luz uma temperatura, ainda que sutil: uma key levemente quente, um fill levemente frio. Essa pequena cor nas luzes é uma das diferenças invisíveis entre um render amador (branco chapado) e um profissional (cores de luz vivas e intencionais).</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE III ===================== -->
+<div class="parte-cover" id="parte3">
+  <div class="pn">PARTE III</div>
+  <h2>Sombras</h2>
+  <p>A sombra é a outra metade da luz — e cada motor a resolve de um jeito. Esta parte mostra como o EEVEE (com seus Virtual Shadow Maps reescritos) e o Cycles (com sombras traçadas por raio) produzem sombras, como controlá-las, e a ferramenta especial do shadow catcher para integrar 3D em fotografia.</p>
+</div>
+
+<!-- ===== CAP 9 ===== -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Sombras em EEVEE</h2>
+
+  <p class="lead">No EEVEE, sombras são calculadas por <strong>shadow maps</strong> — e o EEVEE Next reescreveu esse sistema com os <strong>Virtual Shadow Maps</strong>, que entregam sombras de alta resolução, suaves e estáveis sem a configuração delicada de antes.</p>
+
+  <h3>9.1 — Como o EEVEE faz sombras</h3>
+  <p>Um <strong>shadow map</strong> é uma imagem de profundidade renderizada do ponto de vista da luz: o motor verifica, para cada ponto da cena, se a luz "enxerga" aquele ponto ou se algo o bloqueia — e desenha a sombra. É a técnica rápida dos games. O desafio histórico era a resolução: shadow maps de baixa resolução davam sombras serrilhadas ou imprecisas, e ajustá-los exigia mexer em vários parâmetros delicados.</p>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — Virtual Shadow Maps</div>
+    <p>O EEVEE Next substituiu o sistema antigo pelos <strong>Virtual Shadow Maps</strong>: sombras de resolução muito maior (<strong>4096</strong> contra 1024 do EEVEE antigo), mais nítidas e com menos artefatos (bias), sem consumir muita memória, e com setup simplificado. A visibilidade da luz é calculada com <strong>Shadow Map Ray Tracing</strong>, que produz <strong>sombras suaves plausíveis</strong> automaticamente (a partir do tamanho da fonte, Cap. 7) sem precisar do antigo "jittering" manual. Na prática: sombras boas por padrão, com muito menos ajuste fino.</p>
+  </div>
+
+  <h3>9.2 — Os controles que sobram</h3>
+  <table>
+    <tr><th>Controle</th><th>O que faz</th></tr>
+    <tr><td><strong>Shadows (on/off por luz)</strong></td><td>Liga/desliga a sombra daquela luz</td></tr>
+    <tr><td><strong>Tamanho da fonte</strong></td><td>Controla a suavidade da sombra (Cap. 7) — agora o principal controle</td></tr>
+    <tr><td><strong>Shadow settings (cena)</strong></td><td>Resolução/qualidade global das sombras do EEVEE</td></tr>
+    <tr><td><strong>Contact Shadows / Ray-traced</strong></td><td>Sombras de contato finas onde objetos se tocam, para ancorar</td></tr>
+    <tr><td><strong>Jittered Shadows</strong></td><td>Amostragem extra para sombras suaves mais precisas (custa tempo)</td></tr>
+  </table>
+
+  <h3>9.3 — Sombras de contato</h3>
+  <p>Um detalhe que vende o realismo: as <strong>sombras de contato</strong> — aquelas sombrinhas finas e escuras exatamente onde um objeto toca o chão. Sem elas, objetos parecem "flutuar". O EEVEE oferece sombras de contato (e, no EEVEE Next, a visibilidade ray-traced ajuda a resolvê-las melhor) para ancorar os objetos à superfície. É o tipo de detalhe sutil que o olho não nota quando está certo, mas estranha quando falta.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Sombra suave vem do tamanho, não de um botão</div>
+    <p>No EEVEE Next, se você quer sombras mais suaves, o caminho principal é <strong>aumentar o tamanho da fonte de luz</strong> (Cap. 7) — não procurar um parâmetro "suavidade de sombra". Os Virtual Shadow Maps + ray tracing já traduzem o tamanho da fonte em penumbra plausível automaticamente. Isso unifica EEVEE e Cycles: nos dois, a sombra macia nasce de uma fonte grande. Pensar em "tamanho físico da luz" em vez de "configuração de sombra" simplifica tudo.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 10 ===== -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Sombras em Cycles e o shadow catcher</h2>
+
+  <p class="lead">No Cycles, sombras não são um sistema à parte — elas <strong>emergem</strong> do path tracing. Como o motor traça raios de luz pela cena, a sombra é simplesmente onde os raios não chegam. Isso as torna fisicamente corretas por natureza, e abre a ferramenta do <strong>shadow catcher</strong> para integrar render com fotografia.</p>
+
+  <h3>10.1 — Sombras que nascem da física</h3>
+  <p>No Cycles, quando um raio de luz é bloqueado por um objeto, a região atrás fica na sombra — automaticamente. Não há shadow map a configurar: a sombra é uma consequência direta de traçar a luz. Isso significa que sombras do Cycles são sempre corretas em forma, suavidade (derivada do tamanho da fonte, Cap. 7) e cor (uma sombra sob luz colorida ou perto de uma parede colorida recebe o reflexo daquela cor, via GI — Cap. 15). O custo é o de sempre no Cycles: ruído e tempo (Caps. 17–18).</p>
+
+  <h3>10.2 — O shadow catcher</h3>
+  <p>O <strong>shadow catcher</strong> é um truque essencial para <em>compositing</em>: integrar um objeto 3D numa foto ou vídeo real. Você marca um objeto (geralmente um plano representando o chão da foto) como <em>Shadow Catcher</em> (em Object Properties ▸ Visibility ▸ Cycles): ele fica <strong>invisível no render</strong>, mas <strong>captura as sombras</strong> que o objeto 3D projeta sobre ele. No compositing, você sobrepõe só a sombra (e o objeto) à fotografia, e parece que o objeto 3D sempre esteve lá, lançando sombra no chão real.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 170" role="img" aria-label="O shadow catcher capturando só a sombra">
+      <g transform="translate(60,20)">
+        <text x="120" y="10" text-anchor="middle" class="q-lbl">objeto 3D + shadow catcher</text>
+        <circle cx="60" cy="30" r="6" class="q-glow"/>
+        <path d="M120 55 a25 25 0 1 1 0 50 a25 25 0 1 1 0 -50" class="q-obj"/>
+        <rect x="20" y="115" width="220" height="8" fill="rgba(210,203,188,.12)"/>
+        <path d="M120 105 L180 120 L210 120 L120 100 Z" class="q-shadow"/>
+        <text x="120" y="145" text-anchor="middle" class="q-sub">chão = catcher (invisível)</text>
+      </g>
+      <g transform="translate(420,20)">
+        <text x="120" y="10" text-anchor="middle" class="q-lbl">composto na foto</text>
+        <rect x="0" y="20" width="240" height="110" rx="3" fill="rgba(59,121,201,.06)" stroke="var(--q-dim)" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="120" y="44" text-anchor="middle" class="q-sub">foto real</text>
+        <path d="M120 55 a25 25 0 1 1 0 50 a25 25 0 1 1 0 -50" class="q-obj"/>
+        <path d="M120 105 L180 120 L210 120 L120 100 Z" class="q-shadow"/>
+        <text x="120" y="148" text-anchor="middle" class="q-sub">só a sombra é "colada"</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 10.1 — Sombra sem chão.</b> O shadow catcher é invisível no render, mas recolhe a sombra do objeto 3D. Composta sobre a fotografia, essa sombra ancora o objeto virtual no cenário real — a base de integrar CG em live-action.</figcaption>
+  </figure>
+
+  <h3>10.3 — Controlar sombras "fisicamente"</h3>
+  <p>Como as sombras do Cycles vêm da física, controlá-las significa controlar a <strong>luz</strong>: o tamanho da fonte muda a suavidade (Cap. 7), a posição muda a direção e o comprimento, a cor e a GI mudam a cor da sombra. Quando precisar quebrar a física (uma sombra que não deveria existir, ou uma luz que ignora certo objeto), entra o <strong>light/shadow linking</strong> (Cap. 28) — o controle artístico que o Cycles oferece para burlar as regras de propósito.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Sombra correta é consequência, não ajuste</div>
+    <p>A diferença filosófica entre os motores aparece nítida nas sombras. No EEVEE, a sombra é um <em>sistema</em> que se configura (shadow maps, resolução, contato). No Cycles, a sombra é uma <em>consequência</em> de traçar a luz — você não a ajusta, você ajusta a luz e a sombra segue, sempre correta. Por isso, no Cycles, "consertar uma sombra" é quase sempre "ajustar a fonte de luz". Entender de onde a sombra vem em cada motor evita procurar o controle errado.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE IV ===================== -->
+<div class="parte-cover" id="parte4">
+  <div class="pn">PARTE IV</div>
+  <h2>Mundo e ambiente</h2>
+  <p>Nem toda luz vem de "lâmpadas". O <strong>World</strong> ilumina a cena inteira como um céu envolvente — e os HDRIs trazem a luz de ambientes reais para dentro do Blender com fotorrealismo instantâneo. Esta parte cobre o World, a iluminação por imagem (IBL) e a sky texture Nishita para sol e céu fisicamente corretos.</p>
+</div>
+
+<!-- ===== CAP 11 ===== -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 11</div><div class="fio"></div></div>
+  <h2 class="titulo">O World e a luz ambiente</h2>
+
+  <p class="lead">O <strong>World</strong> é o "céu" infinito que envolve toda a cena. Ele define o fundo e, crucialmente, emite <strong>luz ambiente</strong> de todas as direções — a luz suave que preenche as sombras e que muitas vezes é metade (ou mais) da iluminação de uma cena.</p>
+
+  <h3>11.1 — O World como fonte de luz</h3>
+  <p>Em <span class="menupath">World Properties</span>, a cor (ou textura) do World não é só o fundo visível — ela <strong>ilumina</strong> tudo. Um World cinza médio banha a cena numa luz ambiente neutra e onidirecional; um World azulado dá uma luz fria de "céu aberto"; um World escuro deixa só as luzes diretas atuarem (visual dramático, de estúdio escuro). A <strong>Strength</strong> controla a intensidade dessa luz ambiente.</p>
+
+  <h3>11.2 — O ambiente preenche as sombras</h3>
+  <p>A luz do World é tipicamente o seu <strong>preenchimento global</strong>: ela suaviza as sombras das luzes diretas, garantindo que nenhuma área fique totalmente preta (a menos que você queira). Pense no World como o "céu" de uma cena externa, ou como a luz que ricocheteia pelas paredes de um ambiente — a base ambiente sobre a qual as luzes-chave atuam. Ajustar o equilíbrio entre a luz do World (ambiente) e as luzes diretas (chave) é uma decisão fundamental de contraste.</p>
+
+  <h3>11.3 — World por nós</h3>
+  <p>O World é controlado por nós (como os materiais), no <em>World shader</em>. O nó <strong>Background</strong> (cor + força) é o básico; a partir dele você pode plugar uma <em>Environment Texture</em> (um HDRI, Cap. 12), uma <em>Sky Texture</em> (Cap. 13), gradientes, ou misturas — construindo desde um céu liso até um ambiente fotográfico complexo. O World é, em essência, uma esfera infinita emissiva cuja "imagem" você pinta com nós.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Não deixe o World preto sem querer</div>
+    <p>Um erro comum: a cena parece dura e com sombras "mortas" (totalmente pretas) porque o World está escuro ou zerado, sem nenhuma luz ambiente. Antes de adicionar dezenas de luzes de preenchimento, experimente <strong>dar uma luz sutil ao World</strong> — um cinza escuro ou um azul tênue de baixa intensidade. Esse ambiente mínimo já preenche as sombras de forma natural e realista, do jeito que o céu e as paredes preenchem no mundo real. Às vezes o que falta numa cena dura não é mais luz direta — é um pouco de ambiente.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 12 ===== -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">HDRIs e image-based lighting</h2>
+
+  <p class="lead">A forma mais rápida de iluminação fotorrealista: o <strong>HDRI</strong>. Uma foto panorâmica 360° de alto alcance dinâmico de um ambiente real, aplicada ao World, ilumina sua cena com a luz exata daquele lugar — reflexos, cor e direção inclusos. É a image-based lighting (IBL).</p>
+
+  <h3>12.1 — O que é um HDRI</h3>
+  <p>Um <strong>HDRI</strong> (High Dynamic Range Image) é uma imagem esférica 360° que captura não só as cores de um ambiente, mas o <strong>alcance real de brilho</strong> — do sol ofuscante às sombras profundas, em valores HDR. Aplicado como Environment Texture no World, ele transforma a cena num "molde" daquele ambiente: a luz vem das direções certas, com as cores certas, e os objetos refletem o entorno fotográfico de verdade. É por isso que um produto renderizado sob um bom HDRI parece fotografado num estúdio real.</p>
+
+  <h3>12.2 — Aplicar e controlar</h3>
+  <ol class="passos">
+    <li><h4>Carregue o HDRI no World</h4><p>No World shader, adicione um nó <em>Environment Texture</em>, abra o arquivo .hdr/.exr e plugue na cor do Background.</p></li>
+    <li><h4>Ajuste a intensidade</h4><p>A Strength do Background controla o brilho geral da iluminação ambiente.</p></li>
+    <li><h4>Gire o HDRI</h4><p>Use um nó <em>Mapping</em> (com Texture Coordinate ▸ Generated) para rotacionar o ambiente — girar o HDRI muda de onde vem a luz principal e como caem as sombras, sem mover nada na cena.</p></li>
+    <li><h4>Separe luz de fundo (opcional)</h4><p>Com nós (Light Path ▸ Is Camera Ray), você pode usar o HDRI para iluminar mas mostrar outro fundo — ou esconder o HDRI do fundo e manter só a luz.</p></li>
+  </ol>
+
+  <h3>12.3 — Escolher o HDRI certo</h3>
+  <p>O HDRI <em>é</em> a sua iluminação, então escolha-o como escolheria uma locação: um HDRI de estúdio dá luz de softbox controlada; um de pôr do sol dá luz quente direcional e dramática; um nublado dá luz suave e uniforme; um interior dá a atmosfera daquele espaço. Sites como o Poly Haven oferecem HDRIs gratuitos de alta qualidade. A <strong>direção do sol</strong> no HDRI e a <strong>suavidade</strong> da luz já vêm "embutidas" — por isso girar e escolher o HDRI certo resolve a iluminação inteira de muitas cenas.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ IBL: a luz do mundo real, emprestada</div>
+    <p>A image-based lighting é poderosa porque <strong>captura toda a complexidade da luz real de uma vez</strong>. Recriar manualmente a luz de um entardecer — o sol quente, o céu gradiente, o bounce do chão, os reflexos do ambiente — exigiria dezenas de luzes ajustadas com perfeição. Um HDRI daquele entardecer entrega tudo isso instantaneamente, fisicamente correto. Por isso a IBL é o ponto de partida de tanto trabalho fotorrealista: você empresta a luz que a natureza já compôs, e depois acrescenta luzes próprias para refinar.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ HDRI para a base, luzes para o controle</div>
+    <p>O fluxo mais eficiente combina os dois: use um <strong>HDRI</strong> para estabelecer a iluminação ambiente realista e os reflexos, e adicione <strong>luzes próprias</strong> (Area, Sun) por cima para controlar o que o HDRI não dá — uma key mais forte no rosto, um rim light para destacar, um realce num produto. O HDRI dá realismo e contexto; as luzes adicionais dão controle artístico. Depender só do HDRI limita o controle; ignorá-lo joga fora realismo grátis. Juntos, é o melhor dos dois.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 13 ===== -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Sky texture (Nishita): sol e céu reais</h2>
+
+  <p class="lead">Para cenas externas com sol, há uma alternativa procedural ao HDRI: a <strong>Sky Texture</strong> com o modelo <strong>Nishita</strong>, que simula fisicamente a atmosfera da Terra — gerando um céu e um sol realistas que você controla pela hora do dia e pelas condições do ar.</p>
+
+  <h3>13.1 — Um céu calculado pela física</h3>
+  <p>A Sky Texture (Nishita) é um modelo atmosférico: ela calcula como a luz do sol se espalha pela atmosfera para produzir a cor do céu — azul no alto, alaranjado no horizonte ao entardecer, tudo fisicamente plausível. Aplicada no World, ela dá uma iluminação solar completa (sol direcional + céu ambiente) que muda realisticamente conforme você ajusta a posição do sol.</p>
+
+  <h3>13.2 — Os controles</h3>
+  <table>
+    <tr><th>Controle</th><th>O que faz</th></tr>
+    <tr><td><strong>Sun Elevation / Rotation</strong></td><td>Posição do sol no céu — define a hora do dia (do nascer ao pôr do sol)</td></tr>
+    <tr><td><strong>Sun Intensity / Size</strong></td><td>Brilho e tamanho aparente do disco solar (afeta a dureza da sombra)</td></tr>
+    <tr><td><strong>Air / Dust / Ozone</strong></td><td>Densidade atmosférica — muda a cor e a haze do céu (de limpo a poluído/úmido)</td></tr>
+    <tr><td><strong>Altitude</strong></td><td>Altura do observador — céu mais escuro e azul no alto das montanhas</td></tr>
+  </table>
+
+  <h3>13.3 — Quando usar Nishita vs. HDRI</h3>
+  <ul>
+    <li><strong>Sky Texture (Nishita):</strong> quando você quer <em>controlar</em> a hora do dia e a atmosfera, animar o sol nascendo/se pondo, ou um céu limpo perfeito sem buscar um HDRI. Procedural, infinito, ajustável.</li>
+    <li><strong>HDRI:</strong> quando você quer a luz e os reflexos de um <em>ambiente real específico</em> (com nuvens, prédios, contexto), ou um céu com características fotográficas que o modelo procedural não tem.</li>
+  </ul>
+  <p>Muitas cenas externas combinam: a Sky Texture para o céu e a luz solar controláveis, com um Sun light alinhado para a sombra direta nítida.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Sky + Sun: a dupla do exterior</div>
+    <p>Um setup clássico e poderoso para exteriores: a <strong>Sky Texture (Nishita)</strong> no World para o céu e a luz ambiente atmosférica, somada a um <strong>Sun light</strong> orientado na mesma direção do sol da sky para reforçar a luz direta e a sombra. A sky dá a cor e o ambiente; o Sun dá a sombra nítida e o controle fino da direção. Animar a elevação do sol então cria um ciclo dia-noite completo e fisicamente convincente — só ajustando um valor.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE V ===================== -->
+<div class="parte-cover" id="parte5">
+  <div class="pn">PARTE V</div>
+  <h2>Global Illumination</h2>
+  <p>A luz real não para na primeira superfície — ela <strong>ricocheteia</strong>, carregando cor e preenchendo sombras. Essa luz indireta, a global illumination, é o que separa um render plano de um fotorrealista. Esta parte explica o que é GI, como o Cycles a entrega por natureza, e como o EEVEE Next a aproxima com light probes e ray tracing.</p>
+</div>
+
+<!-- ===== CAP 14 ===== -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é global illumination</h2>
+
+  <p class="lead">A <strong>global illumination</strong> (GI) é a luz que ricocheteia entre as superfícies — a luz <em>indireta</em>. É o que faz uma parede vermelha tingir de rosa o objeto ao lado, o que ilumina o teto de um quarto cuja única luz aponta para baixo, o que preenche sombras com cor. Sem GI, o 3D parece plano; com ela, parece real.</p>
+
+  <h3>14.1 — Luz direta vs. indireta</h3>
+  <table>
+    <tr><th></th><th>Luz direta</th><th>Luz indireta (GI)</th></tr>
+    <tr><td><strong>Caminho</strong></td><td>Da fonte direto à superfície</td><td>Da fonte → ricocheteia em superfícies → chega</td></tr>
+    <tr><td><strong>O que dá</strong></td><td>A iluminação principal, os destaques</td><td>Preenchimento de sombras, bounce de cor, realismo</td></tr>
+    <tr><td><strong>Sem ela</strong></td><td>—</td><td>Sombras pretas-mortas, cena plana e "CG"</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 720 180" role="img" aria-label="A luz ricocheteando e tingindo de cor">
+      <g transform="translate(80,20)">
+        <circle cx="40" cy="30" r="6" class="q-glow"/>
+        <!-- direct -->
+        <path d="M46 34 L150 120" class="q-ray"/>
+        <!-- bounce off red wall -->
+        <rect x="250" y="40" width="14" height="90" fill="rgba(178,58,44,.5)"/>
+        <text x="257" y="150" text-anchor="middle" class="q-sub" fill="#b23a2c">parede vermelha</text>
+        <path d="M46 34 L255 70" class="q-ray"/>
+        <path d="M255 70 L150 110" class="q-ray-c" stroke="#b23a2c" stroke-dasharray="4 3"/>
+        <circle cx="150" cy="115" r="22" class="q-obj"/>
+        <path d="M150 93 A22 22 0 0 1 150 137 Z" fill="rgba(178,58,44,.25)"/>
+        <text x="150" y="165" text-anchor="middle" class="q-sub">objeto recebe rosa no lado da parede</text>
+        <text x="95" y="60" class="q-sub" fill="#f2c24e">direta</text>
+        <text x="200" y="55" class="q-sub" fill="#b23a2c">indireta (cor)</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 14.1 — A luz que carrega cor.</b> A luz direta atinge o objeto; mas a luz que ricocheteia na parede vermelha chega tingida de rosa, "pintando" o lado voltado para ela. Esse bounce de cor (color bleeding) é um sinal inconfundível de GI — e do realismo.</figcaption>
+  </figure>
+
+  <h3>14.2 — Por que a GI é cara</h3>
+  <p>Calcular a luz indireta é caro porque exige <strong>seguir a luz por múltiplos ricochetes</strong> em todas as direções — uma explosão de caminhos possíveis. É exatamente o que o path tracing do Cycles faz (e por isso é lento e ruidoso, mas correto — Cap. 15). Os motores em tempo real, como o EEVEE, precisam <em>aproximar</em> a GI com truques mais baratos (light probes, ray tracing em tela — Cap. 16), porque seguir cada ricochete ao vivo seria impossível na velocidade de um game.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ GI é o que o olho espera, mesmo sem saber</div>
+    <p>Você não nota a global illumination conscientemente — mas seu olho <em>sente</em> a falta dela. Uma cena sem GI tem sombras pretas e duras, objetos que não "conversam" com o entorno, um ar artificial que grita "CG". Uma cena com GI tem sombras preenchidas e coloridas, superfícies que trocam luz, uma coesão que o cérebro lê como "real". Boa parte do salto de qualidade entre um render iniciante e um profissional é simplesmente a presença convincente de luz indireta. É o realismo que mora nos ricochetes.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 15 ===== -->
+<section class="cap" id="cap15">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 15</div><div class="fio"></div></div>
+  <h2 class="titulo">GI no Cycles (path tracing por natureza)</h2>
+
+  <p class="lead">No Cycles, a global illumination não é um recurso a ligar — ela é <strong>inevitável</strong>. Como o motor traça os caminhos da luz pela cena, os ricochetes acontecem por si. Você não "ativa" a GI; você só controla quantos ricochetes calcular e com que qualidade.</p>
+
+  <h3>15.1 — A GI vem de graça</h3>
+  <p>O path tracing segue cada raio de luz enquanto ele ricocheteia de superfície em superfície. Logo, a luz indireta (bounce de cor, preenchimento de sombras, iluminação de um teto por reflexo no chão) surge <strong>automaticamente</strong> — é só a física fazendo o que faz. Por isso o Cycles é a referência de fotorrealismo: você não monta a GI, ela emerge correta da simulação. O preço é o de sempre: tempo e ruído (Caps. 17–18), porque seguir todos esses ricochetes exige muitas amostras.</p>
+
+  <h3>15.2 — Controlar os bounces (Light Paths)</h3>
+  <p>Em <span class="menupath">Render Properties ▸ Light Paths</span>, você define <strong>quantos ricochetes</strong> o Cycles calcula, por tipo (Diffuse, Glossy, Transmission, Volume — Cap. 19). Mais bounces = GI mais completa e precisa, mais lento; menos bounces = mais rápido, mas a luz indireta se "perde" depois de poucos ricochetes (um interior fica escuro demais). O equilíbrio depende da cena: um exterior precisa de poucos bounces; um interior fechado, de mais (a luz precisa ricochetear bastante para preencher o espaço).</p>
+
+  <h3>15.3 — Cenas com muitas luzes</h3>
+  <p>O Cycles tem amostragem inteligente para cenas com <strong>muitas fontes de luz</strong> (a "light tree" / many-light sampling): em vez de testar todas as luzes para cada ponto (caríssimo), ele escolhe estatisticamente as que mais importam ali. Isso torna viável iluminar cenas com centenas ou milhares de luzes (uma cidade noturna, um teto cheio de spots) sem o custo explodir. É o que permite GI realista em cenas complexas de iluminação.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Interiores precisam de mais bounces</div>
+    <p>Se um ambiente fechado (um quarto, um corredor) renderiza escuro demais no Cycles apesar de ter luz entrando, suspeite dos <strong>bounces de diffuse</strong> baixos demais em Light Paths. A luz de uma janela precisa ricochetear várias vezes nas paredes para preencher o interior — com poucos bounces, ela "morre" antes de iluminar o fundo do cômodo. Aumente os Diffuse bounces (e use portals, Cap. 20, para ajudar a luz a entrar). Exteriores, por outro lado, raramente precisam de muitos bounces — a luz escapa para o céu.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 16 ===== -->
+<section class="cap" id="cap16">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 16</div><div class="fio"></div></div>
+  <h2 class="titulo">Light probes e GI no EEVEE Next</h2>
+
+  <p class="lead">O EEVEE não pode traçar todos os ricochetes ao vivo, então aproxima a GI de duas formas: <strong>ray tracing em tela</strong> (para o que está visível) e <strong>light probes</strong> (caches de luz que capturam o entorno). Juntos, eles trazem luz indireta realista para o tempo real.</p>
+
+  <h3>16.1 — Ray tracing em tela (SSGI)</h3>
+  <p>O EEVEE Next traça raios contra o que está na <strong>tela</strong> para calcular reflexos e GI de superfície — a luz ricocheteia entre objetos visíveis, preenchendo sombras e tingindo de cor, em tempo real. É poderoso, mas tem o limite de ser "screen-space": só enxerga o que está enquadrado. O que sai da tela (atrás da câmera, fora de quadro) não pode ser traçado assim — e é aí que entram os probes.</p>
+
+  <h3>16.2 — Os três light probes</h3>
+  <p>Os <strong>light probes</strong> são objetos que você posiciona na cena para <em>capturar</em> a luz e os reflexos do entorno, preenchendo o que o ray tracing em tela não alcança. O EEVEE Next tem três tipos:</p>
+  <table>
+    <tr><th>Probe</th><th>Captura</th><th>Para</th></tr>
+    <tr><td><strong>Volume</strong> (irradiância)</td><td>A luz indireta difusa de uma região 3D</td><td>GI difusa: preencher um ambiente com luz que ricocheteia</td></tr>
+    <tr><td><strong>Sphere</strong> (reflexão)</td><td>Os reflexos do entorno num ponto</td><td>Reflexos especulares precisos em superfícies brilhantes</td></tr>
+    <tr><td><strong>Plane</strong> (planar)</td><td>Reflexos numa superfície plana (espelho, piso)</td><td>Espelhos, pisos polidos, água — reflexos planos nítidos</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 720 170" role="img" aria-label="Light probes capturando a luz de uma sala">
+      <g transform="translate(80,20)">
+        <rect x="0" y="10" width="280" height="120" rx="3" fill="none" stroke="var(--q-base)" stroke-width="1.4"/>
+        <text x="140" y="2" text-anchor="middle" class="q-sub">ambiente</text>
+        <!-- volume probe grid -->
+        <g fill="var(--q-luz)" opacity=".6"><circle cx="50" cy="45" r="3"/><circle cx="110" cy="45" r="3"/><circle cx="170" cy="45" r="3"/><circle cx="230" cy="45" r="3"/><circle cx="50" cy="95" r="3"/><circle cx="110" cy="95" r="3"/><circle cx="170" cy="95" r="3"/><circle cx="230" cy="95" r="3"/></g>
+        <text x="140" y="150" text-anchor="middle" class="q-sub" fill="#f2c24e">Volume probe: grade que amostra a luz indireta</text>
+      </g>
+      <g transform="translate(440,20)">
+        <circle cx="80" cy="70" r="40" fill="none" stroke="var(--q-frio)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="80" cy="70" r="14" class="q-obj"/>
+        <text x="80" y="135" text-anchor="middle" class="q-sub" fill="#6fa0e8">Sphere probe: capta reflexos</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 16.1 — Caches de luz no espaço.</b> O Volume probe semeia uma grade que amostra a luz indireta de um ambiente (GI difusa); o Sphere probe captura os reflexos do entorno num ponto. Posicionados na cena, eles dão ao EEVEE a luz que o ray tracing em tela não enxerga.</figcaption>
+  </figure>
+
+  <h3>16.3 — Assar (bake) os probes</h3>
+  <p>Os probes precisam ser <strong>assados</strong> (bake) para capturar a luz da cena — um cálculo prévio que grava a iluminação indireta nos probes.</p>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — bake de probes reescrito</div>
+    <p>O EEVEE Next reescreveu o sistema de <strong>cache de irradiância</strong>: o bake agora mapeia os dados para os <strong>light probes</strong> da cena, o que permite <strong>modificar a cena sem precisar reassar tudo</strong> — um fluxo muito mais ágil que o antigo. Combinado com o ray tracing em tela para todo BSDF, a GI do EEVEE ficou bem mais próxima do Cycles, em tempo real. Os probes foram renomeados e reorganizados (Volume, Sphere, Plane) para esse novo sistema.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Esqueceu de assar? GI some</div>
+    <p>No EEVEE, se a luz indireta não aparece (ou os reflexos estão errados), a causa frequente é <strong>probes não assados</strong> ou ausentes. Diferente do Cycles (onde a GI é automática), o EEVEE depende dos probes assados para a luz que sai da tela. Ao montar uma cena no EEVEE: posicione um Volume probe cobrindo o ambiente, Sphere probes onde há reflexos importantes, e <strong>asse</strong>. Se mudar a iluminação ou a geometria de forma grande, reasse. Probes esquecidos são a causa nº 1 de GI faltando no EEVEE.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VI ===================== -->
+<div class="parte-cover" id="parte6">
+  <div class="pn">PARTE VI</div>
+  <h2>Cycles a fundo</h2>
+  <p>O motor de path tracing tem seus próprios desafios e controles: o ruído e as amostras, o denoising que o combate, os light paths que governam os ricochetes, os fenômenos difíceis como caustics, e a arte de otimizar para render rápido sem perder qualidade. Esta parte é o manual de domínio do Cycles.</p>
+</div>
+
+<!-- ===== CAP 17 ===== -->
+<section class="cap" id="cap17">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 17</div><div class="fio"></div></div>
+  <h2 class="titulo">Path tracing, samples e ruído</h2>
+
+  <p class="lead">Para dominar o Cycles, é preciso entender de onde vem o <strong>ruído</strong> — aquele granulado que cobre os renders. Ele não é um bug: é a assinatura do path tracing, e gerenciá-lo (com samples e denoise) é a habilidade central de quem renderiza no Cycles.</p>
+
+  <h3>17.1 — Por que o Cycles tem ruído</h3>
+  <p>Para cada pixel, o Cycles lança <strong>raios aleatórios</strong> que ricocheteiam pela cena, e calcula a média da luz que eles trazem. Com <em>poucos</em> raios (samples), essa média é uma estimativa grosseira — alguns raios acham luz, outros não, e o resultado "treme" de pixel a pixel: isso é o <strong>ruído</strong>. Quanto <em>mais</em> samples, mais raios são promediados, mais a estimativa converge para o valor correto, e mais limpo fica o pixel. O ruído é o preço de simular a luz estatisticamente.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 150" role="img" aria-label="Mais samples reduzem o ruído">
+      <g transform="translate(60,20)" font-family="JetBrains Mono">
+        <g>
+          <rect x="0" y="10" width="90" height="90" rx="4" fill="#211c14"/>
+          <g fill="var(--q-luz)" opacity=".5"><circle cx="20" cy="30" r="2"/><circle cx="60" cy="22" r="2"/><circle cx="40" cy="55" r="2"/><circle cx="75" cy="70" r="2"/><circle cx="15" cy="80" r="2"/><circle cx="55" cy="88" r="2"/><circle cx="30" cy="40" r="2"/></g>
+          <text x="45" y="120" text-anchor="middle" class="q-sub">16 samples</text>
+          <text x="45" y="135" text-anchor="middle" class="q-sub">muito ruído</text>
+        </g>
+        <g transform="translate(170,0)">
+          <rect x="0" y="10" width="90" height="90" rx="4" fill="#2a241a"/>
+          <g fill="var(--q-luz)" opacity=".4"><circle cx="25" cy="35" r="1.5"/><circle cx="55" cy="40" r="1.5"/><circle cx="40" cy="60" r="1.5"/><circle cx="65" cy="65" r="1.5"/></g>
+          <text x="45" y="120" text-anchor="middle" class="q-sub">128 samples</text>
+          <text x="45" y="135" text-anchor="middle" class="q-sub">pouco ruído</text>
+        </g>
+        <g transform="translate(340,0)">
+          <rect x="0" y="10" width="90" height="90" rx="4" fill="#34281a"/>
+          <text x="45" y="120" text-anchor="middle" class="q-sub">1024 samples</text>
+          <text x="45" y="135" text-anchor="middle" class="q-sub">limpo (lento)</text>
+        </g>
+        <g transform="translate(510,0)">
+          <rect x="0" y="10" width="90" height="90" rx="4" fill="#34281a"/>
+          <path d="M20 55 L40 75 L72 35" stroke="var(--q-frio)" stroke-width="3" fill="none"/>
+          <text x="45" y="120" text-anchor="middle" class="q-sub">128 + denoise</text>
+          <text x="45" y="135" text-anchor="middle" class="q-sub">limpo e rápido</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption><b>Figura 17.1 — Samples vs. ruído.</b> Mais samples = menos ruído, mas o tempo cresce. O denoising (último quadro) limpa o ruído de uma contagem baixa de samples — por isso o fluxo moderno é "samples moderados + denoise" (Cap. 18), em vez de forçar milhares de samples.</figcaption>
+  </figure>
+
+  <h3>17.2 — Samples no viewport e no render</h3>
+  <p>Há duas configurações de samples (em <span class="menupath">Render Properties ▸ Sampling</span>): <strong>Viewport</strong> (para a pré-visualização interativa) e <strong>Render</strong> (para o frame final). E há o <strong>Adaptive Sampling</strong>: o Cycles detecta quais pixels já convergiram (limpos) e para de gastar samples neles, concentrando esforço nas áreas ainda ruidosas — uma economia automática importante. Defina um <em>Noise Threshold</em> (o nível de ruído aceitável) e o Cycles para quando atingi-lo.</p>
+
+  <h3>17.3 — O que mais causa ruído</h3>
+  <ul>
+    <li><strong>Pouca luz / fontes pequenas:</strong> cenas escuras ou com luzes minúsculas são as mais ruidosas (poucos raios acham a luz).</li>
+    <li><strong>Caustics e glossy:</strong> reflexos e refrações complexas geram muito ruído (Cap. 20).</li>
+    <li><strong>Interiores fechados:</strong> a luz precisa de muitos ricochetes, cada um adicionando ruído.</li>
+    <li><strong>Volumes (fumaça, névoa):</strong> caros e ruidosos (Cap. 25).</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Não combata ruído só com samples</div>
+    <p>A reação instintiva ao ruído é aumentar os samples — mas isso é o caminho mais lento. Antes, ataque a <strong>causa</strong>: fontes de luz maiores (mais raios acham a luz), mais luz na cena, denoising (Cap. 18), clamping de valores extremos (Cap. 19), portals em interiores (Cap. 20). Aumentar samples é o último recurso, não o primeiro. Um iluminador experiente resolve a maior parte do ruído mudando a <em>cena</em> (luzes maiores, menos caustics) e usando o denoiser — reservando samples altos só para o que realmente precisa.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 18 ===== -->
+<section class="cap" id="cap18">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 18</div><div class="fio"></div></div>
+  <h2 class="titulo">Denoising</h2>
+
+  <p class="lead">O <strong>denoising</strong> é a tecnologia que revolucionou o Cycles: em vez de forçar milhares de samples para limpar o ruído, um algoritmo inteligente "limpa" o granulado de um render com poucos samples — cortando o tempo de render drasticamente. Hoje, é parte essencial de quase todo fluxo.</p>
+
+  <h3>18.1 — Os denoisers do Blender</h3>
+  <table>
+    <tr><th>Denoiser</th><th>Característica</th></tr>
+    <tr><td><strong>OptiX</strong></td><td>Por IA, em GPUs NVIDIA; rapidíssimo, ótimo para viewport interativo e render</td></tr>
+    <tr><td><strong>OpenImageDenoise (OIDN)</strong></td><td>Da Intel; funciona em qualquer CPU/GPU; excelente qualidade, padrão para render final</td></tr>
+  </table>
+  <p>Ambos usam IA treinada para distinguir ruído de detalhe real e reconstruir a imagem limpa. O OIDN tende a ser a escolha de qualidade para o frame final; o OptiX brilha na interatividade do viewport.</p>
+
+  <h3>18.2 — Onde o denoise atua</h3>
+  <ul>
+    <li><strong>Viewport Denoising:</strong> limpa a pré-visualização interativa em tempo quase real — você ilumina vendo um resultado limpo, não um granulado.</li>
+    <li><strong>Render Denoising:</strong> aplicado ao frame final, depois dos samples.</li>
+    <li><strong>Compositor (Denoise node):</strong> denoise no pós, usando passes auxiliares (Albedo, Normal) para preservar detalhe — controle máximo.</li>
+  </ul>
+
+  <h3>18.3 — Denoise bem, não cegamente</h3>
+  <p>O denoiser é poderoso, mas não mágico: com <strong>ruído de menos a partir</strong> (samples razoáveis), ele entrega resultado limpo e fiel; com <strong>ruído demais</strong> (samples baixíssimos), ele pode "borrar" detalhes, criar manchas ou perder textura fina. O fluxo ideal: dê samples <em>suficientes</em> para o denoiser ter o que trabalhar (guiado pelo Adaptive Sampling e seu Noise Threshold), e deixe o denoiser fazer o resto. Usar as passes de Albedo e Normal melhora muito a preservação de detalhe.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ O denoise mudou a economia do render</div>
+    <p>Antes do denoising por IA, render limpo no Cycles exigia milhares de samples e tempos brutais. O denoiser inverteu essa economia: hoje você renderiza com samples <em>moderados</em> (dezenas a poucas centenas) e deixa a IA limpar — cortando o tempo de render por uma fração enorme. Isso democratizou o fotorrealismo: o que exigia uma render-farm agora roda numa máquina comum. Dominar a dupla <strong>samples moderados + denoise</strong> é, hoje, a habilidade prática mais valiosa do render no Cycles.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 19 ===== -->
+<section class="cap" id="cap19">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 19</div><div class="fio"></div></div>
+  <h2 class="titulo">Light paths, bounces e clamping</h2>
+
+  <p class="lead">O painel <strong>Light Paths</strong> é o coração do controle de GI no Cycles: ele decide quantas vezes a luz pode ricochetear, por tipo de superfície, e oferece o <strong>clamping</strong> — a ferramenta-chave contra os fireflies, aqueles pontos brilhantes que estragam renders.</p>
+
+  <h3>19.1 — Os tipos de bounce</h3>
+  <p>Em <span class="menupath">Render Properties ▸ Light Paths ▸ Max Bounces</span>, você define o limite de ricochetes para cada tipo de interação:</p>
+  <table>
+    <tr><th>Bounce</th><th>Governa</th></tr>
+    <tr><td><strong>Total</strong></td><td>O teto geral de ricochetes de qualquer tipo</td></tr>
+    <tr><td><strong>Diffuse</strong></td><td>Ricochetes em superfícies foscas — a GI difusa (luz preenchendo um ambiente)</td></tr>
+    <tr><td><strong>Glossy</strong></td><td>Reflexos em superfícies brilhantes (reflexo de reflexo de reflexo)</td></tr>
+    <tr><td><strong>Transmission</strong></td><td>Luz atravessando vidro/líquidos (importante para transparências realistas)</td></tr>
+    <tr><td><strong>Volume</strong></td><td>Ricochetes dentro de volumes (fumaça, névoa)</td></tr>
+  </table>
+  <p>Cada bounce a mais aumenta o realismo e o custo. Um vidro espesso precisa de vários Transmission bounces para a luz atravessar suas faces; um interior precisa de Diffuse bounces generosos; um exterior simples vive com poucos.</p>
+
+  <h3>19.2 — Clamping: domando os fireflies</h3>
+  <p>Os <strong>fireflies</strong> são pixels isolados muito brilhantes — pontos brancos espalhados que demoram enormemente para "limpar" com samples. Eles surgem quando um raio raro encontra um valor de luz extremo (um reflexo minúsculo do sol, uma caustic). O <strong>Clamping</strong> (Clamp Direct / Clamp Indirect, em Light Paths) corta valores de luz acima de um teto, eliminando esses picos extremos — e com eles, os fireflies. Um clamp indireto moderado é um dos ajustes mais eficazes contra ruído pontual.</p>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — rebalancear luz sem mexer no sampling</div>
+    <p>O <strong>5.1</strong> trouxe ao EEVEE controles de <strong>intensidade de light path</strong> que permitem reequilibrar a contribuição da luz direta e indireta <em>globalmente</em>, sem alterar as configurações de sampling — afetando só o pixel final, de forma parecida com compositing, mas leve e compatível com todos os materiais. É um controle artístico para "turbinar" ou "segurar" a GI sem o custo de re-renderizar com outro sampling. No Cycles, o equilíbrio direta/indireta continua vindo dos bounces e do clamping deste capítulo.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Clamp demais achata a luz</div>
+    <p>O clamping mata fireflies, mas em excesso ele <strong>corta destaques legítimos</strong> — o brilho intenso de uma fonte forte, o realce especular num metal — achatando o alcance dinâmico e deixando a imagem "morna". Use um clamp <em>indireto</em> moderado (ele afeta menos o visual e pega a maioria dos fireflies) e seja cauteloso com o clamp <em>direto</em> (que toca os destaques principais). O objetivo é cortar os picos absurdos, não nivelar o brilho. Comece alto e desça só o necessário.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 20 ===== -->
+<section class="cap" id="cap20">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 20</div><div class="fio"></div></div>
+  <h2 class="titulo">Caustics, portals e fenômenos difíceis</h2>
+
+  <p class="lead">Alguns efeitos de luz são notoriamente difíceis para o path tracing: as <strong>caustics</strong> (a luz focada por vidro e água), e a luz entrando por <strong>aberturas pequenas</strong> em interiores. O Cycles tem ferramentas específicas — portals, caustics seletivas — para domar esses casos.</p>
+
+  <h3>20.1 — Caustics: a luz que o vidro foca</h3>
+  <p>As <strong>caustics</strong> são aqueles padrões de luz brilhante que aparecem quando a luz atravessa vidro ou água e se concentra — o desenho luminoso no fundo de uma piscina, a mancha de luz que um copo projeta. São lindas e realistas, mas <strong>extremamente ruidosas</strong> para o path tracing padrão (a luz precisa de um caminho muito específico e raro para formá-las). O Cycles oferece <strong>Shadow Caustics</strong>: você marca seletivamente quais objetos projetam/recebem caustics, permitindo o efeito de forma controlada sem o ruído tomar a cena toda.</p>
+
+  <h3>20.2 — Portals: ajudando a luz a entrar</h3>
+  <p>Em <strong>interiores iluminados por janelas pequenas</strong>, o path tracing sofre: poucos raios "encontram" o caminho pela janela, então o interior fica escuro e ruidoso. Os <strong>portals</strong> (uma Area light marcada como Portal, posicionada na abertura) <em>dizem ao Cycles</em> onde a luz entra, fazendo a amostragem mirar a janela — o que limpa o ruído do interior dramaticamente, sem mudar a aparência da luz. É a ferramenta clássica para interiores arquitetônicos.</p>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — Ray Portals e volumes mais limpos</div>
+    <p>O Cycles ganhou os <strong>Ray Portals</strong> (desde o 4.2): um tipo de portal que "teleporta" raios, útil para iluminação de interiores e efeitos ópticos. E o render de <strong>volumes</strong> foi muito aprimorado no 5.x — menos ruído na GPU e um algoritmo de amostragem não-enviesado (null-scattering) que dispensa ajustar step size / max steps, tornando névoa, fumaça e god rays (Cap. 25) mais limpos e fáceis. Houve ainda melhorias em <strong>subsurface scattering</strong> (não escurece mais demais perto de intersecções) e <strong>thin film</strong> em metais.</p>
+  </div>
+
+  <h3>20.3 — Outros casos difíceis</h3>
+  <ul>
+    <li><strong>Vidro fosco / refração ruidosa:</strong> reduza a rugosidade ou use o truque de "vidro mais simples" para sombras; ajuste Transmission bounces.</li>
+    <li><strong>Fontes minúsculas e potentes:</strong> ruído alto — aumente o tamanho da fonte ou use clamping (Cap. 19).</li>
+    <li><strong>Emissivos pequenos como única luz:</strong> ruidosos; ajudam light tree (Cap. 15) e, às vezes, substituir por uma luz real próxima.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Portals transformam interiores</div>
+    <p>Se você renderiza um interior arquitetônico no Cycles e ele está escuro e cheio de ruído apesar da luz do céu lá fora, <strong>portals nas janelas</strong> são quase um milagre: o mesmo número de samples produz um interior limpo e bem iluminado, porque o motor agora sabe mirar as aberturas. É um dos ajustes de maior impacto/esforço do Cycles para arquitetura. Combine com Diffuse bounces generosos (Cap. 15) e um bom HDRI/sky lá fora (Caps. 12–13).</p>
+  </div>
+</section>
+
+<!-- ===== CAP 21 ===== -->
+<section class="cap" id="cap21">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 21</div><div class="fio"></div></div>
+  <h2 class="titulo">Otimização de render no Cycles</h2>
+
+  <p class="lead">Render bonito que demora demais não serve para prazos reais. Otimizar o Cycles é a arte de cortar tempo sem perder qualidade perceptível — combinando hardware, sampling inteligente, denoise e cuidados de cena.</p>
+
+  <h3>21.1 — As alavancas de velocidade</h3>
+  <table>
+    <tr><th>Alavanca</th><th>Como ajuda</th></tr>
+    <tr><td><strong>GPU rendering</strong></td><td>Render na placa de vídeo (CUDA/OptiX/HIP/Metal) — muito mais rápido que CPU na maioria dos casos</td></tr>
+    <tr><td><strong>Adaptive Sampling</strong></td><td>Para de gastar samples em pixels já limpos (Cap. 17)</td></tr>
+    <tr><td><strong>Denoising</strong></td><td>Permite samples baixos com resultado limpo (Cap. 18)</td></tr>
+    <tr><td><strong>Clamping</strong></td><td>Elimina fireflies que custariam muitos samples (Cap. 19)</td></tr>
+    <tr><td><strong>Bounces ajustados</strong></td><td>Só os ricochetes que a cena precisa (Cap. 15, 19)</td></tr>
+    <tr><td><strong>Persistent Data</strong></td><td>Reaproveita dados entre frames numa animação (acelera muito)</td></tr>
+  </table>
+
+  <h3>21.2 — Cuidados de cena que aceleram</h3>
+  <ul>
+    <li><strong>Fontes de luz maiores:</strong> menos ruído, menos samples necessários (Cap. 7, 17).</li>
+    <li><strong>Simplifique caustics e vidro fosco:</strong> os maiores geradores de ruído (Cap. 20).</li>
+    <li><strong>Light tree para muitas luzes:</strong> mantém cenas com muitas fontes viáveis (Cap. 15).</li>
+    <li><strong>Resolução e samples do viewport baixos</strong> enquanto ilumina; suba só no final.</li>
+    <li><strong>Cutoff/Custom Distance</strong> nas luzes para o motor ignorar o que está longe demais.</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — Cycles mais rápido</div>
+    <p>O <strong>5.1</strong> trouxe ganhos diretos de velocidade ao Cycles: render de <strong>CPU 5–20% mais rápido</strong> (no Windows) e de <strong>GPU 5–10% mais rápido</strong> numa variedade de hardware e sistemas. Somado às melhorias de volumes (Cap. 20) e ao denoise por IA (Cap. 18), o Cycles do 5.x renderiza sensivelmente mais rápido que as gerações anteriores — o fotorrealismo ficou mais barato em tempo.</p>
+  </div>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Otimize a cena, não só as configurações</div>
+    <p>A otimização mais eficaz raramente é um número no painel — é uma <strong>decisão de cena</strong>. Uma fonte de luz maior corta mais ruído que centenas de samples extras. Trocar um vidro fosco caro por um truque barato economiza minutos. Um portal numa janela limpa um interior inteiro. Pense como um diretor de fotografia que também conhece a câmera: ilumine de formas que sejam, ao mesmo tempo, bonitas <em>e</em> baratas de renderizar. A elegância técnica e a artística, no render, costumam ser a mesma coisa.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VII ===================== -->
+<div class="parte-cover" id="parte7">
+  <div class="pn">PARTE VII</div>
+  <h2>EEVEE a fundo</h2>
+  <p>O motor em tempo real tem sua própria mecânica para dominar: como sua pipeline encadeia rasterização, ray tracing em tela e probes; como obter reflexos e refrações convincentes apesar dos limites de screen-space; e como usar volumetrics e otimizar para manter o EEVEE rápido e bonito. Esta parte é o manual de domínio do EEVEE Next.</p>
+</div>
+
+<!-- ===== CAP 22 ===== -->
+<section class="cap" id="cap22">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 22</div><div class="fio"></div></div>
+  <h2 class="titulo">A pipeline do EEVEE Next</h2>
+
+  <p class="lead">Para tirar o melhor do EEVEE, ajuda entender <em>como</em> ele monta a imagem: uma combinação de rasterização rápida com ray tracing em tela e light probes. Conhecer essa pipeline explica por que certas coisas funcionam bem e outras exigem cuidado.</p>
+
+  <h3>22.1 — As camadas do EEVEE</h3>
+  <p>O EEVEE Next combina técnicas para imitar o path tracing em tempo real:</p>
+  <ul>
+    <li><strong>Rasterização:</strong> desenha a geometria e a luz direta rapidamente (a base, herdada dos games).</li>
+    <li><strong>Ray tracing em tela:</strong> traça raios contra o que está visível para reflexos e GI de superfície (todo BSDF, no EEVEE Next).</li>
+    <li><strong>Light probes:</strong> preenchem a luz indireta e os reflexos que saem da tela (Cap. 16).</li>
+    <li><strong>Virtual Shadow Maps:</strong> resolvem as sombras de alta qualidade (Cap. 9).</li>
+  </ul>
+  <p>O resultado é uma imagem que se aproxima do Cycles, montada em milissegundos em vez de minutos — com as costuras aparecendo só nos casos que o screen-space não cobre.</p>
+
+  <h3>22.2 — Os limites do screen-space</h3>
+  <p>A maior "pegadinha" do EEVEE é que o ray tracing dele é <strong>em tela</strong>: ele só enxerga o que está enquadrado. Um reflexo de algo atrás da câmera, ou de um objeto fora de quadro, não pode ser traçado — daí os probes (Cap. 16) entrarem para cobrir essas lacunas. Entender esse limite explica por que reflexos às vezes "somem" nas bordas da tela, ou por que um Sphere probe é necessário para um reflexo correto. Não é bug: é a natureza do screen-space.</p>
+
+  <h3>22.3 — Configurar a qualidade</h3>
+  <p>Em <span class="menupath">Render Properties</span>, o EEVEE expõe controles de qualidade do ray tracing (resolução do traçado, precisão), das sombras (resolução dos shadow maps), e da GI (resolução dos probes). Subir esses valores aproxima do Cycles ao custo de FPS; descê-los acelera o viewport. O equilíbrio depende do uso — viewport ágil para iluminar, qualidade alta para o render final.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ EEVEE é aproximação inteligente</div>
+    <p>A mentalidade certa para o EEVEE: ele é um <strong>aproximador brilhante</strong>, não um simulador físico. Onde o Cycles calcula a verdade (devagar), o EEVEE estima um resultado convincente (rápido) combinando truques. Na maior parte do tempo, a aproximação é indistinguível — e instantânea. Quando ela falha (reflexos fora de tela, GI complexa), você ajuda com probes e ajustes. Trabalhar com o EEVEE é colaborar com suas aproximações: dar a ele os probes e as condições para que os atalhos pareçam reais.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 23 ===== -->
+<section class="cap" id="cap23">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 23</div><div class="fio"></div></div>
+  <h2 class="titulo">Reflexos, refrações e probes na prática</h2>
+
+  <p class="lead">Reflexos e vidro são onde o EEVEE mais exige cuidado — e onde os probes e os novos recursos do EEVEE Next mais ajudam. Este capítulo é o guia prático para superfícies brilhantes e transparentes convincentes em tempo real.</p>
+
+  <h3>23.1 — Reflexos: tela + probes</h3>
+  <p>O EEVEE Next resolve reflexos por ray tracing em tela (para o que está visível) complementado por <strong>Sphere probes</strong> (para o que sai da tela). Na prática, para um objeto brilhante refletir o entorno corretamente: posicione um <strong>Sphere probe</strong> próximo a ele e asse. Para um <strong>piso espelhado ou água plana</strong>, use um <strong>Plane probe</strong>, que dá reflexos planares nítidos (e, no 5.1, com suporte a glossy e refração). Sem o probe certo, reflexos de fora da tela ficam incorretos ou ausentes.</p>
+
+  <h3>23.2 — Refração e transparência</h3>
+  <p>No EEVEE Next, a refração de vidro é tratada pela <strong>Raytraced Transmission</strong> (o antigo "Screen-Space Refraction", renomeado), que afeta todos os BSDFs transmissivos (Refraction, Translucent, Subsurface). Para vidro convincente:</p>
+  <ul>
+    <li>Ative a transmissão ray-traced no material/render.</li>
+    <li>Use o output <strong>Thickness</strong> (novo no EEVEE Next, substitui o antigo Refraction Depth) para modelar a espessura — fundamental para refração, SSS e translucência corretas.</li>
+    <li>Lembre que, sendo screen-space, refrações de objetos fora de tela têm limites — probes e ajustes ajudam.</li>
+  </ul>
+
+  <h3>23.3 — Transparência e blend modes</h3>
+  <p>Materiais transparentes (com alpha) no EEVEE usam métodos de blend que mudaram no EEVEE Next. Para folhagem, vidro simples e decals, escolha o método de transparência adequado e lembre que materiais "Blended" são tratados de forma especial nos reflexos. É uma área onde cenas antigas mais precisam de ajuste ao migrar (Cap. 3).</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Um Sphere probe resolve a maioria dos reflexos</div>
+    <p>Se um objeto metálico ou brilhante no EEVEE reflete "errado" (mostra o fundo, ou nada, em vez do entorno), a solução quase sempre é <strong>adicionar um Sphere probe</strong> perto dele e assar. O ray tracing em tela cobre o visível; o probe cobre o resto. Para cenas com vários objetos reflexivos, alguns probes bem posicionados transformam o realismo dos reflexos. É o reflexo do "esqueceu de assar" do Cap. 16: no EEVEE, reflexo bom = probe assado.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 24 ===== -->
+<section class="cap" id="cap24">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 24</div><div class="fio"></div></div>
+  <h2 class="titulo">Volumetrics e otimização do EEVEE</h2>
+
+  <p class="lead">Névoa, feixes de luz e atmosfera — os volumetrics — são uma especialidade do EEVEE, que os renderiza rápido. E como o EEVEE é tempo real, otimizá-lo é manter FPS alto enquanto a cena cresce. Este capítulo fecha o domínio do motor rápido.</p>
+
+  <h3>24.1 — Volumetrics em tempo real</h3>
+  <p>O EEVEE renderiza <strong>volumes</strong> (World Volume para névoa global, ou um material de volume num cubo para fumaça localizada) de forma eficiente, o que o torna ótimo para atmosfera: feixes de luz visíveis (god rays), neblina, poeira no ar. Como é rápido, você itera a atmosfera ao vivo. Os controles principais são a <strong>densidade</strong> do volume e a <strong>resolução do tile</strong> volumétrico (qualidade vs. velocidade). A técnica artística da luz volumétrica está no Cap. 25; aqui o foco é que o EEVEE a entrega barata.</p>
+
+  <h3>24.2 — Otimizar o EEVEE</h3>
+  <table>
+    <tr><th>Alavanca</th><th>Efeito</th></tr>
+    <tr><td><strong>Resolução das sombras</strong></td><td>Sombras menores = mais FPS; maiores = mais nítidas</td></tr>
+    <tr><td><strong>Qualidade do ray tracing</strong></td><td>Traçado mais grosso acelera; mais fino, melhora reflexos/GI</td></tr>
+    <tr><td><strong>Resolução volumétrica</strong></td><td>Tiles maiores = volumes mais rápidos e mais grosseiros</td></tr>
+    <tr><td><strong>Probes assados</strong></td><td>GI/reflexos vêm de cache, baratos em tempo de render</td></tr>
+    <tr><td><strong>Nº de luzes visíveis</strong></td><td>Até 4096, mas cada uma custa — desligue sombras das menos importantes</td></tr>
+  </table>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — EEVEE mais econômico</div>
+    <p>O <strong>5.1</strong> tornou o EEVEE mais leve: ele agora <strong>economiza memória de textura</strong> (sobrepondo framebuffer e render textures em momentos diferentes do frame, com economia citada de 30–40%) e <strong>compila shaders mais rápido</strong> em todas as plataformas. Houve também um ganho de velocidade geral no viewport (na ordem de dezenas por cento em compilação fria, conforme o backend gráfico). O EEVEE não só ficou mais bonito — ficou mais eficiente para cenas pesadas.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Desligue sombras das luzes de apoio</div>
+    <p>Num setup EEVEE com muitas luzes, nem toda luz precisa lançar sombra. As luzes de <strong>preenchimento e realce</strong> (fill, rim — Cap. 26) muitas vezes ficam ótimas <em>sem</em> sombra, e cada sombra desligada economiza um shadow map. Reserve as sombras para as luzes-chave que definem a forma. Esse simples hábito — sombras só onde contam — mantém cenas EEVEE complexas rodando ágeis, sem perda visual perceptível.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VIII ===================== -->
+<div class="parte-cover" id="parte8">
+  <div class="pn">PARTE VIII</div>
+  <h2>A arte da luz</h2>
+  <p>Até aqui, a técnica; agora, o ofício. Esta parte é sobre <em>iluminar com intenção</em>: a luz volumétrica que enche o ar de atmosfera, o three-point lighting e o estúdio, os modos de iluminar o natural, o interior e o cinema, e o controle artístico final — light linking, light groups e a luz no compositing. É onde tudo que você aprendeu vira imagem com alma.</p>
+</div>
+
+<!-- ===== CAP 25 ===== -->
+<section class="cap" id="cap25">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 25</div><div class="fio"></div></div>
+  <h2 class="titulo">Luz volumétrica, névoa e god rays</h2>
+
+  <p class="lead">A luz que vemos atravessar o ar — feixes pela janela, neblina iluminada, os "god rays" rompendo as nuvens — é a <strong>luz volumétrica</strong>. Ela transforma a atmosfera de uma cena, adicionando profundidade, clima e aquele toque cinematográfico inconfundível.</p>
+
+  <h3>25.1 — Como a luz fica visível no ar</h3>
+  <p>Normalmente a luz é invisível enquanto viaja — só a vemos quando atinge uma superfície. Mas quando o ar tem <strong>partículas</strong> (poeira, névoa, fumaça), a luz se <em>espalha</em> nelas e fica visível: é o feixe de luz no quarto empoeirado, o farol no nevoeiro. No Blender, isso se faz com um <strong>volume</strong> — um <em>Volume Scatter</em> no World (atmosfera global) ou num objeto (névoa localizada). A luz que atravessa esse volume revela seu caminho.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 180" role="img" aria-label="God rays por uma janela através de névoa">
+      <g transform="translate(60,15)">
+        <rect x="0" y="0" width="600" height="150" rx="3" fill="rgba(20,17,12,.4)"/>
+        <!-- window -->
+        <rect x="40" y="20" width="60" height="80" fill="rgba(242,196,74,.25)" stroke="var(--q-luz)" stroke-width="1.4"/>
+        <line x1="70" y1="20" x2="70" y2="100" stroke="var(--q-luz)" stroke-width="1"/>
+        <line x1="40" y1="60" x2="100" y2="60" stroke="var(--q-luz)" stroke-width="1"/>
+        <!-- god rays -->
+        <g fill="rgba(242,196,74,.16)">
+          <path d="M100 28 L520 70 L520 110 L100 92 Z"/>
+        </g>
+        <g stroke="rgba(242,196,74,.4)" stroke-width="1.5">
+          <path d="M100 35 L500 78"/><path d="M100 55 L500 92"/><path d="M100 75 L500 106"/>
+        </g>
+        <text x="300" y="150" text-anchor="middle" class="q-sub" fill="#f2c24e">feixes visíveis = luz espalhada pela névoa no ar</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 25.1 — God rays.</b> A luz entra pela janela e, ao atravessar um volume de névoa, fica visível como feixes. O efeito precisa de três ingredientes: uma luz direcional forte, uma abertura que a recorta, e um volume no ar para espalhá-la.</figcaption>
+  </figure>
+
+  <h3>25.2 — A receita dos god rays</h3>
+  <ol class="passos">
+    <li><h4>Uma luz direcional forte</h4><p>Um Sun ou Spot intenso, vindo de um ângulo (rasante funciona lindamente).</p></li>
+    <li><h4>Algo que recorte a luz</h4><p>Uma janela, folhas, persianas, nuvens — o contraste entre luz e sombra cria os feixes.</p></li>
+    <li><h4>Um volume no ar</h4><p>Volume Scatter no World (sutil!) ou num cubo cobrindo a cena, com densidade baixa.</p></li>
+    <li><h4>Ajuste a densidade com parcimônia</h4><p>Pouca névoa já cria o efeito; densidade demais "lava" a cena e custa render.</p></li>
+  </ol>
+
+  <h3>25.3 — Nos dois motores</h3>
+  <p>O <strong>EEVEE</strong> renderiza volumetrics rápido (Cap. 24), ótimo para iterar e para animação — god rays em tempo real. O <strong>Cycles</strong> os calcula com mais precisão física (e, no 5.x, com bem menos ruído graças à amostragem de volume reescrita — Cap. 20), ideal para o realismo final. A técnica artística é a mesma; só muda o motor que a desenha.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Volumetria pede sutileza e cobra render</div>
+    <p>Dois cuidados com volumes. Primeiro, <strong>menos é mais</strong>: uma névoa sutil sugere atmosfera; uma névoa densa engole a cena e mata o contraste. Comece com densidade baixíssima e suba devagar. Segundo, volumes são <strong>caros</strong>, sobretudo no Cycles e quando recebem muitos bounces (Cap. 19) — são uma das maiores fontes de ruído e tempo. Use o EEVEE para iterar a atmosfera, mantenha a densidade comedida, e no Cycles aproveite as melhorias de volume do 5.x. Atmosfera é tempero, não prato principal.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 26 ===== -->
+<section class="cap" id="cap26">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 26</div><div class="fio"></div></div>
+  <h2 class="titulo">Three-point lighting e setups de estúdio</h2>
+
+  <p class="lead">O <strong>three-point lighting</strong> é o esquema fundamental da iluminação — três luzes com três papéis que, juntas, revelam forma, separam o sujeito do fundo e controlam o clima. Dominá-lo é ter a base de quase toda iluminação de personagem, produto e retrato.</p>
+
+  <h3>26.1 — As três luzes</h3>
+  <table>
+    <tr><th>Luz</th><th>Papel</th><th>Posição típica</th></tr>
+    <tr><td><strong>Key</strong> (principal)</td><td>A luz dominante; define a forma e a direção</td><td>~45° à frente e ao lado do sujeito, acima</td></tr>
+    <tr><td><strong>Fill</strong> (preenchimento)</td><td>Suaviza as sombras da key; controla o contraste</td><td>Lado oposto à key, mais fraca e mais suave</td></tr>
+    <tr><td><strong>Rim / Back</strong> (contraluz)</td><td>Desenha uma borda de luz; separa do fundo</td><td>Atrás do sujeito, apontando para a câmera</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Disposição do three-point lighting">
+      <g transform="translate(360,110)">
+        <!-- subject -->
+        <circle cx="0" cy="0" r="26" class="q-obj"/>
+        <text x="0" y="55" text-anchor="middle" class="q-sub">sujeito</text>
+        <!-- camera -->
+        <rect x="-18" y="75" width="36" height="22" rx="3" fill="none" stroke="var(--q-dim)" stroke-width="1.3"/>
+        <text x="0" y="112" text-anchor="middle" class="q-sub">câmera</text>
+        <!-- key -->
+        <g transform="translate(-150,-70)"><circle r="9" class="q-warmf"/><text x="0" y="-16" text-anchor="middle" class="q-sub" fill="#f2c24e">KEY</text><path d="M12 8 L-118 60" class="q-ray" opacity=".6"/></g>
+        <!-- fill -->
+        <g transform="translate(160,-30)"><circle r="9" class="q-coolf"/><text x="0" y="-16" text-anchor="middle" class="q-sub" fill="#6fa0e8">FILL</text><path d="M-12 6 L120 26" class="q-ray-c" opacity=".55"/></g>
+        <!-- rim -->
+        <g transform="translate(60,-120)"><circle r="9" fill="rgba(240,232,214,.5)"/><text x="0" y="-16" text-anchor="middle" class="q-sub">RIM</text><path d="M-8 10 L-45 95" stroke="rgba(240,232,214,.5)" stroke-width="1.6" fill="none"/></g>
+      </g>
+    </svg>
+    <figcaption><b>Figura 26.1 — O triângulo clássico.</b> A key (quente, dominante, ~45°) modela a forma; a fill (fria, fraca, oposta) abre as sombras; o rim (atrás) traça o contorno e separa do fundo. Variar a proporção entre elas muda todo o clima.</figcaption>
+  </figure>
+
+  <h3>26.2 — O contraste key-fill (ratio)</h3>
+  <p>A relação entre a força da <strong>key</strong> e da <strong>fill</strong> define o clima: uma fill forte (próxima da key) dá iluminação <em>plana e suave</em> (alegre, comercial, "high key"); uma fill fraca (ou ausente) dá sombras profundas e <em>dramáticas</em> ("low key", noir, misterioso). Esse "ratio" é uma das decisões mais expressivas da iluminação — antes de mover qualquer luz, decida quão fundas você quer as sombras.</p>
+
+  <h3>26.3 — Do retrato ao produto</h3>
+  <p>O three-point é a <em>base</em>, não a regra rígida. Para <strong>produto</strong>, costuma-se usar Area lights grandes (softboxes) como key e fill, com cuidado nos reflexos (Cap. 7). Para <strong>personagem</strong>, a key modela o rosto e o rim o destaca do fundo. A partir do triângulo, você adiciona ou remove luzes conforme a cena — mas o pensamento "principal, preenchimento, separação" guia praticamente toda iluminação deliberada.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Construa uma luz de cada vez</div>
+    <p>O erro do iniciante é acender todas as luzes juntas e tentar equilibrar o caos. Faça o oposto: ligue <strong>só a key</strong> e ajuste-a até a forma estar bonita (essa é a luz que mais importa). <em>Depois</em> adicione a fill e ajuste o contraste. <em>Por fim</em> o rim, para a separação. Construir a iluminação <strong>uma luz de cada vez</strong>, vendo o que cada uma contribui, é o método dos profissionais — e transforma iluminar de adivinhação em decisão consciente.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 27 ===== -->
+<section class="cap" id="cap27">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 27</div><div class="fio"></div></div>
+  <h2 class="titulo">Iluminação natural, interior e cinematográfica</h2>
+
+  <p class="lead">Cada tipo de cena tem sua gramática de luz. Iluminar um exterior ensolarado, um interior aconchegante e um plano cinematográfico dramático exige abordagens diferentes — todas construídas sobre os fundamentos, mas com receitas próprias.</p>
+
+  <h3>27.1 — Luz natural (exteriores)</h3>
+  <p>A luz do dia tem uma estrutura clara: o <strong>sol</strong> (uma fonte direcional forte — Sun light, Cap. 5) é a key, e o <strong>céu</strong> (o World/HDRI/Nishita — Caps. 11–13) é uma fill ampla e azulada que preenche as sombras. O contraste quente (sol) × frio (céu) é o coração do visual natural (Cap. 8). A hora do dia muda tudo: meio-dia dá luz dura e de cima; o golden hour dá luz quente, rasante e mágica; o nublado dá luz suave e uniforme. Para exteriores: comece com Sky+Sun (Cap. 13) e refine.</p>
+
+  <h3>27.2 — Interiores</h3>
+  <p>Interiores vivem da luz que <strong>entra e ricocheteia</strong>: janelas (Area lights ou portais, Caps. 5, 20) como fontes principais, a GI preenchendo o ambiente (Caps. 15–16), e as <strong>luzes práticas</strong> (lâmpadas, abajures visíveis na cena — emissivos ou Point lights) dando pontos de interesse e calor. O desafio técnico é a GI (a luz precisa ricochetear para preencher — bounces, portals); o desafio artístico é equilibrar a luz fria da janela com o calor das práticas. Interiores são onde a GI mais brilha (ou mais falta).</p>
+
+  <h3>27.3 — Cinematográfica</h3>
+  <p>A iluminação de cinema é <strong>motivada e seletiva</strong>: cada luz tem uma "fonte" plausível na história (a janela, o abajur, o letreiro de neon), e o iluminador usa contraste, cor e sombra para dirigir o olhar e criar emoção. Características do visual cinematográfico: contraste quente-frio forte (Cap. 8), sombras que escondem tanto quanto revelam (low key), rim lights separando os sujeitos, e atmosfera volumétrica (Cap. 25) para profundidade. Menos "iluminar tudo igual", mais "esculpir com luz e escuridão".</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Motivação: de onde vem esta luz?</div>
+    <p>O princípio que une toda iluminação convincente — natural, interior ou cinema — é a <strong>motivação</strong>: cada luz deve parecer ter uma <em>fonte</em> no mundo da cena. A luz quente vem do abajur ali; a fria, da janela; o rim, do letreiro lá fora. Quando as luzes são motivadas, mesmo as artísticas (e mesmo quebrando a física com light linking, Cap. 28) parecem <em>certas</em>, porque o cérebro encontra uma explicação. Iluminação que "vem do nada" parece falsa. Pergunte sempre: de onde, na história desta imagem, vem cada luz?</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 27</div>
+    <p>Pegue uma única cena (um objeto sobre uma mesa, por exemplo) e ilumine-a de três formas: como <strong>meio-dia</strong> (Sun duro de cima, céu frio), como <strong>golden hour</strong> (Sun quente rasante, céu âmbar) e como <strong>noir</strong> (uma única fonte dura lateral, fill quase zero, fundo escuro). Mesma geometria, três climas radicalmente diferentes. Você sentirá, na prática, que a luz — não o modelo — conta a história.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 28 ===== -->
+<section class="cap" id="cap28">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 28</div><div class="fio"></div></div>
+  <h2 class="titulo">Light linking, light groups e luz no compositing</h2>
+
+  <p class="lead">As ferramentas de controle final, que dão poder de diretor de fotografia: o <strong>light linking</strong> (uma luz que ilumina só o que você quer), os <strong>light groups</strong> (ajustar cada luz no pós) e a luz tratada no <strong>compositing</strong>. É onde a física dá lugar ao controle artístico total.</p>
+
+  <h3>28.1 — Light linking e shadow linking</h3>
+  <p>O <strong>light linking</strong> (Cycles, e disponível para EEVEE no manual 5.x) permite que uma luz ilumine <strong>apenas objetos específicos</strong> — quebrando a física para ganhar controle. Um rim light que só toca o personagem (e não o cenário); uma luz que realça um produto sem afetar o fundo; eliminar um reflexo indesejado nos olhos. O <strong>shadow linking</strong> complementa: define quais objetos <em>bloqueiam</em> a sombra daquela luz — ou deixam a luz passar através deles.</p>
+
+  <div class="caixa v5">
+    <div class="rot">✷ Blender 5.x — como linkar luzes</div>
+    <p>O light/shadow linking funciona por <strong>coleções</strong>: o emissor (luz ou objeto emissivo) recebe uma coleção de "receptores" de luz e de "bloqueadores" de sombra. Selecione a luz, vá ao painel <strong>Cycles Shading</strong> (ou EEVEE Shading), crie uma coleção de linking e arraste os objetos — ou selecione os objetos + a luz e pressione <kbd>Ctrl</kbd>+<kbd>L</kbd> ▸ <em>Link Receivers/Blockers to Emitter</em>. Note: objetos <strong>emissivos</strong> só suportam light linking no <strong>Cycles</strong>, e o shadow linking pode deixar o render mais lento (traça raios extras). É controle artístico que "quebra as leis da física" de propósito.</p>
+  </div>
+
+  <h3>28.2 — Light groups: reequilibrar no pós</h3>
+  <p>Os <strong>light groups</strong> permitem separar a contribuição de cada luz (ou grupo de luzes) em <strong>passes próprios</strong> no render. No compositor, você então ajusta o brilho e a cor de cada luz <em>depois</em> de renderizar — sem re-renderizar a cena. Quer a key 20% mais forte, ou o neon mais azul? Mude o pass daquele grupo no compositing. É um fluxo poderoso para iteração rápida e para acertar o equilíbrio sem o custo de novos renders.</p>
+
+  <h3>28.3 — Luz no compositing</h3>
+  <p>Boa parte do "acabamento" da luz acontece no <strong>compositor</strong> (vol. 4): o <strong>Glare</strong> adiciona bloom e estrelas aos destaques (o antigo Bloom do EEVEE agora se faz aqui); a <strong>exposição e o color grade</strong> finalizam o clima; passes e light groups reequilibram as fontes; god rays e atmosfera podem ser reforçados. Renderizar não é o fim — a luz ganha seu polimento final na composição, onde você ajusta o que seria caro mudar no 3D.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Quando quebrar a física é o certo</div>
+    <p>O light linking, os light groups e o compositing existem para um propósito: <strong>servir à imagem, não à simulação</strong>. A luz fisicamente correta é o ponto de partida — mas o cinema, a publicidade e a arte frequentemente precisam de uma luz que a física não daria: um realce que só toca o herói, uma sombra que some para clareza, um brilho exagerado para drama. Saber quando <em>respeitar</em> a física (realismo) e quando <em>quebrá-la</em> com essas ferramentas (expressão) é a marca do iluminador maduro. O motor simula a verdade; você dirige a mentira bonita.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE IX ===================== -->
+<div class="parte-cover" id="parte9">
+  <div class="pn">PARTE IX</div>
+  <h2>Domínio</h2>
+  <p>A reta final: resolver os problemas que toda cena de iluminação eventualmente apresenta — ruído, fireflies, render lento, sombras erradas — com um mapa de diagnóstico; e a referência completa, com glossário, atalhos e o resumo das novidades 5.x. É onde o conhecimento vira fluidez.</p>
+</div>
+
+<!-- ===== CAP 29 ===== -->
+<section class="cap" id="cap29">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 29</div><div class="fio"></div></div>
+  <h2 class="titulo">Troubleshooting</h2>
+
+  <p class="lead">Todo iluminador encontra os mesmos problemas. Aqui está o mapa de diagnóstico — do sintoma à causa à solução — para os males mais comuns da iluminação no EEVEE e no Cycles.</p>
+
+  <h3>29.1 — Ruído e fireflies (Cycles)</h3>
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável → solução</th></tr>
+    <tr><td>Granulado geral</td><td>Samples baixos / luz insuficiente → denoise (Cap. 18), fontes maiores, mais luz, adaptive sampling</td></tr>
+    <tr><td>Pontos brancos isolados (fireflies)</td><td>Valores de luz extremos → clamping indireto (Cap. 19), fontes maiores</td></tr>
+    <tr><td>Interior escuro e ruidoso</td><td>Poucos bounces / luz não entra → mais Diffuse bounces, portals (Caps. 15, 20)</td></tr>
+    <tr><td>Caustics cheias de ruído</td><td>Caminhos raros → shadow caustics seletivas, ou simplificar o vidro (Cap. 20)</td></tr>
+    <tr><td>Volume granulado</td><td>Volume caro → densidade menor, menos volume bounces, 5.x melhora isso (Caps. 24, 20)</td></tr>
+  </table>
+
+  <h3>29.2 — Problemas de aparência (ambos)</h3>
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável → solução</th></tr>
+    <tr><td>Sombras totalmente pretas</td><td>Sem luz ambiente → dar luz ao World, fill, mais bounces (Caps. 11, 15)</td></tr>
+    <tr><td>Destaques estourados e feios</td><td>Lutando contra o view transform → confiar no AgX, ajustar Exposure (Cap. 4)</td></tr>
+    <tr><td>Cena plana, sem dimensão</td><td>Falta contraste/direção → key-fill ratio, contraste quente-frio, rim (Caps. 8, 26)</td></tr>
+    <tr><td>Objeto parece flutuar</td><td>Sem sombra de contato → contact shadows / ancorar (Cap. 9)</td></tr>
+    <tr><td>Luz branca "morta"</td><td>Sem temperatura → dar Kelvin a cada luz (Cap. 8)</td></tr>
+  </table>
+
+  <h3>29.3 — Problemas específicos do EEVEE</h3>
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável → solução</th></tr>
+    <tr><td>Sem luz indireta / GI faltando</td><td>Probes não assados → posicionar e assar Volume probe (Cap. 16)</td></tr>
+    <tr><td>Reflexos errados / ausentes</td><td>Fora da tela / sem probe → Sphere/Plane probe e assar (Cap. 23)</td></tr>
+    <tr><td>Cena antiga abriu diferente</td><td>Migração do EEVEE Next → reajustar luz, Bloom→Glare, Thickness (Cap. 3)</td></tr>
+    <tr><td>Vidro/refração estranhos</td><td>Raytraced Transmission e Thickness → ativar e configurar (Cap. 23)</td></tr>
+  </table>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Diagnostique isolando</div>
+    <p>Quando algo está errado e você não sabe a causa, <strong>isole</strong>: desligue todas as luzes menos uma e veja o que cada uma faz; troque o view transform para conferir o alcance real; renderize só uma região; desligue volumes e probes para ver se o problema some. A iluminação é um sistema de camadas — quase todo "bug" vira óbvio quando você separa as camadas e olha uma de cada vez. Mudar tudo ao mesmo tempo esconde a causa; isolar a revela.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 30 ===== -->
+<section class="cap" id="cap30">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="#E0982C"/><g stroke="#F2C44A" stroke-width="1.4" stroke-linecap="round"><path d="M10 1 V4 M10 16 V19 M1 10 H4 M16 10 H19 M3.5 3.5 L5.6 5.6 M14.4 14.4 L16.5 16.5 M16.5 3.5 L14.4 5.6 M5.6 14.4 L3.5 16.5"/></g></svg><div class="num">CAPÍTULO 30</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>30.1 — Glossário</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição</th></tr>
+    <tr><td><strong>EEVEE / EEVEE Next</strong></td><td>O motor em tempo real (reescrito desde o 4.2): rasterização + ray tracing em tela + probes</td></tr>
+    <tr><td><strong>Cycles</strong></td><td>O motor de path tracing fisicamente correto (render final)</td></tr>
+    <tr><td><strong>Path tracing</strong></td><td>Traçar raios de luz pela cena para simular a física — base do Cycles</td></tr>
+    <tr><td><strong>Rasterização</strong></td><td>Desenhar a cena rápido sem traçar cada raio — base histórica do EEVEE</td></tr>
+    <tr><td><strong>GI (Global Illumination)</strong></td><td>A luz indireta, que ricocheteia entre superfícies</td></tr>
+    <tr><td><strong>Inverso do quadrado</strong></td><td>A intensidade da luz cai com o quadrado da distância</td></tr>
+    <tr><td><strong>Point / Sun / Spot / Area</strong></td><td>Os quatro tipos de luz: ponto, paralela, cone, superfície</td></tr>
+    <tr><td><strong>Power (W) / Strength (W/m²)</strong></td><td>Potência das luzes / irradiância do Sun</td></tr>
+    <tr><td><strong>Temperatura de cor (K)</strong></td><td>A cor da luz em Kelvin: baixo = quente, alto = frio</td></tr>
+    <tr><td><strong>Blackbody</strong></td><td>Nó que gera a cor de uma temperatura física em Kelvin</td></tr>
+    <tr><td><strong>View transform / AgX</strong></td><td>A tradução do HDR para a tela; AgX é o padrão moderno</td></tr>
+    <tr><td><strong>HDRI / IBL</strong></td><td>Imagem 360° HDR usada para iluminar (image-based lighting)</td></tr>
+    <tr><td><strong>Sky Texture (Nishita)</strong></td><td>Céu e sol atmosféricos procedurais e fisicamente plausíveis</td></tr>
+    <tr><td><strong>Light probe (Volume/Sphere/Plane)</strong></td><td>Caches de luz/reflexo do EEVEE: GI difusa, reflexo, reflexo planar</td></tr>
+    <tr><td><strong>Virtual Shadow Maps</strong></td><td>Sistema de sombras do EEVEE Next (4096, nítidas, estáveis)</td></tr>
+    <tr><td><strong>Samples</strong></td><td>Quantos raios por pixel no Cycles — mais = menos ruído, mais lento</td></tr>
+    <tr><td><strong>Denoising (OptiX / OIDN)</strong></td><td>IA que limpa o ruído de poucos samples</td></tr>
+    <tr><td><strong>Bounces / Light Paths</strong></td><td>Quantos ricochetes a luz pode dar, por tipo (diffuse, glossy...)</td></tr>
+    <tr><td><strong>Clamping</strong></td><td>Cortar valores de luz extremos para matar fireflies</td></tr>
+    <tr><td><strong>Caustics</strong></td><td>Luz focada por vidro/água; bonita e ruidosa</td></tr>
+    <tr><td><strong>Portal / Ray Portal</strong></td><td>Ajuda a luz a entrar por aberturas (interiores)</td></tr>
+    <tr><td><strong>Three-point lighting</strong></td><td>Key (principal) + Fill (preenchimento) + Rim (contorno)</td></tr>
+    <tr><td><strong>Light / Shadow linking</strong></td><td>Uma luz ilumina/é bloqueada só por objetos escolhidos (quebra a física)</td></tr>
+    <tr><td><strong>Light groups</strong></td><td>Separar cada luz em passes para reequilibrar no compositing</td></tr>
+    <tr><td><strong>Volumetrics</strong></td><td>Luz visível no ar (névoa, god rays) via volumes</td></tr>
+  </table>
+
+  <h3>30.2 — Atalhos e caminhos úteis</h3>
+  <table>
+    <tr><th>Ação</th><th>Onde / como</th></tr>
+    <tr><td>Adicionar uma luz</td><td><kbd>Shift</kbd>+<kbd>A</kbd> ▸ Light ▸ (tipo)</td></tr>
+    <tr><td>Trocar de motor</td><td>Render Properties ▸ Render Engine</td></tr>
+    <tr><td>View transform / Exposure</td><td>Render Properties ▸ Color Management</td></tr>
+    <tr><td>Samples / Denoise (Cycles)</td><td>Render Properties ▸ Sampling</td></tr>
+    <tr><td>Bounces / Clamping</td><td>Render Properties ▸ Light Paths</td></tr>
+    <tr><td>Assar light probes (EEVEE)</td><td>Render Properties ▸ (Light Cache) ▸ Bake</td></tr>
+    <tr><td>Light linking</td><td>Selecionar objetos + luz ▸ <kbd>Ctrl</kbd>+<kbd>L</kbd> ▸ Link Receivers/Blockers</td></tr>
+    <tr><td>Shadow catcher</td><td>Object ▸ Visibility ▸ Cycles ▸ Shadow Catcher</td></tr>
+    <tr><td>HDRI no World</td><td>World ▸ Background ▸ Environment Texture</td></tr>
+  </table>
+
+  <h3>30.3 — Novidades 4.x → 5.x para iluminação</h3>
+  <ul>
+    <li><strong>EEVEE Next (4.2, é o EEVEE no 5.x):</strong> ray tracing em tela por BSDF, GI real, objetos emissivos iluminam, displacement de shader, luzes ilimitadas (4096 visíveis), viewport motion blur — reescrita incompatível com cenas antigas.</li>
+    <li><strong>Virtual Shadow Maps (EEVEE):</strong> sombras 4096 (vs 1024), mais nítidas e estáveis, menos bias, setup simplificado; soft shadows plausíveis por Shadow Map Ray Tracing.</li>
+    <li><strong>Light probes renovados (EEVEE):</strong> Volume, Sphere, Plane; cache de irradiância reescrito que mapeia para os probes (modificar a cena sem reassar tudo).</li>
+    <li><strong>AgX padrão (desde 4.0):</strong> view transform que lida melhor com brilhos altos e cores saturadas.</li>
+    <li><strong>Light & Shadow linking (4.0; Cycles, e EEVEE no manual 5.x):</strong> luzes que afetam só objetos escolhidos, por coleções.</li>
+    <li><strong>Cycles 4.2–5.x:</strong> Ray Portals, Thin Film Interference (em metais no 5.0), volumes com muito menos ruído (amostragem null-scattering, sem step size), SSS melhorado, Metallic BSDF, Volume Coefficients node.</li>
+    <li><strong>Blender 5.1:</strong> nó Raycast no EEVEE (screen-space, NPR), controles de intensidade de light path (rebalancear direta/indireta sem mexer no sampling), reflexões planares com glossy e refração; Cycles 5–20% (CPU) / 5–10% (GPU) mais rápido; EEVEE economiza memória de textura e compila shaders mais rápido.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ A coleção completa</div>
+    <p>Este é o volume 10 — e a iluminação é o que dá <strong>vida</strong> a tudo que a coleção construiu. Você ilumina a forma criada no <strong>Hard Surface (vol. 2)</strong> e no <strong>Boolean (vol. 3)</strong>, com a <strong>Topologia (vol. 6)</strong> limpa que reage bem à luz; revela os materiais texturizados sobre as <strong>UVs (vol. 7)</strong> e assados no <strong>Baking (vol. 9)</strong>; ilumina personagens com <strong>Rigging (vol. 1)</strong>, cenas montadas com <strong>Modifiers (vol. 5)</strong> e <strong>Composição (vol. 4)</strong>, e efeitos de <strong>Simulação (vol. 8)</strong>. Da primeira aresta à luz final, a coleção cobre o caminho inteiro do 3D no Blender — e a luz é o último gesto, o que faz a imagem existir. O manual oficial de render (<a class="ext" href="https://docs.blender.org/manual/en/latest/render/index.html">docs.blender.org</a>) detalha cada motor. Agora vá iluminar.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Iluminação no Blender 5.x — EEVEE e Cycles · A Apostila Completa · volume 10 da coleção · 30 capítulos em 9 partes<br>
+  A modelagem dá a forma; a luz dá a vida. Iluminar é a última e mais decisiva escolha da imagem.
+</footer>
+
+</main>
+</div><!-- /layout -->
+<script src="./apostilas-nav.js" defer></script>
+</body>
+</html>

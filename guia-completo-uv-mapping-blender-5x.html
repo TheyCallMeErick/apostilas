@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UV Mapping no Blender 5.x — Guia Completo: planificar a superfície</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F2EFE8;--tinta:#1A1712;--tinta-suave:#57534A;
+  --luz:#E0982C;--luz-escuro:#9C6410;
+  --frio:#3B79C9;--frio-escuro:#235394;
+  --verde:#4F8A45;--vermelho:#B23A2C;--glow:#F2C44A;
+  --linha:#DCD6C9;--cartao:#FFFFFF;--quadro:#14110C;
+  --q-base:#D2CBBC;--q-dim:#867E6E;--q-luz:#F2C24E;--q-frio:#6FA0E8;--q-cream:#F0E8D6;
+  --code-bg:#1E1A12;--code-fg:#EEE8DA;
+  --sombra:0 1px 3px rgba(26,23,18,.1), 0 8px 24px rgba(26,23,18,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{background:var(--papel);color:var(--tinta);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.64}
+::selection{background:var(--luz);color:#1A1712}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+.sidebar{border-right:1px solid var(--linha);background:linear-gradient(180deg,#EBE7DC,#F2EFE8 260px);padding:28px 20px 56px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar .parte{font-family:"Archivo",sans-serif;font-stretch:88%;font-size:.64rem;letter-spacing:.15em;text-transform:uppercase;color:var(--luz-escuro);margin:22px 0 7px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sidebar .parte::before{content:"";width:13px;height:1.5px;background:var(--frio)}
+.sidebar nav a{display:block;text-decoration:none;color:var(--tinta-suave);font-family:"Archivo",sans-serif;font-size:.81rem;line-height:1.32;padding:4px 8px 4px 13px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(224,152,44,.11);border-left-color:var(--luz)}
+.sidebar nav a .n{color:var(--luz-escuro);font-weight:700;font-variant-numeric:tabular-nums;margin-right:5px}
+.logo-l{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.logo-l .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.0rem;line-height:1.05;font-stretch:104%}
+.logo-l .t2{font-family:"JetBrains Mono",monospace;font-size:.62rem;color:var(--frio-escuro)}
+main{padding:0 0 120px}
+.miolo{max-width:800px;margin:0 auto;padding:0 38px}
+.capa{background:radial-gradient(680px 480px at 30% 28%, rgba(242,196,74,.5), transparent 56%),radial-gradient(900px 560px at 88% 96%, rgba(59,121,201,.32), transparent 60%),var(--quadro);color:#EEE8DA;padding:90px 38px 78px;position:relative;overflow:hidden}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;color:var(--q-luz);border:1px solid rgba(242,196,74,.42);border-radius:999px;padding:6px 14px;margin-bottom:26px;background:rgba(20,17,12,.5)}
+.capa h1{font-family:"Archivo",sans-serif;font-stretch:112%;font-weight:880;font-size:clamp(2.1rem,5.2vw,3.6rem);line-height:1.0;letter-spacing:-.02em;max-width:15ch;margin-bottom:22px}
+.capa h1 em{font-style:normal;color:var(--q-luz)}
+.capa p.sub{font-size:1.08rem;max-width:62ch;color:#C9C2B2;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;border:1px solid rgba(238,232,218,.26);border-radius:6px;padding:6px 12px;color:#D4CDBD}
+.capa-art{position:absolute;right:-10px;top:50%;transform:translateY(-50%);z-index:1;opacity:.62}
+.parte-cover{padding:62px 0 8px;border-bottom:1px solid var(--linha);margin-top:38px}
+.parte-cover .pn{font-family:"JetBrains Mono",monospace;font-size:.8rem;letter-spacing:.2em;color:var(--luz-escuro)}
+.parte-cover h2{font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:870;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.04;letter-spacing:-.015em;margin:8px 0 12px}
+.parte-cover p{font-size:1.04rem;color:var(--tinta-suave);max-width:62ch;margin-bottom:18px}
+section.cap{padding-top:58px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .sun{width:20px;height:20px;flex:0 0 auto}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--luz-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;font-size:clamp(1.55rem,3.2vw,2.15rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:20px}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.18rem;margin:38px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:26px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+em.term{font-style:italic;color:var(--luz-escuro);font-weight:600}
+a.ext{color:var(--frio-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+kbd{font-family:"JetBrains Mono",monospace;font-size:.78em;background:#fff;border:1px solid #C7C0B0;border-bottom-width:2.5px;border-radius:5px;padding:1.5px 7px;white-space:nowrap;color:var(--tinta)}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#E8E2D5;border-radius:4px;padding:1.5px 6px}
+pre{background:var(--code-bg);color:var(--code-fg);font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--frio-escuro)}
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{display:flex;align-items:center;gap:8px;font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.conceito{border-left:4px solid var(--luz)}
+.caixa.conceito .rot{color:var(--luz-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--frio)}
+.caixa.exercicio .rot{color:var(--frio-escuro)}
+.caixa.v5{border-left:4px solid var(--luz);background:#FBF3E6}
+.caixa.v5 .rot{color:var(--luz-escuro)}
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{content:counter(passo);position:absolute;left:0;top:1px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;display:flex;align-items:center;justify-content:center}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.9rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{font-family:"Archivo",sans-serif;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAF7EF}
+figure{margin:26px 0;background:var(--quadro);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:"Archivo",sans-serif;font-size:.82rem;color:#A9A18E;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(210,203,188,.3)}
+figcaption b{color:#EEE8DA}
+.q-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#EEE8DA}
+.q-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--q-dim)}
+.q-wire{fill:none;stroke:var(--q-base);stroke-width:1.3;stroke-linejoin:round}
+.q-obj{fill:rgba(210,203,188,.1);stroke:var(--q-base);stroke-width:1.5}
+.q-ray{fill:none;stroke:var(--q-luz);stroke-width:1.8;stroke-linecap:round}
+.q-ray-c{fill:none;stroke:var(--q-frio);stroke-width:1.8;stroke-linecap:round}
+.q-glow{fill:var(--q-luz)}
+.q-coolf{fill:rgba(111,160,232,.16);stroke:var(--q-frio);stroke-width:1.4}
+.q-warmf{fill:rgba(242,194,78,.16);stroke:var(--q-luz);stroke-width:1.4}
+.q-shadow{fill:rgba(20,17,12,.55)}
+.q-axis{fill:none;stroke:var(--q-dim);stroke-width:1.2}
+.q-bad{fill:none;stroke:var(--vermelho);stroke-width:2.2}
+.q-seam{fill:none;stroke:#E0982C;stroke-width:2.6;stroke-linecap:round}
+.q-uvgrid{fill:none;stroke:rgba(210,203,188,.28);stroke-width:1}
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin:24px 0 10px}
+.sumario a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--tinta);font-family:"Archivo",sans-serif;font-size:.87rem;padding:7px 11px;border-radius:8px;border:1px solid transparent;line-height:1.22}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--luz-escuro);font-size:.76rem;flex:0 0 auto}
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}.sumario{grid-template-columns:1fr}.miolo{padding:0 20px}.capa{padding:60px 20px 52px}.capa-art{display:none}}
+@media print{.sidebar{display:none}.layout{display:block}.capa{background:#fff;color:#000}.capa h1 em{color:#000}.capa-art{display:none}figure{background:#fff;border:1px solid #999}figure,.caixa,table{box-shadow:none}section.cap{page-break-inside:avoid}.parte-cover{page-break-before:always}}
+:focus-visible{outline:3px solid var(--luz);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-l">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="5" y="5" width="30" height="30" rx="4" fill="none" stroke="#E0982C" stroke-width="2"/>
+      <path d="M5 20 H35 M20 5 V35" stroke="#3B79C9" stroke-width="1.6" opacity=".7"/>
+      <path d="M12 12 L28 12 L24 28 L16 28 Z" fill="rgba(242,196,74,.35)" stroke="#F2C44A" stroke-width="1.6"/>
+    </svg>
+    <div>
+      <div class="t1">UV Mapping</div>
+      <div class="t2">Guia Completo · 5.x</div>
+    </div>
+  </div>
+
+  <div class="parte">I · Fundamentos</div>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é UV mapping</a>
+    <a href="#cap2"><span class="n">02</span>O UV Editor e o workspace</a>
+    <a href="#cap3"><span class="n">03</span>Distorção e texel density</a>
+  </nav>
+  <div class="parte">II · Costuras e desdobramento</div>
+  <nav>
+    <a href="#cap4"><span class="n">04</span>Seams: onde cortar</a>
+    <a href="#cap5"><span class="n">05</span>Os métodos de unwrap</a>
+    <a href="#cap6"><span class="n">06</span>Pin, Live Unwrap e endireitar</a>
+  </nav>
+  <div class="parte">III · Layout e empacotamento</div>
+  <nav>
+    <a href="#cap7"><span class="n">07</span>Packing: o quebra-cabeça</a>
+    <a href="#cap8"><span class="n">08</span>Texel density uniforme</a>
+    <a href="#cap9"><span class="n">09</span>Simetria, overlap e stacking</a>
+  </nav>
+  <div class="parte">IV · UDIMs e casos</div>
+  <nav>
+    <a href="#cap10"><span class="n">10</span>UDIMs: tiles de alta resolução</a>
+    <a href="#cap11"><span class="n">11</span>UVs para hard surface e bake</a>
+    <a href="#cap12"><span class="n">12</span>UVs orgânicas (personagem)</a>
+    <a href="#cap13"><span class="n">13</span>UVs para games e lightmaps</a>
+  </nav>
+  <div class="parte">V · Ferramentas e domínio</div>
+  <nav>
+    <a href="#cap14"><span class="n">14</span>Múltiplos UV maps</a>
+    <a href="#cap15"><span class="n">15</span>Transferir, modifiers e nodes</a>
+    <a href="#cap16"><span class="n">16</span>Diagnóstico e troubleshooting</a>
+  </nav>
+  <div class="parte">VI · Prática</div>
+  <nav>
+    <a href="#cap17"><span class="n">17</span>Projeto: UV de um asset</a>
+    <a href="#cap18"><span class="n">18</span>Glossário, atalhos e 5.x</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="capa">
+  <svg class="capa-art" width="430" height="450" viewBox="0 0 430 450" aria-hidden="true">
+    <!-- cubo 3D -->
+    <g transform="translate(70,90)" opacity=".9">
+      <path d="M0 40 L60 10 L120 40 L120 110 L60 140 L0 110 Z" fill="rgba(242,194,78,.18)" stroke="rgba(242,196,74,.7)" stroke-width="2"/>
+      <path d="M0 40 L60 70 L120 40 M60 70 L60 140" fill="none" stroke="rgba(242,196,74,.5)" stroke-width="1.6"/>
+    </g>
+    <!-- seta desdobrar -->
+    <path d="M210 130 q40 20 70 0" fill="none" stroke="rgba(238,232,218,.4)" stroke-width="2" marker-end="url(#a)"/>
+    <defs><marker id="a" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="rgba(238,232,218,.5)"/></marker></defs>
+    <!-- cruz UV plana -->
+    <g transform="translate(270,250)" opacity=".95">
+      <g fill="rgba(59,121,201,.16)" stroke="rgba(111,160,232,.7)" stroke-width="1.6">
+        <rect x="40" y="0" width="40" height="40"/>
+        <rect x="0" y="40" width="40" height="40"/>
+        <rect x="40" y="40" width="40" height="40"/>
+        <rect x="80" y="40" width="40" height="40"/>
+        <rect x="120" y="40" width="40" height="40"/>
+        <rect x="40" y="80" width="40" height="40"/>
+      </g>
+    </g>
+    <text x="95" y="80" font-family="JetBrains Mono" font-size="11" fill="rgba(242,194,78,.85)">3D</text>
+    <text x="300" y="245" font-family="JetBrains Mono" font-size="11" fill="rgba(111,160,232,.85)">UV (2D)</text>
+  </svg>
+  <div class="miolo">
+    <span class="selo">✷ GUIA COMPLETO · VOLUME 7 DA COLEÇÃO</span>
+    <h1>UV Mapping no Blender: <em>planificar</em> a superfície</h1>
+    <p class="sub">A ponte entre a forma e a textura. Da intuição do origami e da costura ao desdobramento sem distorção: seams, os métodos de unwrap, texel density, packing, UDIMs, múltiplos canais de UV, lightmaps para games, e como a malha plana decide a qualidade de tudo que vem depois — texturização, baking e render. Sem UV boa, nenhum material parece bom.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>18 capítulos · 6 partes</span>
+      <span>UDIMs · Lightmaps</span>
+      <span>Texel density</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como ler este guia</h2>
+  <p class="lead">UV mapping é a etapa que quase todo iniciante pula — e depois descobre que era a causa de toda textura esticada, de todo material que "não cola direito". Este guia trata as UVs como o que elas são: o <strong>endereço 2D de cada ponto da superfície</strong>, o mapa que diz a cada pixel da textura onde ele mora no modelo. A <strong>Parte I</strong> dá a intuição e o ferramental; a <strong>Parte II</strong> ensina a cortar e desdobrar; a <strong>III</strong> a organizar o espaço; a <strong>IV</strong> cobre UDIMs e os casos reais (hard surface, orgânico, games); a <strong>V</strong> é o ferramental avançado e o diagnóstico; a <strong>VI</strong> põe tudo num projeto. Leia em ordem na primeira vez — UV é cumulativa.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é UV mapping e por que existe</a>
+    <a href="#cap2"><span class="n">02</span>O UV Editor e o workspace UV Editing</a>
+    <a href="#cap3"><span class="n">03</span>Distorção, escala e texel density</a>
+    <a href="#cap4"><span class="n">04</span>Seams: onde e por que cortar</a>
+    <a href="#cap5"><span class="n">05</span>Os métodos de unwrap</a>
+    <a href="#cap6"><span class="n">06</span>Pin, Live Unwrap e endireitar ilhas</a>
+    <a href="#cap7"><span class="n">07</span>Packing: o quebra-cabeça das ilhas</a>
+    <a href="#cap8"><span class="n">08</span>Texel density uniforme na prática</a>
+    <a href="#cap9"><span class="n">09</span>Simetria, overlapping e stacking</a>
+    <a href="#cap10"><span class="n">10</span>UDIMs: tiles de alta resolução</a>
+    <a href="#cap11"><span class="n">11</span>UVs para hard surface e o bake</a>
+    <a href="#cap12"><span class="n">12</span>UVs orgânicas (personagem, rosto)</a>
+    <a href="#cap13"><span class="n">13</span>UVs para games e lightmaps</a>
+    <a href="#cap14"><span class="n">14</span>Múltiplos UV maps e quem lê cada um</a>
+    <a href="#cap15"><span class="n">15</span>Transferir UVs, modifiers e nodes</a>
+    <a href="#cap16"><span class="n">16</span>Diagnóstico e troubleshooting</a>
+    <a href="#cap17"><span class="n">17</span>Projeto: UV de um asset completo</a>
+    <a href="#cap18"><span class="n">18</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">✷ Sobre a versão</div>
+    <p>Escrito para o <strong>Blender 5.x</strong>. O sistema de UV é maduro e estável há anos, mas o 5.x trouxe melhorias práticas: o <strong>UV Editor</strong> com seleção e snapping refinados, o <strong>Pack Islands</strong> reescrito (do antigo "Pack Islands" para o motor com rotação por ângulo, escala por ilha e <em>Lock Overlapping</em>), suporte a <strong>UDIMs</strong> consolidado no fluxo de tiles, e a integração de UV em <strong>Geometry Nodes</strong> (ler e gravar o atributo <code>UVMap</code> proceduralmente). As novidades estão em caixas âmbar e resumidas no Capítulo 18.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE I ===================== -->
+<div class="parte-cover" id="parte1">
+  <div class="pn">PARTE I</div>
+  <h2>Fundamentos</h2>
+  <p>Antes de cortar a primeira costura, é preciso entender o que uma UV realmente é, onde ela vive, e o único inimigo que você combate o tempo todo: a distorção. Esta parte dá a intuição (origami, mapa-múndi, costura), apresenta o UV Editor e estabelece a métrica que governa qualidade — o texel density.</p>
+</div>
+
+<!-- ===== CAP 1 ===== -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é UV mapping e por que existe</h2>
+
+  <p class="lead">Uma textura é uma imagem plana — uma grade de pixels num retângulo. Um modelo 3D é uma superfície curva no espaço. UV mapping é a <strong>correspondência</strong> entre os dois: para cada vértice da malha, um par de coordenadas <code>(u, v)</code> que diz qual ponto da imagem cai ali. Sem esse mapa, o Blender não sabe onde colar a textura — e o resultado é caos.</p>
+
+  <h3>1.1 — Por que "U" e "V"</h3>
+  <p>As letras <code>X</code>, <code>Y</code> e <code>Z</code> já estão ocupadas pelas coordenadas do espaço 3D. Para nomear os dois eixos do espaço da textura, a computação gráfica pegou as letras anteriores no alfabeto: <strong>U</strong> (horizontal) e <strong>V</strong> (vertical). O espaço UV é sempre um quadrado de <code>0</code> a <code>1</code> em cada eixo — o canto inferior-esquerdo é <code>(0,0)</code>, o superior-direito é <code>(1,1)</code>. Esse quadrado é o "0–1 space" ou <em>UDIM tile</em> 1001 (mais sobre isso no Cap. 10). Não importa se sua textura é 512×512 ou 8192×8192: as coordenadas UV vão sempre de 0 a 1, e a imagem é esticada para preencher o quadrado.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ A definição que resolve tudo</div>
+    <p>Uma UV é um <strong>endereço</strong>. Cada canto de cada face da malha guarda um par <code>(u,v)</code> que aponta para um lugar na imagem. "Desdobrar" (unwrap) é o ato de atribuir esses endereços de forma inteligente — de modo que pedaços vizinhos no modelo fiquem vizinhos na textura, e que nada estique. O modelo não muda de forma; só ganha um mapa de como vestir sua superfície.</p>
+  </div>
+
+  <h3>1.2 — As três analogias que destravam o conceito</h3>
+  <p>UV mapping confunde porque é uma transformação entre dimensões. Três imagens mentais ajudam:</p>
+  <ul>
+    <li><strong>O origami ao contrário.</strong> Pegue uma caixa de papelão e abra-a numa folha plana. As dobras que você corta com a tesoura são as <em>seams</em> (costuras); a folha aberta é o seu UV layout. Você corta o mínimo para a folha deitar plana sem rasgar nem amassar.</li>
+    <li><strong>O mapa-múndi.</strong> A Terra é uma esfera; o mapa na parede é plano. É impossível achatar uma esfera sem distorcer — por isso a Groenlândia parece gigante. Toda projeção é um compromisso entre preservar <em>área</em> e preservar <em>forma</em>. UV é exatamente o mesmo problema, e por isso esferas e formas orgânicas sempre distorcem um pouco.</li>
+    <li><strong>A costura de roupa.</strong> Um molde de costura é o tecido plano cortado em peças (mangas, frente, costas) que, costuradas, vestem o corpo 3D. As bordas onde as peças se unem são as seams. Bons costureiros escondem as costuras em lugares discretos — e você fará o mesmo.</li>
+  </ul>
+
+  <figure>
+    <svg viewBox="0 0 720 220" role="img" aria-label="Cubo 3D desdobrado em cruz UV">
+      <!-- cubo -->
+      <g transform="translate(70,55)">
+        <path d="M0 35 L55 8 L110 35 L110 100 L55 127 L0 100 Z" class="q-obj"/>
+        <path d="M0 35 L55 62 L110 35 M55 62 L55 127" class="q-wire"/>
+        <text x="55" y="160" text-anchor="middle" class="q-sub">modelo 3D (cubo)</text>
+      </g>
+      <!-- seta -->
+      <path d="M210 90 h60" class="q-axis" marker-end="url(#arr1)"/>
+      <defs><marker id="arr1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#867E6E"/></marker></defs>
+      <text x="240" y="78" text-anchor="middle" class="q-sub">unwrap</text>
+      <!-- cruz UV -->
+      <g transform="translate(330,20)">
+        <rect x="0" y="0" width="180" height="180" class="q-uvgrid"/>
+        <g class="q-coolf">
+          <rect x="45" y="0" width="45" height="45"/>
+          <rect x="0" y="45" width="45" height="45"/>
+          <rect x="45" y="45" width="45" height="45"/>
+          <rect x="90" y="45" width="45" height="45"/>
+          <rect x="135" y="45" width="45" height="45"/>
+          <rect x="45" y="90" width="45" height="45"/>
+        </g>
+        <text x="67" y="28" text-anchor="middle" class="q-sub" fill="#6FA0E8">topo</text>
+        <text x="67" y="118" text-anchor="middle" class="q-sub" fill="#6FA0E8">base</text>
+        <text x="90" y="208" text-anchor="middle" class="q-sub">UV layout (2D, 0–1)</text>
+      </g>
+      <text x="540" y="40" class="q-sub">v=1</text><text x="540" y="200" class="q-sub">v=0</text>
+    </svg>
+    <figcaption><b>Figura 1.1 — Desdobrar é abrir.</b> As seis faces do cubo são "abertas" numa cruz dentro do quadrado 0–1. Cada face ocupa uma região da textura; faces vizinhas na cruz compartilham bordas (sem costura) ou foram separadas (com costura). Esse é o princípio para qualquer forma.</figcaption>
+  </figure>
+
+  <h3>1.3 — O que acontece sem UVs (ou com UVs ruins)</h3>
+  <p>Quando você cria uma malha no Blender, ela já vem com um UV map automático — gerado a partir de como o objeto foi feito. Para um cubo ou um plano simples, às vezes basta. Mas assim que você modela algo real, esse UV default fica imprestável: as texturas esticam (<em>stretching</em>), aparecem costuras óbvias, a resolução fica irregular (uma parte nítida, outra borrada). Materiais procedurais que usam coordenadas <em>Generated</em> ou <em>Object</em> (vol. 8 de Shader Nodes) podem dispensar UVs — mas qualquer textura baseada em imagem (um normal map assado, uma foto de madeira, um decal) <strong>depende</strong> de UVs boas.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ O erro de pular UVs</div>
+    <p>Muita gente modela lindamente, aplica um material procedural no viewport, acha que terminou — e trava na hora de exportar para um game engine ou de assar texturas. <strong>Quase tudo no fim do pipeline assume UVs limpas:</strong> o baking (vol. 9) projeta o detalhe high-poly para a textura <em>via</em> UV; o texture painting pinta <em>sobre</em> UVs; game engines amostram normal/AO maps <em>pelas</em> UVs. UV não é opcional — é infraestrutura.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 2 ===== -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">O UV Editor e o workspace UV Editing</h2>
+
+  <p class="lead">Antes de desdobrar, você precisa do ambiente certo. O Blender tem um workspace dedicado que mostra, lado a lado, o modelo 3D (onde você marca seams e seleciona faces) e o UV Editor (onde os endereços viram um layout que você manipula).</p>
+
+  <h3>2.1 — Abrir o ambiente</h3>
+  <p>No topo da janela, clique na aba <span class="menupath">UV Editing</span>. A tela se divide: à esquerda o <strong>UV Editor</strong> (a imagem 2D), à direita o <strong>3D Viewport</strong> já em Edit Mode. A regra de ouro: <strong>o UV Editor só mostra as UVs das faces selecionadas no viewport 3D.</strong> Se ele aparece vazio, é porque nada está selecionado lá — aperte <kbd>A</kbd> no viewport para selecionar tudo.</p>
+
+  <h3>2.2 — O fluxo mínimo (memorize)</h3>
+  <ol class="passos">
+    <li><h4>Selecione as faces no viewport 3D</h4><p>Entre em Edit Mode (<kbd>Tab</kbd>), modo Face (<kbd>3</kbd>), e selecione tudo com <kbd>A</kbd>.</p></li>
+    <li><h4>Marque as seams</h4><p>Selecione as arestas onde quer cortar e use <span class="menupath">Edge ▸ Mark Seam</span> (ou <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Mark Seam). Elas ficam vermelhas. (Cap. 4 ensina onde.)</p></li>
+    <li><h4>Desdobre</h4><p>Com tudo selecionado, <kbd>U</kbd> ▸ <span class="menupath">Unwrap</span>. As ilhas aparecem no UV Editor.</p></li>
+    <li><h4>Confira a distorção</h4><p>Ative o overlay de stretch (Cap. 3) e ajuste seams/escala até o azul dominar.</p></li>
+    <li><h4>Empacote</h4><p><span class="menupath">UV ▸ Pack Islands</span> para arrumar tudo dentro do quadrado sem sobrepor (Cap. 7).</p></li>
+  </ol>
+
+  <h3>2.3 — Os controles do UV Editor</h3>
+  <p>O UV Editor se navega como o viewport: roda do meio para pan, scroll para zoom, <kbd>G</kbd>/<kbd>R</kbd>/<kbd>S</kbd> para mover/girar/escalar ilhas e vértices UV. Os modos de seleção (vértice, aresta, face, ilha) ficam no cabeçalho, ao lado de um ícone extra exclusivo do UV: o <strong>UV Sync Selection</strong> (o ícone de duas setas no canto superior-esquerdo).</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ UV Sync Selection: ligado ou desligado?</div>
+    <p>Com o <strong>sync desligado</strong> (padrão), o UV Editor só mostra as UVs das faces selecionadas no 3D, e você pode selecionar UVs independentemente da seleção 3D — ideal para trabalhar o layout. Há também o modo <strong>Island</strong> de seleção (atalho <kbd>4</kbd>) que só existe com sync desligado: clicar seleciona a ilha inteira. Com o <strong>sync ligado</strong>, a seleção é compartilhada entre 3D e UV (o que você seleciona num aparece no outro) — útil para depurar quais faces correspondem a quais UVs. Aprenda os dois; o desligado é o do dia a dia.</p>
+  </div>
+
+  <h3>2.4 — A grade de referência e a imagem de teste</h3>
+  <p>O UV Editor mostra o quadrado 0–1 com uma grade. Para avaliar distorção e densidade, carregue uma <strong>imagem de teste</strong>: no cabeçalho do UV Editor, <span class="menupath">Image ▸ New</span>, e em <em>Generated Type</em> escolha <strong>UV Grid</strong> ou <strong>Color Grid</strong>. Aplique essa imagem como textura no material (Cap. 3) e os quadradinhos da grade revelam na hora qualquer esticamento ou diferença de resolução pela cena.</p>
+
+  <table>
+    <tr><th>Ação</th><th>Atalho / caminho</th></tr>
+    <tr><td>Abrir workspace</td><td>Aba <strong>UV Editing</strong> no topo</td></tr>
+    <tr><td>Desdobrar</td><td><kbd>U</kbd> (no viewport 3D, Edit Mode)</td></tr>
+    <tr><td>Marcar/limpar seam</td><td><kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Mark / Clear Seam</td></tr>
+    <tr><td>Selecionar ilha (UV)</td><td><kbd>4</kbd> (sync off) ou hover + <kbd>L</kbd></td></tr>
+    <tr><td>Mover / girar / escalar UV</td><td><kbd>G</kbd> / <kbd>R</kbd> / <kbd>S</kbd></td></tr>
+    <tr><td>Empacotar ilhas</td><td><span class="menupath">UV ▸ Pack Islands</span></td></tr>
+    <tr><td>Fixar vértice UV (pin)</td><td><kbd>P</kbd> (unpin: <kbd>Alt</kbd>+<kbd>P</kbd>)</td></tr>
+  </table>
+</section>
+
+<!-- ===== CAP 3 ===== -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">Distorção, escala e texel density</h2>
+
+  <p class="lead">Há dois pecados em UV mapping: <strong>distorção</strong> (a textura estica ou comprime numa parte) e <strong>densidade irregular</strong> (uma parte do modelo tem mais pixels de textura que outra, ficando nítida ali e borrada acolá). O dia inteiro de UV é uma luta contra esses dois. Felizmente, o Blender tem ferramentas para medir os dois objetivamente.</p>
+
+  <h3>3.1 — O overlay de Stretching</h3>
+  <p>No UV Editor, abra o painel <span class="menupath">Overlays</span> (ícone de dois círculos sobrepostos, canto superior-direito) e ative <strong>Display Stretch</strong>. Ele colore cada face conforme a distorção: <strong>azul</strong> = sem distorção (proporção preservada), <strong>vermelho</strong> = distorção forte. Há dois modos: <em>Area</em> (compara a área da face 3D com a UV) e <em>Angle</em> (compara os ângulos). Mire em manter tudo azul/esverdeado; vermelho é onde a textura vai esticar.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Overlay de stretch comparando boa e má UV">
+      <!-- boa -->
+      <g transform="translate(40,25)">
+        <rect x="0" y="0" width="150" height="150" class="q-uvgrid"/>
+        <g fill="rgba(111,160,232,.22)" stroke="#6FA0E8" stroke-width="1">
+          <rect x="10" y="10" width="42" height="42"/><rect x="54" y="10" width="42" height="42"/><rect x="98" y="10" width="42" height="42"/>
+          <rect x="10" y="54" width="42" height="42"/><rect x="54" y="54" width="42" height="42"/><rect x="98" y="54" width="42" height="42"/>
+          <rect x="10" y="98" width="42" height="42"/><rect x="54" y="98" width="42" height="42"/><rect x="98" y="98" width="42" height="42"/>
+        </g>
+        <text x="75" y="180" text-anchor="middle" class="q-sub" fill="#6FA0E8">azul = sem distorção ✔</text>
+      </g>
+      <!-- má -->
+      <g transform="translate(300,25)">
+        <rect x="0" y="0" width="150" height="150" class="q-uvgrid"/>
+        <g stroke-width="1">
+          <rect x="10" y="10" width="70" height="20" fill="rgba(178,58,44,.3)" stroke="#B23A2C"/>
+          <rect x="80" y="10" width="20" height="60" fill="rgba(178,58,44,.3)" stroke="#B23A2C"/>
+          <rect x="10" y="40" width="60" height="30" fill="rgba(224,152,44,.25)" stroke="#E0982C"/>
+          <rect x="10" y="80" width="120" height="55" fill="rgba(178,58,44,.35)" stroke="#B23A2C"/>
+        </g>
+        <text x="75" y="180" text-anchor="middle" class="q-sub" fill="#B23A2C">vermelho = estica ✘</text>
+      </g>
+      <!-- legenda -->
+      <g transform="translate(520,40)">
+        <text x="0" y="0" class="q-lbl" font-size="12">Display Stretch</text>
+        <rect x="0" y="14" width="20" height="12" fill="rgba(111,160,232,.5)"/><text x="28" y="24" class="q-sub">0% — proporção ok</text>
+        <rect x="0" y="34" width="20" height="12" fill="rgba(224,152,44,.5)"/><text x="28" y="44" class="q-sub">médio</text>
+        <rect x="0" y="54" width="20" height="12" fill="rgba(178,58,44,.6)"/><text x="28" y="64" class="q-sub">forte — corrija</text>
+        <text x="0" y="96" class="q-sub">Modos: Area · Angle</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 3.1 — Ler a distorção.</b> Uma boa UV preserva as proporções: os quadrados da grade continuam quadrados (azul). Quando as faces UV têm forma muito diferente da 3D, a textura estica — o overlay acusa em laranja e vermelho. A correção: mais seams, ou ajustar a forma da ilha.</figcaption>
+  </figure>
+
+  <h3>3.2 — Texel density: a métrica que ninguém te conta</h3>
+  <p><strong>Texel density</strong> é quantos pixels de textura cabem por unidade de superfície do modelo — geralmente medido em <strong>texels por metro</strong> (px/m) ou por unidade Blender. É a métrica de "nitidez" da textura. Se um objeto tem 512 px/m e outro tem 2048 px/m na mesma cena, o segundo parecerá 4× mais nítido. Para uma cena coerente, todos os objetos do mesmo tipo devem compartilhar a <strong>mesma texel density</strong> — senão umas peças ficam borradas perto de outras afiadas.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Como pensar em texel density</div>
+    <p>A relação é direta: <strong>quanto maior uma ilha ocupa no quadrado UV, mais pixels da textura ela recebe, mais nítida fica.</strong> Distribuir o espaço UV é distribuir nitidez. Por isso o rosto de um personagem (que a câmera vê de perto) ganha uma ilha grande, e a sola do sapato (que ninguém olha) ganha uma ilha pequena. Texel density é orçamento: você decide onde gastar resolução.</p>
+  </div>
+
+  <h3>3.3 — Medir e igualar no Blender</h3>
+  <p>O Blender traz isso embutido: ative a extensão <strong>UV Tools / Texel Density</strong> (ou o add-on clássico "Texel Density Checker"), ou use a régua mental: o <strong>Pack Islands</strong> moderno tem a opção <em>Scale</em> que, combinada com <span class="menupath">UV ▸ Average Islands Scale</span> (atalho <kbd>Ctrl</kbd>+<kbd>A</kbd> no UV Editor), iguala a densidade entre ilhas automaticamente. O fluxo padrão é: desdobrar tudo → <strong>Average Islands Scale</strong> (todas ficam com a mesma densidade) → <strong>Pack Islands</strong> (arruma sem mudar a escala relativa).</p>
+
+  <table>
+    <tr><th>Resolução da textura</th><th>Texel density típica (objeto a ~1 m da câmera)</th></tr>
+    <tr><td>Mobile / low-end</td><td>~256–512 px/m</td></tr>
+    <tr><td>Game console / PC (padrão)</td><td>~1024 px/m (10.24 px/cm)</td></tr>
+    <tr><td>Hero asset / close-up</td><td>~2048–4096 px/m</td></tr>
+    <tr><td>Film / cinematics</td><td>UDIMs, densidade conforme a tela</td></tr>
+  </table>
+
+  <div class="caixa dica">
+    <div class="rot">✔ A receita de densidade uniforme</div>
+    <p>Selecione todas as ilhas no UV Editor, <kbd>Ctrl</kbd>+<kbd>A</kbd> (<strong>Average Islands Scale</strong>) para igualar a densidade, depois <span class="menupath">UV ▸ Pack Islands</span> para empacotar. Pronto: todas as superfícies recebem a mesma nitidez. Para dar <em>mais</em> resolução a uma parte importante (um rosto), escale aquela ilha manualmente <strong>antes</strong> do pack — ela passa a ocupar mais quadrado e ganha texels.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE II ===================== -->
+<div class="parte-cover" id="parte2">
+  <div class="pn">PARTE II</div>
+  <h2>Costuras e desdobramento</h2>
+  <p>O coração do UV mapping: decidir onde cortar (seams) e como achatar o que sobrou (unwrap). Esta parte cobre a estratégia de seams para cada tipo de forma, todos os métodos de desdobramento do Blender e quando usar cada um, e as ferramentas finas — pin, live unwrap e endireitar ilhas — que transformam um desdobramento bruto num layout limpo.</p>
+</div>
+
+<!-- ===== CAP 4 ===== -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">Seams: onde e por que cortar</h2>
+
+  <p class="lead">Uma seam (costura) é uma aresta marcada onde a malha vai "rasgar" para deitar plana. Toda seam é um compromisso: ela permite achatar sem distorcer, mas cria uma borda visível e uma descontinuidade na textura. A arte das UVs é cortar <em>o suficiente</em> para eliminar distorção, mas <em>o mínimo</em> e nos lugares mais escondidos.</p>
+
+  <h3>4.1 — Por que seams são necessárias</h3>
+  <p>Lembre do mapa-múndi: não dá para achatar uma esfera sem rasgar. Quanto mais curva a superfície, mais cortes ela precisa. Uma seam diz ao algoritmo de unwrap: "aqui você pode separar — estas duas faces não precisam ficar grudadas no layout". Sem seams suficientes, o unwrap tenta forçar tudo grudado e estica horrores. Com seams demais, você cria ilhas pequenas demais, costuras visíveis e desperdício de espaço.</p>
+
+  <h3>4.2 — Os três princípios de onde cortar</h3>
+  <ul>
+    <li><strong>Esconda a costura.</strong> Coloque seams onde o olho não vai: a parte de trás de um objeto, dentro de uma fenda, sob o braço de um personagem, ao longo de uma quina já dura. Uma costura numa quina afiada é quase invisível.</li>
+    <li><strong>Siga a forma natural.</strong> Cilindros pedem uma costura ao longo do comprimento (como a emenda de uma lata). Membros pedem costuras nas "axilas" e no interior. Quinas duras de hard surface são lugares perfeitos.</li>
+    <li><strong>Corte onde a curvatura muda muito.</strong> A transição entre o topo e a lateral de um cilindro, entre a face e o pescoço — onde a superfície "vira" bruscamente, uma seam alivia a distorção.</li>
+  </ul>
+
+  <figure>
+    <svg viewBox="0 0 720 210" role="img" aria-label="Onde colocar seams num cilindro">
+      <!-- cilindro com seam -->
+      <g transform="translate(60,30)">
+        <ellipse cx="55" cy="20" rx="45" ry="16" class="q-obj"/>
+        <path d="M10 20 V130 a45 16 0 0 0 90 0 V20" class="q-obj"/>
+        <path d="M10 20 V130" class="q-seam"/>
+        <ellipse cx="55" cy="20" rx="45" ry="16" fill="none" class="q-seam"/>
+        <text x="55" y="172" text-anchor="middle" class="q-sub">cilindro</text>
+        <text x="55" y="187" text-anchor="middle" class="q-sub" fill="#E0982C">seam: 1 vertical + 2 tampas</text>
+      </g>
+      <!-- resultado UV -->
+      <g transform="translate(300,25)">
+        <rect x="0" y="0" width="170" height="160" class="q-uvgrid"/>
+        <ellipse cx="40" cy="35" rx="28" ry="28" class="q-coolf"/>
+        <ellipse cx="130" cy="35" rx="28" ry="28" class="q-coolf"/>
+        <rect x="12" y="80" width="146" height="65" class="q-coolf"/>
+        <text x="40" y="35" text-anchor="middle" class="q-sub" fill="#6FA0E8">topo</text>
+        <text x="130" y="35" text-anchor="middle" class="q-sub" fill="#6FA0E8">base</text>
+        <text x="85" y="117" text-anchor="middle" class="q-sub" fill="#6FA0E8">lateral (retângulo)</text>
+        <text x="85" y="200" text-anchor="middle" class="q-sub">resultado: 3 ilhas planas, zero distorção</text>
+      </g>
+      <text x="245" y="105" class="q-sub">→</text>
+    </svg>
+    <figcaption><b>Figura 4.1 — A costura clássica do cilindro.</b> Uma seam ao longo do comprimento e duas em volta das tampas transformam o cilindro em três ilhas perfeitamente planas: dois círculos (tampas) e um retângulo (a lateral desenrolada). Esse é o gesto mais reutilizado em todo UV mapping.</figcaption>
+  </figure>
+
+  <h3>4.3 — Como marcar e o atalho do dia</h3>
+  <p>Selecione as arestas (modo Edge, <kbd>2</kbd>), depois <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ <strong>Mark Seam</strong>. Para limpar, <kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ <strong>Clear Seam</strong>. Truques de seleção que aceleram tudo:</p>
+  <ul>
+    <li><strong><kbd>Alt</kbd>+clique</strong> seleciona um loop inteiro de arestas — perfeito para a costura em volta de um cilindro.</li>
+    <li><strong>Select ▸ Select Loops ▸ Select Boundary Loop</strong> para a borda de uma região de faces selecionadas.</li>
+    <li><strong>Seam from Islands</strong> (<span class="menupath">UV ▸ Seams from Islands</span>): se você já tem um UV (ex.: de um Smart UV Project), isto cria as seams correspondentes — ótimo para depois refinar à mão.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Marcação por ângulo (sharp = seam)</div>
+    <p>Em hard surface, muitas seams coincidem com as quinas duras. Use <span class="menupath">Select ▸ Select All by Trait ▸ Select Sharp Edges</span> (ou selecione as arestas já marcadas como Sharp) e marque seam em todas de uma vez. Em geral, <strong>toda quina dura é candidata a seam</strong> — a descontinuidade da textura ali é mascarada pela própria quebra de iluminação da quina.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 5 ===== -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">Os métodos de unwrap</h2>
+
+  <p class="lead">O menu <kbd>U</kbd> oferece vários algoritmos de desdobramento. Cada um resolve um problema diferente: alguns respeitam suas seams, outros ignoram tudo e projetam de um ângulo, outros são para casos especiais. Saber qual chamar economiza horas.</p>
+
+  <h3>5.1 — Unwrap (o principal)</h3>
+  <p>O método padrão. Respeita suas seams e desdobra minimizando a distorção. No painel de redo (canto inferior-esquerdo) você escolhe o algoritmo:</p>
+  <ul>
+    <li><strong>Angle Based (ABF)</strong> — o padrão; prioriza preservar os ângulos (forma). Melhor para a maioria dos casos, especialmente orgânicos.</li>
+    <li><strong>Conformal (LSCM)</strong> — mais rápido, bom para formas simples e mecânicas; tende a preservar ângulos locais mas pode distorcer área.</li>
+    <li><strong>Minimum Stretch</strong> (5.x) — variação que busca o menor esticamento global.</li>
+  </ul>
+  <p>Opções importantes: <strong>Margin</strong> (espaço entre ilhas no auto-pack), <strong>Fill Holes</strong>, e <strong>Correct Aspect</strong> (leva em conta a proporção da textura se ela não for quadrada).</p>
+
+  <h3>5.2 — Smart UV Project</h3>
+  <p>O "desdobrador automático". Ele analisa a malha, corta por ângulo (o <em>Angle Limit</em> define quão diferente duas faces precisam ser para virarem ilhas separadas) e empacota tudo sozinho — sem você marcar uma seam sequer. É excelente para:</p>
+  <ul>
+    <li>Hard surface complexo onde marcar seams à mão seria tedioso.</li>
+    <li>Lightmaps e bakes rápidos onde a estética do layout não importa.</li>
+    <li>Um ponto de partida: rode o Smart UV, depois <em>Seams from Islands</em> e refine.</li>
+  </ul>
+  <p>Defeito: as ilhas costumam ser muitas e mal-arrumadas para texturização manual, e as costuras caem onde o algoritmo quis, não onde você esconderia.</p>
+
+  <h3>5.3 — As projeções diretas</h3>
+  <p>Estas ignoram seams e projetam a partir de uma forma primitiva. Use quando o objeto <em>é</em> aquela forma:</p>
+  <table>
+    <tr><th>Método</th><th>Quando usar</th></tr>
+    <tr><td><strong>Cube Projection</strong></td><td>Caixas, prédios, qualquer coisa em planos retos. Projeta das 6 direções.</td></tr>
+    <tr><td><strong>Cylinder Projection</strong></td><td>Latas, canos, troncos, copos. Desenrola a lateral como rótulo.</td></tr>
+    <tr><td><strong>Sphere Projection</strong></td><td>Bolas, planetas, olhos. Projeção tipo mapa-múndi (distorce nos polos).</td></tr>
+    <tr><td><strong>Project from View</strong></td><td>Projeta exatamente o que a câmera/viewport vê. Para decals, planos de fundo, projeção de fotos. Versão "Bounds" encaixa no 0–1.</td></tr>
+  </table>
+
+  <h3>5.4 — Follow Active Quads e Lightmap Pack</h3>
+  <p><strong>Follow Active Quads</strong> desdobra uma tira de quads seguindo a forma da face ativa, mantendo todos os quads do mesmo tamanho — perfeito para corredores, estradas, escadas, trilhos, tijolos: superfícies feitas de quads regulares onde você quer a textura fluindo sem distorção. <strong>Lightmap Pack</strong> gera um UV específico para lightmaps (sem sobreposição, com margem), normalmente num segundo canal de UV (Cap. 13).</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Qual método chamar — árvore de decisão</div>
+    <p><strong>Forma orgânica ou geral?</strong> Marque seams → <kbd>U</kbd> ▸ Unwrap (Angle Based).<br>
+    <strong>É uma caixa / cilindro / esfera?</strong> Projeção correspondente — sem seams.<br>
+    <strong>Hard surface complexo, layout não importa?</strong> Smart UV Project.<br>
+    <strong>Tira de quads (estrada, escada)?</strong> Follow Active Quads.<br>
+    <strong>Decal ou projeção de foto?</strong> Project from View.<br>
+    <strong>Lightmap para engine?</strong> Lightmap Pack (em UV2).</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 5.1 — Os três primitivos</div>
+    <p>Crie um cubo, um cilindro e uma esfera (UV Sphere). Desdobre cada um com o método "errado" e o "certo": tente Sphere Projection no cubo, Cube no cilindro, etc. Carregue a textura UV Grid e observe a distorção em cada combinação. Depois faça o cilindro do jeito certo (seam no comprimento + tampas, Unwrap) e compare com a Cylinder Projection. Note onde cada um coloca a costura.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 6 ===== -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Pin, Live Unwrap e endireitar ilhas</h2>
+
+  <p class="lead">O desdobramento bruto raramente é o final. Estas três ferramentas dão controle fino: <strong>pin</strong> trava pontos no lugar, <strong>live unwrap</strong> recalcula em tempo real enquanto você arrasta, e os comandos de <strong>endireitar</strong> tornam ilhas tortas em retângulos limpos — essencial para texturas que precisam de linhas retas (tijolos, painéis, tecido listrado).</p>
+
+  <h3>6.1 — Pinning (fixar vértices UV)</h3>
+  <p>Selecione vértices UV e aperte <kbd>P</kbd> para fixá-los (ficam vermelhos). Pinos não se movem durante um novo Unwrap — o algoritmo desdobra o resto <em>respeitando</em> esses pontos âncora. Uso clássico: fixar os quatro cantos de uma ilha nos cantos do quadrado 0–1 e re-desdobrar para forçar o preenchimento. Para liberar, <kbd>Alt</kbd>+<kbd>P</kbd> (Unpin).</p>
+
+  <h3>6.2 — Live Unwrap</h3>
+  <p>Ative em <span class="menupath">UV ▸ Live Unwrap</span> no UV Editor. Com ele ligado, sempre que você mover um vértice pinado, o resto da ilha se re-desdobra na hora. Combinado com pins, é mágico para ajustar uma UV orgânica interativamente: fixe alguns pontos-chave, arraste, e veja a malha relaxar em volta sem distorcer.</p>
+
+  <h3>6.3 — Endireitar e alinhar</h3>
+  <p>As ferramentas que limpam o layout:</p>
+  <ul>
+    <li><strong>Follow Active Quads</strong> (já visto) — para tiras regulares.</li>
+    <li><strong>UV ▸ Align / Straighten</strong> — selecione um loop de vértices UV e alinhe-os no eixo X ou Y, ou use <strong>Straighten</strong> para deixá-los retos.</li>
+    <li><strong>UV Squares</strong> (add-on popular) ou o gesto manual: selecione a borda de uma ilha, alinhe os loops, depois <em>Unwrap</em> com os cantos pinados → a ilha vira um retângulo perfeito.</li>
+    <li><strong>Minimize Stretch</strong> (<kbd>Ctrl</kbd>+<kbd>V</kbd>) — relaxa iterativamente a ilha para reduzir esticamento; segure e mexa o mouse para controlar a intensidade.</li>
+  </ul>
+
+  <figure>
+    <svg viewBox="0 0 720 190" role="img" aria-label="Endireitar uma ilha torta">
+      <g transform="translate(50,25)">
+        <rect x="0" y="0" width="170" height="140" class="q-uvgrid"/>
+        <path d="M20 25 L120 15 L150 90 L40 120 Z" class="q-warmf"/>
+        <text x="85" y="160" text-anchor="middle" class="q-sub" fill="#E0982C">ilha torta (distorce)</text>
+      </g>
+      <path d="M250 95 h60" class="q-axis" marker-end="url(#arr6)"/>
+      <defs><marker id="arr6" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#867E6E"/></marker></defs>
+      <text x="280" y="83" text-anchor="middle" class="q-sub">straighten<tspan>+ pin</tspan></text>
+      <g transform="translate(360,25)">
+        <rect x="0" y="0" width="170" height="140" class="q-uvgrid"/>
+        <rect x="20" y="20" width="130" height="100" class="q-coolf"/>
+        <text x="85" y="160" text-anchor="middle" class="q-sub" fill="#6FA0E8">retângulo limpo ✔</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 6.1 — De torto a reto.</b> Uma ilha com bordas irregulares distorce texturas com linhas. Alinhando os loops de borda (Straighten), fixando os cantos (Pin) e re-desdobrando, ela vira um retângulo — ideal para texturas tileáveis, painéis e qualquer padrão regular.</figcaption>
+  </figure>
+
+  <div class="caixa dica">
+    <div class="rot">✔ O fluxo de uma ilha perfeita</div>
+    <p>Selecione um loop de borda → <strong>Straighten</strong> (alinha em linha reta) → repita para o loop oposto → selecione os cantos → <kbd>P</kbd> (Pin) → <kbd>U</kbd> ▸ Unwrap com Live Unwrap ligado. A ilha relaxa entre os cantos fixados, virando um retângulo com mínima distorção. Use para qualquer superfície que precise carregar linhas retas.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE III ===================== -->
+<div class="parte-cover" id="parte3">
+  <div class="pn">PARTE III</div>
+  <h2>Layout e empacotamento</h2>
+  <p>Desdobrar resolve a distorção; empacotar resolve o aproveitamento. Cada pixel de textura que sobra entre ilhas é resolução desperdiçada. Esta parte cobre o Pack Islands moderno e suas opções, como garantir densidade uniforme no layout final, e as técnicas de economia — simetria, overlapping e stacking — que dobram (ou quadruplicam) o uso do espaço.</p>
+</div>
+
+<!-- ===== CAP 7 ===== -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Packing: o quebra-cabeça das ilhas</h2>
+
+  <p class="lead">Packing é encaixar todas as ilhas dentro do quadrado 0–1 da forma mais compacta possível, sem sobreposição indevida e com uma margem de segurança entre elas. Quanto melhor o pack, mais texels para o modelo — espaço vazio é resolução jogada fora.</p>
+
+  <h3>7.1 — Pack Islands e suas opções</h3>
+  <p>Selecione tudo e <span class="menupath">UV ▸ Pack Islands</span>. O motor reescrito do Blender 5.x oferece controles ricos no painel de redo:</p>
+  <table>
+    <tr><th>Opção</th><th>O que faz</th></tr>
+    <tr><td><strong>Rotation</strong></td><td>Permite girar ilhas para encaixar melhor. <em>Rotation Method</em>: Any Angle, 90°, ou Axis-Aligned (mantém retângulos retos).</td></tr>
+    <tr><td><strong>Scale</strong></td><td>Escala as ilhas para preencher o quadrado. Desligue se já igualou densidade com Average Islands Scale.</td></tr>
+    <tr><td><strong>Margin</strong></td><td>O espaço entre ilhas. Essencial para evitar <em>bleeding</em> (sangramento) no mipmap. Há <em>Margin Method</em>: Scaled, Add, Fraction.</td></tr>
+    <tr><td><strong>Lock Overlapping</strong></td><td>Trata ilhas sobrepostas (stacked) como uma só, preservando a sobreposição intencional (Cap. 9).</td></tr>
+    <tr><td><strong>Shape Method</strong></td><td>Concave (encaixa pela forma real — mais apertado) vs Convex/Bounding Box (mais rápido).</td></tr>
+    <tr><td><strong>Pin</strong></td><td>Ilhas com vértices pinados ficam onde estão; o resto packa em volta.</td></tr>
+  </table>
+
+  <h3>7.2 — Margem: o detalhe que evita o bug</h3>
+  <p>Quando uma textura é reduzida (mipmapping, na distância), pixels de ilhas vizinhas "vazam" um no outro, criando linhas coloridas erradas nas bordas. A <strong>margin</strong> cria um colchão de segurança. Regra prática: margem proporcional à resolução — em 2K/4K, uma margem de <code>0.005–0.01</code> costuma bastar; para mobile com mipmaps agressivos, aumente. O baking (vol. 9) também usa <em>extend/dilate</em> para pintar além das bordas e reforçar isso.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Pack ruim vs bom">
+      <g transform="translate(50,20)">
+        <rect x="0" y="0" width="160" height="160" class="q-uvgrid"/>
+        <rect x="10" y="10" width="50" height="30" class="q-warmf"/>
+        <ellipse cx="110" cy="40" rx="30" ry="20" class="q-warmf"/>
+        <rect x="15" y="90" width="40" height="55" class="q-warmf"/>
+        <text x="80" y="185" text-anchor="middle" class="q-sub" fill="#E0982C">~40% usado — desperdício</text>
+      </g>
+      <path d="M240 100 h50" class="q-axis" marker-end="url(#arr7)"/>
+      <defs><marker id="arr7" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#867E6E"/></marker></defs>
+      <text x="265" y="90" text-anchor="middle" class="q-sub">pack</text>
+      <g transform="translate(330,20)">
+        <rect x="0" y="0" width="160" height="160" class="q-uvgrid"/>
+        <rect x="6" y="6" width="92" height="58" class="q-coolf"/>
+        <ellipse cx="128" cy="35" rx="28" ry="28" class="q-coolf"/>
+        <rect x="6" y="72" width="55" height="82" class="q-coolf"/>
+        <rect x="68" y="72" width="86" height="82" class="q-coolf"/>
+        <text x="80" y="185" text-anchor="middle" class="q-sub" fill="#6FA0E8">~85% usado ✔ (rotação + escala)</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 7.1 — Cada pixel conta.</b> O mesmo conjunto de ilhas, mal e bem empacotado. Ativar rotação e shape concave, e escalar para preencher, eleva o aproveitamento de ~40% para ~85% — o que, na prática, é mais que o dobro da resolução efetiva na mesma textura.</figcaption>
+  </figure>
+
+  <div class="caixa v5">
+    <div class="rot">✷ 5.x — o Pack reescrito</div>
+    <p>O antigo Pack Islands era simples (bounding box, sem rotação fina). O motor moderno do 5.x faz <strong>packing por forma côncava com rotação livre</strong>, frequentemente superando add-ons pagos de gerações anteriores. Combine <em>Shape Method: Concave</em> + <em>Rotation: Any Angle</em> + <em>Scale</em> para o melhor aproveitamento. Para projetos enormes, add-ons como UVPackmaster ainda oferecem GPU packing e mais controle, mas o nativo já entrega muito.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 8 ===== -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Texel density uniforme na prática</h2>
+
+  <p class="lead">O Capítulo 3 definiu texel density; agora a prática de impô-la num modelo inteiro, com várias peças e materiais. O objetivo: que a textura tenha a mesma nitidez por toda a cena — exceto onde você decidir, conscientemente, gastar mais resolução.</p>
+
+  <h3>8.1 — O fluxo canônico</h3>
+  <ol class="passos">
+    <li><h4>Desdobre todas as peças</h4><p>Com seams e Unwrap, ou Smart UV onde couber. Não se preocupe com a escala relativa ainda.</p></li>
+    <li><h4>Iguale a densidade</h4><p>Selecione todas as ilhas no UV Editor (<kbd>A</kbd>) e <kbd>Ctrl</kbd>+<kbd>A</kbd> (<strong>Average Islands Scale</strong>). Agora todas têm o mesmo número de texels por metro.</p></li>
+    <li><h4>Promova as peças importantes (opcional)</h4><p>Escale manualmente a ilha do rosto, da face frontal, do detalhe que a câmera vê — elas passam a merecer mais resolução.</p></li>
+    <li><h4>Empacote</h4><p><strong>Pack Islands</strong> com <em>Scale</em> ligado preenche o quadrado preservando as proporções relativas que você definiu.</p></li>
+    <li><h4>Verifique</h4><p>Aplique a UV Grid: os quadradinhos devem ter o mesmo tamanho em toda a malha (exceto onde você promoveu). Diferenças = densidade desigual.</p></li>
+  </ol>
+
+  <h3>8.2 — Várias texturas / vários materiais</h3>
+  <p>Se o modelo usa <strong>mais de um material</strong>, cada material costuma ter seu próprio conjunto de UVs ocupando o quadrado 0–1 inteiro — ou seja, peças de materiais diferentes <em>podem</em> ocupar o mesmo espaço UV sem conflito, porque vão para texturas diferentes. Isso é diferente de UDIMs (Cap. 10), onde um único material se espalha por vários tiles. Decida cedo: um material com tudo num atlas, vários materiais (um por região), ou UDIMs.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ A armadilha da escala do objeto</div>
+    <p>Texel density depende do tamanho real do objeto. Se você esquecer de <strong>aplicar a escala</strong> (<kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ Scale, em Object Mode) antes de calcular densidade, o Average Islands Scale usa as dimensões erradas e a densidade fica inconsistente entre objetos escalados de forma diferente. <strong>Aplique transformações antes de trabalhar UVs sério</strong> — é o mesmo cuidado do baking e da exportação (vol. 9).</p>
+  </div>
+</section>
+
+<!-- ===== CAP 9 ===== -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Simetria, overlapping e stacking</h2>
+
+  <p class="lead">A maneira mais poderosa de ganhar resolução é não desperdiçá-la em coisas repetidas. Se as duas metades de um objeto são iguais, por que dar a cada uma seu próprio espaço de textura? Sobrepor (overlap/stack) ilhas idênticas faz peças repetidas compartilharem os mesmos pixels — multiplicando a densidade efetiva.</p>
+
+  <h3>9.1 — Simetria de espelho</h3>
+  <p>Um personagem é simétrico: o braço esquerdo é o espelho do direito. Em vez de desdobrar os dois, você desdobra um e <strong>sobrepõe o outro por cima</strong> (espelhado). Os dois braços passam a amostrar a mesma metade da textura — dobrando a resolução, já que ocupam o espaço de um só. O custo: a textura fica simétrica (uma cicatriz no braço esquerdo apareceria igual no direito). Para hero assets, às vezes se quebra a simetria depois com um detalhe pintado num segundo passo.</p>
+
+  <h3>9.2 — Stacking de peças idênticas</h3>
+  <p>Um parafuso aparece 20 vezes no modelo. Empilhe (stack) as 20 ilhas exatamente sobre uma só: todas amostram o mesmo pixel, e você só "gasta" um parafuso de espaço. O <strong>Pack Islands</strong> com <em>Lock Overlapping</em> (ou o add-on de stacking) detecta ilhas idênticas e as mantém empilhadas durante o pack.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Stacking de ilhas idênticas">
+      <g transform="translate(50,25)">
+        <rect x="0" y="0" width="160" height="150" class="q-uvgrid"/>
+        <g class="q-warmf"><rect x="12" y="12" width="30" height="30"/><rect x="48" y="12" width="30" height="30"/><rect x="84" y="12" width="30" height="30"/><rect x="12" y="48" width="30" height="30"/><rect x="48" y="48" width="30" height="30"/><rect x="84" y="48" width="30" height="30"/></g>
+        <text x="80" y="172" text-anchor="middle" class="q-sub" fill="#E0982C">6 parafusos = 6 ilhas pequenas</text>
+      </g>
+      <path d="M240 95 h50" class="q-axis" marker-end="url(#arr9)"/>
+      <defs><marker id="arr9" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#867E6E"/></marker></defs>
+      <text x="265" y="85" text-anchor="middle" class="q-sub">stack</text>
+      <g transform="translate(330,25)">
+        <rect x="0" y="0" width="160" height="150" class="q-uvgrid"/>
+        <rect x="35" y="30" width="90" height="90" class="q-coolf"/>
+        <rect x="38" y="33" width="84" height="84" fill="none" stroke="#6FA0E8" stroke-width="1" opacity=".5"/>
+        <text x="80" y="78" text-anchor="middle" class="q-sub" fill="#6FA0E8">1 ilha grande</text>
+        <text x="80" y="172" text-anchor="middle" class="q-sub" fill="#6FA0E8">6× a resolução, mesmo espaço ✔</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 9.1 — Reaproveitar é resolução grátis.</b> Empilhar as seis ilhas de parafuso idênticas sobre uma só libera o espaço das outras cinco — que vai para o resto do modelo. A peça repetida agora ocupa uma ilha grande e nítida, e todas as cópias a compartilham.</figcaption>
+  </figure>
+
+  <h3>9.3 — Quando NÃO sobrepor</h3>
+  <ul>
+    <li><strong>Lightmaps</strong> exigem UVs sem nenhuma sobreposição — cada ponto precisa de um lugar único para guardar sua luz assada (Cap. 13).</li>
+    <li><strong>Bakes de dados de posição/ID</strong> (vol. 9) também precisam de UVs únicas.</li>
+    <li><strong>Quando a assimetria importa</strong> — um rosto com cicatriz só de um lado, um logo só num ombro. Aí ou se quebra a simetria, ou se pinta o detalhe num canal separado.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ A regra do "dois conjuntos de UV"</div>
+    <p>O padrão profissional para games: <strong>UV1 com overlapping e stacking</strong> (máxima resolução para as texturas de cor/normal/rough) e <strong>UV2 sem sobreposição</strong> (gerado por Lightmap Pack ou Smart UV, para a luz assada). Cada um otimizado para seu propósito. Mais sobre múltiplos canais no Cap. 14.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE IV ===================== -->
+<div class="parte-cover" id="parte4">
+  <div class="pn">PARTE IV</div>
+  <h2>UDIMs e casos reais</h2>
+  <p>A teoria encontra os fluxos de produção. Esta parte cobre os UDIMs (vários tiles de textura para resolução de cinema), e depois desce a três disciplinas com regras próprias: hard surface e o casamento UV↔bake, UVs orgânicas de personagem, e UVs para games em tempo real — incluindo o segundo canal para lightmaps.</p>
+</div>
+
+<!-- ===== CAP 10 ===== -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">UDIMs: tiles de alta resolução</h2>
+
+  <p class="lead">Um único quadrado 0–1 tem um teto de resolução: por maior que seja a textura, há um limite prático (8K, 16K). Para um personagem de cinema que precisa de detalhe extremo em cada poro, isso não basta. UDIMs resolvem isso espalhando as UVs por <strong>vários quadrados</strong> (tiles), cada um com sua própria textura.</p>
+
+  <h3>10.1 — Como funciona o sistema de tiles</h3>
+  <p>UDIM significa "U-Dimension". Além do tile padrão (0–1, chamado <strong>1001</strong>), você pode colocar ilhas no próximo quadrado à direita (1–2 em U, tile <strong>1002</strong>), no seguinte (1003), e assim por diante; a numeração sobe para a próxima fileira em 1011. Cada tile carrega uma imagem separada (ex.: <code>textura.1001.png</code>, <code>textura.1002.png</code>). O Blender e os engines montam tudo automaticamente pela numeração no nome do arquivo.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Grade de tiles UDIM">
+      <g transform="translate(180,20)">
+        <g class="q-uvgrid">
+          <rect x="0" y="80" width="80" height="80"/><rect x="80" y="80" width="80" height="80"/><rect x="160" y="80" width="80" height="80"/><rect x="240" y="80" width="80" height="80"/>
+          <rect x="0" y="0" width="80" height="80"/><rect x="80" y="0" width="80" height="80"/><rect x="160" y="0" width="80" height="80"/><rect x="240" y="0" width="80" height="80"/>
+        </g>
+        <text x="40" y="125" text-anchor="middle" class="q-sub" fill="#6FA0E8">1001</text>
+        <text x="120" y="125" text-anchor="middle" class="q-sub">1002</text>
+        <text x="200" y="125" text-anchor="middle" class="q-sub">1003</text>
+        <text x="280" y="125" text-anchor="middle" class="q-sub">1004</text>
+        <text x="40" y="45" text-anchor="middle" class="q-sub">1011</text>
+        <text x="120" y="45" text-anchor="middle" class="q-sub">1012</text>
+        <text x="200" y="45" text-anchor="middle" class="q-sub">1013</text>
+        <text x="280" y="45" text-anchor="middle" class="q-sub">1014</text>
+        <ellipse cx="40" cy="120" rx="22" ry="30" class="q-warmf"/>
+        <rect x="92" y="92" width="56" height="56" class="q-warmf"/>
+      </g>
+      <text x="360" y="190" text-anchor="middle" class="q-sub">cada tile = uma textura própria · numeração 1001, 1002… 1011…</text>
+    </svg>
+    <figcaption><b>Figura 10.1 — A grade UDIM.</b> Em vez de espremer tudo no tile 1001, as ilhas se distribuem por uma grade de tiles, cada um com resolução plena. Um personagem de filme pode usar 10–40 tiles — rosto num, torso noutro, mãos noutro — atingindo detalhe impossível num único quadrado.</figcaption>
+  </figure>
+
+  <h3>10.2 — Trabalhar UDIMs no Blender</h3>
+  <ol class="passos">
+    <li><h4>Crie a imagem como tiled</h4><p>No UV Editor, <span class="menupath">Image ▸ New</span> e marque <strong>UDIM Tiles</strong>. No painel <em>UDIM Tiles</em> (N) adicione os tiles que vai usar.</p></li>
+    <li><h4>Distribua as ilhas</h4><p>Mova ilhas para os tiles arrastando-as para os quadrados à direita/acima. O <strong>Pack Islands</strong> tem opção de empacotar respeitando tiles.</p></li>
+    <li><h4>No shader</h4><p>O nó <strong>Image Texture</strong> reconhece UDIMs automaticamente quando a imagem é tiled e o arquivo tem o padrão <code>&lt;UDIM&gt;</code> no nome.</p></li>
+    <li><h4>Exporte</h4><p>Pinte no Substance/Mari (que adoram UDIMs) ou asse por tile. glTF <strong>não</strong> suporta UDIMs; USD e formatos de VFX suportam.</p></li>
+  </ol>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ UDIM não é para games (em geral)</div>
+    <p>UDIMs são o padrão de <strong>VFX, animação e cinema</strong>, onde a pipeline (Maya, Houdini, Mari, USD, RenderMan) os trata nativamente. Game engines de tempo real (Unity, Unreal) <strong>tradicionalmente não usam UDIMs</strong> — preferem atlas únicos ou texture arrays (Unreal tem suporte parcial via Virtual Textures). Para games, fique no fluxo de 0–1 + múltiplos materiais (Cap. 13). Escolha o caminho pelo destino.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 11 ===== -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 11</div><div class="fio"></div></div>
+  <h2 class="titulo">UVs para hard surface e o bake</h2>
+
+  <p class="lead">Hard surface (vol. 2) e baking (vol. 9) têm exigências específicas de UV. Aqui a UV não é só para colar uma foto de metal — ela é o destino para onde o detalhe do modelo high-poly será projetado (normal, AO, curvature). UV ruim = bake com costuras, artefatos e desperdício.</p>
+
+  <h3>11.1 — Seams nas quinas duras</h3>
+  <p>A boa notícia do hard surface: ele tem quinas duras naturais, e elas são lugares perfeitos para seams — a quebra de iluminação da quina esconde a descontinuidade da textura. A regra: <strong>marque seam em toda quina dura</strong> (as mesmas arestas que receberiam um bevel ou um Sharp). Isso também alinha com o que o normal map espera: ilhas separadas por quinas duras evitam que o bake "sangre" normal entre faces de orientação muito diferente.</p>
+
+  <h3>11.2 — As regras de UV para um bom bake</h3>
+  <ul>
+    <li><strong>Sem sobreposição</strong> (a menos que intencional e idêntica). Faces sobrepostas no UV recebem o mesmo bake — desastre para normal/AO de peças que não são idênticas.</li>
+    <li><strong>Margem generosa</strong> entre ilhas, para o <em>dilate/extend</em> do bake pintar além das bordas sem invadir a ilha vizinha.</li>
+    <li><strong>Ângulos retos quando possível</strong> — ilhas alinhadas aos eixos UV produzem normal maps mais limpos e comprimem melhor.</li>
+    <li><strong>Texel density consistente</strong> — senão o detalhe assado fica nítido numa peça e borrado noutra.</li>
+    <li><strong>Casar com o ID map</strong> — se você vai usar um ID map (vol. 9) para máscaras, ilhas bem separadas por material facilitam.</li>
+  </ul>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ O elo UV → normal map</div>
+    <p>Um normal map guarda direções de superfície no <em>tangent space</em>, que é definido <strong>pela própria UV</strong>. Por isso UV e normal map são inseparáveis: mudar a UV depois de assar invalida o normal map. A ordem correta é sempre <strong>UV → bake → texturização</strong>. E a convenção de canais (Y+ vs Y−, a "armadilha do verde" do vol. 9) interage com como suas UVs estão orientadas. Trate a UV como decisão final antes de assar.</p>
+  </div>
+
+  <h3>11.3 — Smart UV como atalho honesto</h3>
+  <p>Para hard surface muito complexo (uma arma com 200 peças), marcar seams à mão é inviável. <strong>Smart UV Project</strong> com um Angle Limit de ~66° corta nas quinas duras automaticamente e empacota — e como em hard surface as costuras caem nas quinas de qualquer jeito, o resultado costuma ser ótimo para bake. Refine só as peças que a câmera vê de perto.</p>
+</section>
+
+<!-- ===== CAP 12 ===== -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">UVs orgânicas (personagem, rosto)</h2>
+
+  <p class="lead">Orgânicos são o caso difícil: superfícies curvas e contínuas, sem quinas para esconder costuras, e regiões (o rosto) que exigem altíssima densidade. As estratégias de seam para um personagem são quase um padrão de indústria — vale conhecê-las.</p>
+
+  <h3>12.1 — Onde escondem as seams num personagem</h3>
+  <p>O molde clássico de costura corporal:</p>
+  <ul>
+    <li><strong>Atrás das orelhas e na linha do cabelo</strong> — para a cabeça, escondendo a costura do rosto.</li>
+    <li><strong>Interior dos braços e pernas</strong> (a "linha de costura" como numa roupa), descendo pela parte interna.</li>
+    <li><strong>Axilas e virilha</strong> — dobras profundas que o olho não acessa.</li>
+    <li><strong>Linha das costas ou da lateral do torso</strong> — uma costura central nas costas é discreta.</li>
+    <li><strong>Punhos e tornozelos</strong> — para separar mãos e pés em ilhas próprias (que merecem densidade alta).</li>
+  </ul>
+
+  <h3>12.2 — O rosto manda</h3>
+  <p>O rosto é o que a câmera mais vê e onde o olho humano detecta o menor defeito. Dê a ele uma <strong>ilha grande e própria</strong>, com costura na linha do cabelo e atrás das orelhas, e <strong>promova sua texel density</strong> (escale a ilha antes do pack, ou dedique um tile UDIM só para a cabeça). Mantenha a simetria para texturizar uma metade, mas reserve um passo final para quebrar a simetria (assimetrias faciais e detalhes são o que dá realismo).</p>
+
+  <figure>
+    <svg viewBox="0 0 720 210" role="img" aria-label="Layout UV de personagem">
+      <g transform="translate(40,20)">
+        <!-- silhueta com seams -->
+        <path d="M55 15 a18 18 0 1 1 .1 0 M40 50 L30 130 M70 50 L80 130 M37 60 L20 110 M73 60 L90 110 M48 130 L44 180 M62 130 L66 180" class="q-wire"/>
+        <path d="M55 33 V120" class="q-seam"/>
+        <text x="55" y="200" text-anchor="middle" class="q-sub">personagem · seams internas</text>
+      </g>
+      <g transform="translate(260,20)">
+        <rect x="0" y="0" width="180" height="180" class="q-uvgrid"/>
+        <ellipse cx="55" cy="50" rx="45" ry="42" class="q-coolf"/>
+        <text x="55" y="54" text-anchor="middle" class="q-sub" fill="#6FA0E8">cabeça (grande)</text>
+        <rect x="105" y="10" width="65" height="80" class="q-coolf"/>
+        <text x="137" y="52" text-anchor="middle" class="q-sub" fill="#6FA0E8">torso</text>
+        <rect x="8" y="100" width="36" height="72" class="q-coolf"/><rect x="48" y="100" width="36" height="72" class="q-coolf"/>
+        <text x="46" y="186" text-anchor="middle" class="q-sub" fill="#6FA0E8">braços/pernas</text>
+        <rect x="92" y="100" width="34" height="34" class="q-coolf"/><rect x="130" y="100" width="34" height="34" class="q-coolf"/>
+        <text x="128" y="150" text-anchor="middle" class="q-sub" fill="#6FA0E8">mãos/pés</text>
+      </g>
+      <g transform="translate(480,40)">
+        <text x="0" y="0" class="q-lbl" font-size="12">Prioridades</text>
+        <text x="0" y="22" class="q-sub">• rosto = maior ilha</text>
+        <text x="0" y="40" class="q-sub">• membros: stack L/R</text>
+        <text x="0" y="58" class="q-sub">• seams internas</text>
+        <text x="0" y="76" class="q-sub">• simetria → quebrar no fim</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 12.1 — O molde do personagem.</b> Costuras escondidas no interior dos membros e na linha do cabelo; a cabeça recebe a maior ilha (mais texels); braços e pernas esquerdo/direito são empilhados para economizar; mãos e pés ganham ilhas próprias.</figcaption>
+  </figure>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Live Unwrap é seu amigo aqui</div>
+    <p>Orgânicos distorcem por natureza. Ligue <strong>Live Unwrap</strong>, fixe (pin) alguns pontos-chave (centro do rosto, pontas dos membros) e use <strong>Minimize Stretch</strong> (<kbd>Ctrl</kbd>+<kbd>V</kbd>) para relaxar as ilhas iterativamente. O overlay de stretch (Cap. 3) guia onde ainda há vermelho — adicione uma seam discreta ali se necessário.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 13 ===== -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">UVs para games e lightmaps</h2>
+
+  <p class="lead">Tempo real impõe restrições: orçamento de textura apertado, mipmaps agressivos e, muitas vezes, um segundo conjunto de UVs só para a iluminação pré-calculada. Esta é a disciplina mais exigente de packing e organização.</p>
+
+  <h3>13.1 — As prioridades do game-art</h3>
+  <ul>
+    <li><strong>Aproveitamento máximo</strong> do espaço — cada texel importa no orçamento de VRAM.</li>
+    <li><strong>Overlapping e stacking agressivos</strong> em UV1 (peças repetidas, simetria) para esticar a resolução.</li>
+    <li><strong>Margem suficiente</strong> para os mipmaps não sangrarem na distância.</li>
+    <li><strong>Atlas</strong> — várias peças (ou vários objetos) num único conjunto de texturas, reduzindo draw calls.</li>
+    <li><strong>Padding consistente</strong> e ilhas alinhadas aos eixos onde possível (compressão de bloco gosta disso).</li>
+  </ul>
+
+  <h3>13.2 — O segundo canal: lightmap UVs</h3>
+  <p>Engines pré-calculam a iluminação estática e a guardam num <strong>lightmap</strong> — uma textura de luz por superfície. Para isso, cada ponto da malha precisa de um lugar <strong>único</strong> no UV (não pode sobrepor, senão duas superfícies guardariam luz no mesmo pixel). Como UV1 costuma ter overlapping para resolução, o lightmap usa um <strong>UV2 separado</strong>, sem sobreposição.</p>
+  <p>No Blender: adicione um segundo UV Map (Cap. 14), selecione-o, e use <strong>Lightmap Pack</strong> ou <strong>Smart UV Project</strong> com margem. Unity pode gerar lightmap UVs na importação, mas fazê-las no Blender dá mais controle. Unreal usa o "Lightmap UV index" para apontar qual canal é o lightmap.</p>
+
+  <table>
+    <tr><th>Canal</th><th>Propósito</th><th>Sobreposição?</th><th>Como gerar</th></tr>
+    <tr><td><strong>UV0 (UVMap)</strong></td><td>Cor, normal, roughness — as texturas do material</td><td>Sim (stack/mirror)</td><td>Unwrap manual + pack</td></tr>
+    <tr><td><strong>UV1 (Lightmap)</strong></td><td>Luz assada (GI estática)</td><td>Não — único</td><td>Lightmap Pack / Smart UV</td></tr>
+    <tr><td><strong>UV extra</strong></td><td>Detail maps, decals, máscaras de blend</td><td>Conforme o uso</td><td>Projeção específica</td></tr>
+  </table>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ Ordem dos canais importa na exportação</div>
+    <p>Engines identificam canais por <strong>índice</strong> (0, 1, 2…), não por nome. O primeiro UV Map da lista do Blender vira UV0, o segundo vira UV1, etc. Se a ordem estiver trocada, a engine vai amostrar a textura no canal de lightmap (ou vice-versa). Confira a ordem na lista de UV Maps (Object Data Properties) <strong>antes</strong> de exportar FBX/glTF. Veja a checklist de export no vol. 9.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 13.1 — Dois canais</div>
+    <p>Pegue um modelo simples de cenário (uma casinha). Crie UV0 com unwrap manual e packing apertado (pode sobrepor janelas idênticas). Adicione UV1 e gere com Lightmap Pack (sem sobreposição, margem 0.02). Compare os dois layouts: note como o UV1 é mais "espalhado e único" e o UV0 mais "apertado e repetido". Exporte em glTF e confirme que ambos os canais saíram.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE V ===================== -->
+<div class="parte-cover" id="parte5">
+  <div class="pn">PARTE V</div>
+  <h2>Ferramentas e domínio</h2>
+  <p>O ferramental avançado e o olho crítico. Como gerenciar múltiplos UV maps, transferir UVs entre malhas e gerá-las proceduralmente com modifiers e Geometry Nodes, e — o mais importante — como reconhecer as assinaturas visuais de uma UV ruim e consertá-las.</p>
+</div>
+
+<!-- ===== CAP 14 ===== -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">Múltiplos UV maps e quem lê cada um</h2>
+
+  <p class="lead">Uma malha pode carregar vários conjuntos de UV ao mesmo tempo, cada um servindo a um propósito. Saber criar, nomear e apontar o shader para o canal certo é o que separa um setup que funciona de um que cola a textura no lugar errado.</p>
+
+  <h3>14.1 — Criar e gerenciar</h3>
+  <p>Em <span class="menupath">Object Data Properties ▸ UV Maps</span>, o sinal <strong>+</strong> adiciona um novo canal (copiando o atual). Você pode renomear (clique duplo), reordenar implícita pela posição, e definir qual é o ativo (o que o UV Editor mostra) e qual tem o ícone de <strong>câmera</strong> (o usado para render quando o shader não especifica um). O primeiro da lista é o índice 0.</p>
+
+  <h3>14.2 — Apontar o shader para um canal específico</h3>
+  <p>Por padrão, o nó <strong>Image Texture</strong> usa o UV ativo de render. Para forçar um canal específico, adicione um nó <strong>UV Map</strong> (Input ▸ UV Map), escolha o canal pelo nome, e conecte sua saída ao <em>Vector</em> da Image Texture. É assim que você usa, por exemplo, UV0 para a cor e UV2 para um detail map sobreposto. O nó <strong>Attribute</strong> (com o nome do UV) faz o mesmo via atributo.</p>
+
+  <pre><code>UV Map (nome: "UVMap")  ──► Image Texture (cor base)
+UV Map (nome: "Detail") ──► Image Texture (detail/decal)  ──► Mix</code></pre>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ UVs são atributos</div>
+    <p>No Blender moderno, um UV map é um <strong>atributo</strong> do domínio <em>Face Corner</em> (canto de face) do tipo 2D Vector, chamado por padrão <code>UVMap</code>. Isso significa que tudo do sistema de atributos vale: você pode lê-lo e gravá-lo em Geometry Nodes (Cap. 15), transferi-lo com Data Transfer, e vê-lo no Spreadsheet. Entender que UV é "só mais um atributo por canto de face" desmistifica muita coisa — é a mesma natureza dos vertex colors e dos vertex groups (vol. 5).</p>
+  </div>
+</section>
+
+<!-- ===== CAP 15 ===== -->
+<section class="cap" id="cap15">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 15</div><div class="fio"></div></div>
+  <h2 class="titulo">Transferir UVs, modifiers e nodes</h2>
+
+  <p class="lead">UVs não precisam ser sempre desenhadas à mão. Você pode copiá-las de uma malha para outra, projetá-las dinamicamente com modifiers, e gerá-las/modificá-las em Geometry Nodes — útil para variações, retopologia e fluxos procedurais.</p>
+
+  <h3>15.1 — Transferir UVs entre malhas</h3>
+  <p>Refez a topologia de um modelo e quer reaproveitar as UVs do antigo? Ou tem dez variações do mesmo objeto base? Use o modifier <strong>Data Transfer</strong> (vol. 5) com <em>Face Corner Data ▸ UVs</em>, ou o operador <span class="menupath">Object ▸ Link/Transfer Data ▸ Transfer UV Maps</span> (selecione fonte e destino, este por último ativo). Funciona melhor quando as malhas têm formas parecidas; mapeamento por proximidade ou por índice de polígono.</p>
+
+  <h3>15.2 — UV Project e UV Warp (modifiers)</h3>
+  <ul>
+    <li><strong>UV Project</strong> — projeta UVs a partir de um ou mais "projetores" (objetos empty/camera), como um slide projetado na malha. Ótimo para decals dinâmicos, projeção de vídeo, ou texturizar arquitetura plana sem desdobrar.</li>
+    <li><strong>UV Warp</strong> — distorce as UVs existentes a partir do movimento de dois objetos de controle. Usado para animar texturas (uma esteira rolante, água escorrendo, deslocar um padrão) sem tocar no shader.</li>
+  </ul>
+
+  <h3>15.3 — UVs em Geometry Nodes</h3>
+  <p>Geometry Nodes (vol. — Apostila de Geometry Nodes) trata UV como o atributo <code>UVMap</code> do domínio Face Corner. Você pode:</p>
+  <ul>
+    <li><strong>Ler</strong> a UV com <em>Named Attribute</em> (<code>UVMap</code>, tipo 2D Vector) para usá-la em lógica procedural.</li>
+    <li><strong>Gerar/sobrescrever</strong> com <em>Store Named Attribute</em> no domínio Face Corner — por exemplo, projetar UV planar por código, ou criar UV para geometria instanciada.</li>
+    <li><strong>Preservar</strong> UVs ao gerar geometria nova (Curve to Mesh já cria UVs próprias; Mesh Boolean precisa de cuidado para manter as UVs dos operandos).</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">✷ 5.x — UV procedural maduro</div>
+    <p>Nas versões recentes, manipular UVs em Geometry Nodes ficou direto: o atributo <code>UVMap</code> é exposto como qualquer outro 2D Vector no domínio Face Corner, e nós dedicados (Pack UV Islands, UV Unwrap dentro de GN em builds recentes) permitem desdobramento procedural. Para assets gerados (cabos, trilhos, scatter), isso significa UVs corretas sem passo manual.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 16 ===== -->
+<section class="cap" id="cap16">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 16</div><div class="fio"></div></div>
+  <h2 class="titulo">Diagnóstico e troubleshooting</h2>
+
+  <p class="lead">Saber consertar começa por saber reconhecer. Toda UV ruim deixa uma assinatura visual previsível. Esta é a tabela de socorro do UV mapping — o problema, a causa e a correção.</p>
+
+  <h3>16.1 — As assinaturas visuais</h3>
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável</th><th>Correção</th></tr>
+    <tr><td>Textura esticada/borrada numa região</td><td>Distorção (ilha mal-desdobrada)</td><td>Mais seams ali, ou Minimize Stretch; cheque o overlay de stretch</td></tr>
+    <tr><td>Nitidez desigual entre peças</td><td>Texel density inconsistente</td><td>Average Islands Scale antes do pack; aplique a escala do objeto</td></tr>
+    <tr><td>Costura visível/feia</td><td>Seam em lugar exposto</td><td>Mova a seam para área escondida; cuide do bake dilate/margin</td></tr>
+    <tr><td>Linhas coloridas nas bordas (na distância)</td><td>Bleeding por margem insuficiente</td><td>Aumente a Margin no pack; aumente o extend/dilate do bake</td></tr>
+    <tr><td>Textura repetida/espelhada onde não devia</td><td>Ilhas sobrepostas sem querer</td><td>UV ▸ overlay "Display Overlapping"; separe as ilhas</td></tr>
+    <tr><td>Normal map com costuras gritantes</td><td>UV mudou depois do bake, ou tangent inconsistente</td><td>Reasse após finalizar UV; cheque convenção de canal (vol. 9)</td></tr>
+    <tr><td>Lightmap com manchas/vazamento</td><td>Sobreposição no UV de lightmap</td><td>Regere UV2 sem overlap (Lightmap Pack); aumente margem</td></tr>
+    <tr><td>Textura "girada" 90°</td><td>Ilha rotacionada no pack</td><td>Desligue rotação no pack, ou alinhe a ilha manualmente</td></tr>
+  </table>
+
+  <h3>16.2 — Os overlays de verificação</h3>
+  <p>No UV Editor, o painel <strong>Overlays</strong> tem três aliados: <em>Display Stretch</em> (distorção, Cap. 3), <em>Display Overlapping</em> (acende ilhas que se sobrepõem indevidamente — vermelho = problema) e <em>Display Modified</em> (mostra o efeito de modifiers nas UVs). Ative-os antes de declarar uma UV pronta.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ O teste final dos 30 segundos</div>
+    <p>Antes de dizer "UV pronta": (1) aplique a <strong>UV Grid</strong> — quadradinhos uniformes e sem esticar? (2) ligue <strong>Display Overlapping</strong> — algum vermelho não-intencional? (3) ligue <strong>Display Stretch</strong> — tudo azul? (4) confira a <strong>margem</strong> visualmente. (5) confira a <strong>ordem dos canais</strong> se for exportar. Cinco checagens, trinta segundos, zero retrabalho depois.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VI ===================== -->
+<div class="parte-cover" id="parte6">
+  <div class="pn">PARTE VI</div>
+  <h2>Prática</h2>
+  <p>A teoria condensada num projeto completo, e o material de referência para o dia a dia: glossário, atalhos e o resumo das novidades do 5.x.</p>
+</div>
+
+<!-- ===== CAP 17 ===== -->
+<section class="cap" id="cap17">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 17</div><div class="fio"></div></div>
+  <h2 class="titulo">Projeto: UV de um asset completo</h2>
+
+  <p class="lead">Vamos desdobrar um asset hard surface realista — digamos, um <strong>rádio portátil</strong> (uma caixa com botões, alça cilíndrica, antena, grade de alto-falante). Ele junta todas as técnicas: projeções, seams em quinas, cilindros, stacking de parafusos e densidade uniforme. O fluxo serve para quase qualquer asset.</p>
+
+  <ol class="passos">
+    <li><h4>Prepare</h4><p>Aplique todas as transformações (<kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms em Object Mode). Confira normais (Recalculate Outside, <kbd>Shift</kbd>+<kbd>N</kbd>). Decida: um material só (atlas) — vamos de atlas em 0–1.</p></li>
+    <li><h4>O corpo (caixa)</h4><p>Marque seams nas quinas verticais traseiras e em volta da base (escondidas). <kbd>U</kbd> ▸ Unwrap. Confira: as faces grandes viram retângulos limpos.</p></li>
+    <li><h4>A alça (cilindro)</h4><p>Seam ao longo da parte interna (que encosta no corpo) + nas extremidades. Unwrap → vira uma tira reta. Use Straighten se entortar.</p></li>
+    <li><h4>A antena (cilindro fino)</h4><p>Cylinder Projection direto. É fina; vai receber pouca densidade — tudo bem.</p></li>
+    <li><h4>Os botões e parafusos (repetidos)</h4><p>Desdobre um de cada tipo. Selecione todas as cópias idênticas e <strong>empilhe</strong> (stack) sobre a primeira. No pack, ligue <em>Lock Overlapping</em>.</p></li>
+    <li><h4>A grade do alto-falante</h4><p>Se for geometria repetida, stack. Se for um plano com textura/alpha, Project from View de frente.</p></li>
+    <li><h4>Densidade uniforme</h4><p>Selecione tudo no UV Editor, <kbd>Ctrl</kbd>+<kbd>A</kbd> (Average Islands Scale). Depois <strong>promova</strong> o painel frontal (onde estão os controles que a câmera vê) escalando sua ilha ~1.3×.</p></li>
+    <li><h4>Pack final</h4><p><span class="menupath">UV ▸ Pack Islands</span> com Rotation: Any Angle, Shape: Concave, Margin 0.008, Lock Overlapping ON, Scale ON.</p></li>
+    <li><h4>Verifique</h4><p>UV Grid aplicada: quadradinhos uniformes? Display Overlapping: só os stacks intencionais acendem? Display Stretch: azul? Se sim, pronto para baking (vol. 9) e texturização.</p></li>
+  </ol>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ A ordem que nunca muda</div>
+    <p><strong>Modelar → aplicar transformações → marcar seams → desdobrar → igualar densidade → promover o que importa → empacotar → verificar → (segundo canal se for game) → bake → texturizar.</strong> Esta sequência é o esqueleto de qualquer asset. Decorá-la elimina 90% dos problemas de textura que aparecem lá no fim do pipeline.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 17.1 — Seu próprio asset</div>
+    <p>Escolha um objeto da sua casa com partes variadas (um controle remoto, uma garrafa térmica, um fone). Modele em blocking simples e aplique o fluxo de 9 passos acima. Meta: layout com >80% de aproveitamento, densidade uniforme (confirmada na UV Grid), e nenhuma costura na face que você apontaria uma câmera. Asse um normal map de um high-poly simples para fechar o ciclo com o vol. 9.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 18 ===== -->
+<section class="cap" id="cap18">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M3 10 H17 M10 3 V17" stroke="#3B79C9" stroke-width="1.2" opacity=".7"/></svg><div class="num">CAPÍTULO 18</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>18.1 — Glossário essencial</h3>
+  <table>
+    <tr><th>Termo</th><th>Significado</th></tr>
+    <tr><td><strong>UV</strong></td><td>As coordenadas 2D (u, v) que mapeiam cada ponto da malha para a textura. Espaço 0–1.</td></tr>
+    <tr><td><strong>Unwrap</strong></td><td>Achatar a superfície 3D no plano UV, respeitando seams.</td></tr>
+    <tr><td><strong>Seam</strong></td><td>Aresta marcada onde a malha "rasga" para deitar plana.</td></tr>
+    <tr><td><strong>Island (ilha)</strong></td><td>Um pedaço contíguo de UV, delimitado por seams.</td></tr>
+    <tr><td><strong>Stretching</strong></td><td>Distorção: a textura estica porque a UV não preserva proporção.</td></tr>
+    <tr><td><strong>Texel density</strong></td><td>Pixels de textura por unidade de superfície (px/m). Mede nitidez.</td></tr>
+    <tr><td><strong>Packing</strong></td><td>Encaixar todas as ilhas no quadrado 0–1 da forma mais compacta.</td></tr>
+    <tr><td><strong>Margin / Padding</strong></td><td>Espaço entre ilhas para evitar bleeding nos mipmaps.</td></tr>
+    <tr><td><strong>Bleeding</strong></td><td>Pixels de ilhas vizinhas vazando um no outro na redução (mip).</td></tr>
+    <tr><td><strong>UDIM</strong></td><td>Sistema de múltiplos tiles (1001, 1002…) para resolução de cinema.</td></tr>
+    <tr><td><strong>Lightmap UV</strong></td><td>Segundo canal sem sobreposição, para guardar luz pré-calculada.</td></tr>
+    <tr><td><strong>Atlas</strong></td><td>Várias peças/objetos num único conjunto de texturas.</td></tr>
+    <tr><td><strong>Stacking</strong></td><td>Empilhar ilhas idênticas para compartilharem texels.</td></tr>
+    <tr><td><strong>Pin</strong></td><td>Fixar vértices UV para o unwrap não movê-los.</td></tr>
+    <tr><td><strong>Tangent space</strong></td><td>Sistema local definido pela UV; base dos normal maps.</td></tr>
+  </table>
+
+  <h3>18.2 — Atalhos de bancada</h3>
+  <table>
+    <tr><th>Atalho</th><th>Ação</th></tr>
+    <tr><td><kbd>U</kbd></td><td>Menu Unwrap (no viewport 3D, Edit Mode)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Mark/Clear Seam</td><td>Marcar / limpar costura</td></tr>
+    <tr><td><kbd>Alt</kbd>+clique</td><td>Selecionar loop de arestas (para seam)</td></tr>
+    <tr><td><kbd>P</kbd> / <kbd>Alt</kbd>+<kbd>P</kbd></td><td>Pin / Unpin vértice UV</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd> (UV Editor)</td><td>Average Islands Scale (igualar densidade)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>V</kbd> (UV Editor)</td><td>Minimize Stretch (relaxar ilha)</td></tr>
+    <tr><td><kbd>L</kbd> / <kbd>4</kbd></td><td>Selecionar ilha (hover+L / modo Island)</td></tr>
+    <tr><td><kbd>G</kbd> / <kbd>R</kbd> / <kbd>S</kbd></td><td>Mover / girar / escalar no UV Editor</td></tr>
+  </table>
+
+  <h3>18.3 — Novidades 4.x → 5.x para UV mapping</h3>
+  <ul>
+    <li><strong>Pack Islands reescrito:</strong> packing por forma côncava, rotação em qualquer ângulo, escala por ilha, <em>Lock Overlapping</em> e <em>Pin</em> integrados — frequentemente superando soluções de add-on antigas.</li>
+    <li><strong>UDIMs consolidados:</strong> criação de imagens tiled no UV Editor, pack respeitando tiles, e Image Texture reconhecendo a sequência automaticamente.</li>
+    <li><strong>UV como atributo:</strong> o canal <code>UVMap</code> é um atributo Face Corner 2D Vector pleno — lido/gravado em Geometry Nodes, transferível por Data Transfer, visível no Spreadsheet.</li>
+    <li><strong>Geometry Nodes:</strong> nós e fluxo para gerar/empacotar UV proceduralmente (Pack UV Islands, store do atributo UV).</li>
+    <li><strong>UV Editor:</strong> overlays de stretch/overlap refinados, snapping e seleção melhorados, e melhor performance em malhas pesadas.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Onde isto se encaixa na coleção</div>
+    <p>UV mapping é o <strong>volume 7</strong> — a dobradiça do pipeline. Ele recebe a forma da <strong>Topologia (vol. 6)</strong>, do <strong>Hard Surface (vol. 2)</strong> e do <strong>Boolean (vol. 3)</strong>; serve de base para o <strong>Baking (vol. 9)</strong>, que projeta o detalhe nas UVs; e essas texturas são lidas pelos <strong>Shader Nodes</strong> e <strong>BSDFs</strong> e reveladas pela <strong>Iluminação (vol. 10)</strong>. Próximo passo natural: a <strong>texturização</strong> (texture paint, PBR) que pinta sobre estas UVs, e a <strong>Simulação (vol. 8)</strong>. O manual oficial detalha cada ferramenta em <a class="ext" href="https://docs.blender.org/manual/en/latest/modeling/meshes/uv/index.html">docs.blender.org</a>. Agora vá desdobrar — e nunca mais uma textura vai esticar sem você saber por quê.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  UV Mapping no Blender 5.x — Guia Completo · volume 7 da coleção · 18 capítulos em 6 partes<br>
+  A forma é o esqueleto; a UV é a pele esticada onde toda textura vai viver. Desdobre com cuidado, texturize sem medo.
+</footer>
+
+</main>
+</div><!-- /layout -->
+<script src="./apostilas-nav.js" defer></script>
+</body>
+</html>

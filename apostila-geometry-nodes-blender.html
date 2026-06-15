@@ -333,6 +333,7 @@ dl.gloss dd{margin-left:0;color:var(--muted);font-size:14.5px;line-height:1.65}
     <li><a href="#malha">Operações de malha</a></li>
     <li><a href="#utilitarios">Seleções e campos úteis</a></li>
     <li><a href="#zonas">Zonas: Simulation &amp; Repeat</a></li>
+    <li><a href="#novidades5x">Bundles, Closures &amp; For Each (5.x)</a></li>
     <li><a href="#shading">A ponte com o shading</a></li>
     <li class="grp">Parte III — Estudo</li>
     <li><a href="#tabela">Mapa rápido dos nós</a></li>
@@ -885,6 +886,103 @@ dl.gloss dd{margin-left:0;color:var(--muted);font-size:14.5px;line-height:1.65}
     </div>
   </div>
 </div>
+</section>
+
+<!-- ======================= NOVIDADES 5.x ======================= -->
+<section id="novidades5x">
+  <div class="sec-head"><span class="idx">Parte II</span><h2>Bundles, Closures, For Each e Gizmos — o dataflow do 5.x</h2></div>
+  <p class="sec-sub">As zonas quebraram a regra "sem estado". O ciclo 4.3 → 5.x quebrou outra: a de que cada fio carrega <em>um</em> valor e que a árvore só processa a geometria <em>inteira</em> de uma vez. Estes quatro recursos transformam Geometry Nodes numa linguagem com funções, agrupamento de dados, laços por elemento e até manipuladores na tela.</p>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#4fd0c0"></span><h3>For Each Geometry Element Zone</h3><span class="chip">Zona · laço por elemento</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Disponível:</b> Blender 4.3+</span><span><b>Gesto:</b> isolar e processar um elemento de cada vez</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Campos fazem "a mesma conta em todo mundo ao mesmo tempo". Mas e quando cada elemento precisa de um <em>tratamento próprio que depende só dele</em> — extrudar cada face por um valor que exige isolar aquela face, dividir cada peça de um Boolean separadamente, dar a cada instância uma lógica independente? A <code>For Each Geometry Element Zone</code> roda os nós internos <strong>uma vez por elemento</strong> (face, ponto, instância...) com aquele elemento isolado, e junta os resultados no fim. É o <code>for</code> que faltava: enquanto a Repeat Zone repete N vezes <em>no tempo do bloco</em>, a For Each repete <em>uma vez por item da geometria</em>.</p>
+    </div>
+    <figure class="diagram">
+      <svg viewBox="0 0 760 220" role="img" aria-label="For Each Element: a geometria é separada por elemento, cada um processado isolado, e os resultados são reunidos no fim">
+        <defs><marker id="fe-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4fd0c0"/></marker></defs>
+        <rect x="40" y="86" width="92" height="60" rx="8" fill="#1c2422" stroke="#3a3d44"/>
+        <text x="86" y="78" class="svg-lbl" text-anchor="middle">geometria</text>
+        <g fill="#3a5a2f"><polygon points="60,116 74,98 88,116"/><polygon points="92,128 106,110 120,128"/></g>
+        <line x1="134" y1="116" x2="196" y2="116" stroke="#4fd0c0" stroke-width="2.2" marker-end="url(#fe-a)"/>
+        <rect x="200" y="40" width="360" height="150" rx="10" fill="#241f16" stroke="#5a4a1f" stroke-width="1.5"/>
+        <text x="216" y="62" fill="#f0dfa0" font-family="'Space Grotesk',sans-serif" font-size="12.5" font-weight="600">For Each Element  ·  1×/elemento</text>
+        <g font-family="'JetBrains Mono'" font-size="10.5">
+          <rect x="220" y="78" width="150" height="30" rx="6" fill="#26282d" stroke="#3a3d44"/><text x="230" y="97" fill="#b9c4c0">elemento isolado #1</text>
+          <rect x="220" y="116" width="150" height="30" rx="6" fill="#26282d" stroke="#3a3d44"/><text x="230" y="135" fill="#b9c4c0">elemento isolado #2</text>
+          <rect x="386" y="97" width="156" height="30" rx="6" fill="#1b2a1b" stroke="#3a5a2f"/><text x="396" y="116" fill="#cfe8a8">processa cada um</text>
+        </g>
+        <line x1="562" y1="116" x2="640" y2="116" stroke="#4fd0c0" stroke-width="2.2" marker-end="url(#fe-a)"/>
+        <text x="650" y="104" class="svg-lbl">resultados</text><text x="650" y="120" class="svg-lbl s">reunidos</text>
+        <text x="200" y="24" class="svg-tit">isola → processa item a item → junta</text>
+      </svg>
+      <figcaption>Fig. 7b — A For Each Element isola cada elemento, roda a sub-árvore para ele e concatena as saídas. Use quando o resultado de um item não pode "vazar" para o vizinho — o que um campo, por natureza paralelo e global, não garante.</figcaption>
+    </figure>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>A zona expõe um <em>Index</em> da iteração e aceita entradas no modo <code>Main</code> (a geometria isolada por elemento) e campos auxiliares. A grande vitória é semântica: operações que antes exigiam "realizar tudo + truques de ID" agora se escrevem como um laço limpo — <em>split a malha em ilhas e dê a cada ilha um material/altura próprios</em>, <em>resolver um Boolean por peça</em>, <em>numerar e rotular cada componente conexo</em>. Custo: como todo laço, é mais cara que um campo equivalente — se a operação <em>pode</em> ser um campo paralelo, prefira o campo; reserve a For Each para o que é genuinamente por-elemento. Ela combina com Bundles (abaixo) para carregar vários valores por iteração num fio só.</p>
+    </div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#c9a0dc"></span><h3>Bundle &amp; Closure</h3><span class="chip">5.0 · dados agrupados e funções</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Disponível:</b> Blender 5.0+</span><span><b>Gesto:</b> empacotar vários sockets — e empacotar <em>lógica</em></span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Dois conceitos irmãos que enxugam árvores grandes:</p>
+      <ul>
+        <li><strong>Bundle</strong> — <code>Combine Bundle</code> junta vários valores (geometria + cor + número + ...) num <em>único fio</em>; <code>Separate Bundle</code> os abre de volta no destino. Em vez de seis fios paralelos cruzando a tela, um só. É organização — e a embalagem que os closures usam para entrar e sair.</li>
+        <li><strong>Closure</strong> — um <em>pedaço de árvore tratado como valor</em>: você "embrulha" uma mini-função (entradas → saídas) e a passa adiante por um socket, para ser executada onde outro nó decidir (<code>Evaluate Closure</code>). É a programação funcional chegando ao GN: passar comportamento, não só dados.</li>
+      </ul>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Closures destravam o padrão "ordem superior": um node group genérico recebe <em>como</em> processar cada elemento por parâmetro. Imagine um grupo "Scatter &amp; Aplicar" que recebe um closure "o que fazer em cada ponto" — o mesmo scatter serve para árvores, pedras ou prédios, trocando só a função passada. Combinam naturalmente com a For Each (passar uma função para rodar por elemento) e com Bundles (a assinatura de entrada/saída do closure é, na prática, um bundle tipado). É a maior mudança conceitual desde os campos: GN deixa de ser só "fluxo de dados" e ganha "fluxo de funções". Use com parcimônia — poder demais cedo demais vira árvore ilegível; comece empacotando lógica que você <em>repete</em>.</p>
+    </div>
+    <div class="warn"><b>Cuidado de versão:</b> Bundles e Closures são do <strong>Blender 5.0</strong>. Arquivos que os usam não abrem em 4.x, e o recurso ainda amadurece — documente bem os grupos que dependem deles.</div>
+  </div>
+</div>
+
+<div class="node">
+  <div class="node-head"><span class="sock" style="background:#e0a83f"></span><h3>Gizmos: Linear, Dial &amp; Transform</h3><span class="chip">4.3 · manipuladores na tela</span></div>
+  <div class="node-body">
+    <div class="engine"><span><b>Disponível:</b> Blender 4.3+</span><span><b>Gesto:</b> dar alças interativas a inputs do modificador</span></div>
+    <div class="lvl beg">
+      <span class="tag">Explicação simples</span>
+      <p>Até agora, ajustar um setup procedural era digitar números no painel do modificador. Os nós de <strong>gizmo</strong> põem <em>alças no viewport</em>: o <code>Linear Gizmo</code> (uma seta para arrastar um valor), o <code>Dial Gizmo</code> (um anel para girar um ângulo) e o <code>Transform Gizmo</code> (mover/girar/escalar). Ligue a saída do gizmo a um input e ele vira controlável direto na cena — sua ferramenta procedural ganha interface, como se fosse nativa do Blender.</p>
+    </div>
+    <div class="lvl adv">
+      <span class="tag">Explicação avançada</span>
+      <p>Gizmos leem e <em>escrevem</em> de volta no valor de origem — por isso precisam apontar para algo editável (um input do grupo exposto no modificador, um valor de um nó Value). Posicione-os com a geometria (um Dial sobre a dobradiça de uma porta paramétrica, um Linear na ponta de um braço telescópico) para um rig procedural autoexplicativo. São a peça que faltava para entregar setups de GN a outras pessoas: quem usa não precisa entender a árvore, só arrastar a alça certa.</p>
+    </div>
+  </div>
+</div>
+
+  <h4 class="sub">Os outros saltos do 4.x → 5.x</h4>
+  <div class="tbl-wrap"><table class="tbl">
+    <tr><th>Recurso</th><th>O que mudou</th></tr>
+    <tr><td>Node Tools</td><td>Grupos de Geometry Nodes que rodam como <em>ferramentas de Edit/Sculpt Mode</em> (aparecem nos menus, operam sobre a seleção, leem mouse/face sets). Você cria operadores de modelagem sem Python.</td></tr>
+    <tr><td>Grease Pencil em GN</td><td>O Grease Pencil reescrito virou geometria processável: dá para transformar traços, ler/gravar atributos de camada e ponto, instanciar e deformar desenho 2D com a mesma árvore da malha.</td></tr>
+    <tr><td>Domínios Volume / Points</td><td>Fluxo mais sólido para volumes (Mesh to Volume / Volume to Mesh, Distribute Points in Volume) e nuvens de pontos como cidadãs de primeira classe.</td></tr>
+    <tr><td>Menus &amp; busca</td><td>Menu de adicionar reorganizado, agrupamento por zonas, e melhorias de performance na avaliação de árvores grandes.</td></tr>
+  </table></div>
+
+  <div class="tip"><b>Como estudar isto:</b> não tente usar tudo de uma vez. A ordem natural de adoção é <em>For Each Element</em> (resolve problemas concretos do dia a dia) → <em>Gizmos</em> (deixa seus setups usáveis) → <em>Bundles</em> (limpa árvores que cresceram) → <em>Closures</em> (quando você se pegar copiando a mesma lógica em vários lugares). Cada um é um degrau; pule só quando o anterior já for natural.</div>
+
+  <div class="lab">
+    <span class="lab-tag">Experimente no Blender (5.x)</span>
+    <ol>
+      <li>Cubo → <code>For Each Geometry Element Zone</code> no domínio Face: dentro, <code>Extrude Mesh</code> por um valor = Random Value semeado pelo <em>Index</em> da iteração. Cada face cresce um tanto independente.</li>
+      <li>Exponha o "valor base de extrusão" como input do grupo e ligue um <code>Linear Gizmo</code> a ele: arraste a seta no viewport e veja todas as faces responderem.</li>
+      <li>Empacote posição-alvo + cor num <code>Combine Bundle</code>, passe pela zona e abra com <code>Separate Bundle</code> na saída — note como o emaranhado de fios some.</li>
+    </ol>
+    <p class="obs">Se algum nó não aparecer, confira a versão: For Each e Gizmos exigem 4.3+, Bundles/Closures exigem 5.0+.</p>
+  </div>
 </section>
 
 <!-- ======================= SHADING ======================= -->

@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Texturização PBR no Blender 5.x — Guia Completo: pintar a superfície</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F2EFE8;--tinta:#1A1712;--tinta-suave:#57534A;
+  --luz:#E0982C;--luz-escuro:#9C6410;
+  --frio:#3B79C9;--frio-escuro:#235394;
+  --verde:#4F8A45;--vermelho:#B23A2C;--glow:#F2C44A;
+  --linha:#DCD6C9;--cartao:#FFFFFF;--quadro:#14110C;
+  --q-base:#D2CBBC;--q-dim:#867E6E;--q-luz:#F2C24E;--q-frio:#6FA0E8;--q-cream:#F0E8D6;
+  --code-bg:#1E1A12;--code-fg:#EEE8DA;
+  --sombra:0 1px 3px rgba(26,23,18,.1), 0 8px 24px rgba(26,23,18,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{background:var(--papel);color:var(--tinta);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.64}
+::selection{background:var(--luz);color:#1A1712}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+.sidebar{border-right:1px solid var(--linha);background:linear-gradient(180deg,#EBE7DC,#F2EFE8 260px);padding:28px 20px 56px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar .parte{font-family:"Archivo",sans-serif;font-stretch:88%;font-size:.64rem;letter-spacing:.15em;text-transform:uppercase;color:var(--luz-escuro);margin:22px 0 7px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sidebar .parte::before{content:"";width:13px;height:1.5px;background:var(--frio)}
+.sidebar nav a{display:block;text-decoration:none;color:var(--tinta-suave);font-family:"Archivo",sans-serif;font-size:.81rem;line-height:1.32;padding:4px 8px 4px 13px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(224,152,44,.11);border-left-color:var(--luz)}
+.sidebar nav a .n{color:var(--luz-escuro);font-weight:700;font-variant-numeric:tabular-nums;margin-right:5px}
+.logo-l{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.logo-l .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.0rem;line-height:1.05;font-stretch:104%}
+.logo-l .t2{font-family:"JetBrains Mono",monospace;font-size:.62rem;color:var(--frio-escuro)}
+main{padding:0 0 120px}
+.miolo{max-width:800px;margin:0 auto;padding:0 38px}
+.capa{background:radial-gradient(680px 480px at 30% 28%, rgba(242,196,74,.5), transparent 56%),radial-gradient(900px 560px at 88% 96%, rgba(59,121,201,.32), transparent 60%),var(--quadro);color:#EEE8DA;padding:90px 38px 78px;position:relative;overflow:hidden}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;color:var(--q-luz);border:1px solid rgba(242,196,74,.42);border-radius:999px;padding:6px 14px;margin-bottom:26px;background:rgba(20,17,12,.5)}
+.capa h1{font-family:"Archivo",sans-serif;font-stretch:112%;font-weight:880;font-size:clamp(2.1rem,5.2vw,3.6rem);line-height:1.0;letter-spacing:-.02em;max-width:15ch;margin-bottom:22px}
+.capa h1 em{font-style:normal;color:var(--q-luz)}
+.capa p.sub{font-size:1.08rem;max-width:62ch;color:#C9C2B2;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;border:1px solid rgba(238,232,218,.26);border-radius:6px;padding:6px 12px;color:#D4CDBD}
+.capa-art{position:absolute;right:-10px;top:50%;transform:translateY(-50%);z-index:1;opacity:.62}
+.parte-cover{padding:62px 0 8px;border-bottom:1px solid var(--linha);margin-top:38px}
+.parte-cover .pn{font-family:"JetBrains Mono",monospace;font-size:.8rem;letter-spacing:.2em;color:var(--luz-escuro)}
+.parte-cover h2{font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:870;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.04;letter-spacing:-.015em;margin:8px 0 12px}
+.parte-cover p{font-size:1.04rem;color:var(--tinta-suave);max-width:62ch;margin-bottom:18px}
+section.cap{padding-top:58px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .sun{width:20px;height:20px;flex:0 0 auto}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--luz-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;font-size:clamp(1.55rem,3.2vw,2.15rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:20px}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.18rem;margin:38px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:26px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+em.term{font-style:italic;color:var(--luz-escuro);font-weight:600}
+a.ext{color:var(--frio-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+kbd{font-family:"JetBrains Mono",monospace;font-size:.78em;background:#fff;border:1px solid #C7C0B0;border-bottom-width:2.5px;border-radius:5px;padding:1.5px 7px;white-space:nowrap;color:var(--tinta)}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#E8E2D5;border-radius:4px;padding:1.5px 6px}
+pre{background:var(--code-bg);color:var(--code-fg);font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--frio-escuro)}
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{display:flex;align-items:center;gap:8px;font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.conceito{border-left:4px solid var(--luz)}
+.caixa.conceito .rot{color:var(--luz-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--frio)}
+.caixa.exercicio .rot{color:var(--frio-escuro)}
+.caixa.v5{border-left:4px solid var(--luz);background:#FBF3E6}
+.caixa.v5 .rot{color:var(--luz-escuro)}
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{content:counter(passo);position:absolute;left:0;top:1px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;display:flex;align-items:center;justify-content:center}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.9rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{font-family:"Archivo",sans-serif;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAF7EF}
+figure{margin:26px 0;background:var(--quadro);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:"Archivo",sans-serif;font-size:.82rem;color:#A9A18E;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(210,203,188,.3)}
+figcaption b{color:#EEE8DA}
+.q-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#EEE8DA}
+.q-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--q-dim)}
+.q-wire{fill:none;stroke:var(--q-base);stroke-width:1.3;stroke-linejoin:round}
+.q-obj{fill:rgba(210,203,188,.1);stroke:var(--q-base);stroke-width:1.5}
+.q-ray{fill:none;stroke:var(--q-luz);stroke-width:1.8;stroke-linecap:round}
+.q-ray-c{fill:none;stroke:var(--q-frio);stroke-width:1.8;stroke-linecap:round}
+.q-glow{fill:var(--q-luz)}
+.q-coolf{fill:rgba(111,160,232,.16);stroke:var(--q-frio);stroke-width:1.4}
+.q-warmf{fill:rgba(242,194,78,.16);stroke:var(--q-luz);stroke-width:1.4}
+.q-shadow{fill:rgba(20,17,12,.55)}
+.q-axis{fill:none;stroke:var(--q-dim);stroke-width:1.2}
+.q-bad{fill:none;stroke:var(--vermelho);stroke-width:2.2}
+.q-seam{fill:none;stroke:#E0982C;stroke-width:2.6;stroke-linecap:round}
+.q-uvgrid{fill:none;stroke:rgba(210,203,188,.28);stroke-width:1}
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin:24px 0 10px}
+.sumario a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--tinta);font-family:"Archivo",sans-serif;font-size:.87rem;padding:7px 11px;border-radius:8px;border:1px solid transparent;line-height:1.22}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--luz-escuro);font-size:.76rem;flex:0 0 auto}
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}.sumario{grid-template-columns:1fr}.miolo{padding:0 20px}.capa{padding:60px 20px 52px}.capa-art{display:none}}
+@media print{.sidebar{display:none}.layout{display:block}.capa{background:#fff;color:#000}.capa h1 em{color:#000}.capa-art{display:none}figure{background:#fff;border:1px solid #999}figure,.caixa,table{box-shadow:none}section.cap{page-break-inside:avoid}.parte-cover{page-break-before:always}}
+:focus-visible{outline:3px solid var(--luz);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-l">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="5" y="5" width="30" height="30" rx="4" fill="none" stroke="#E0982C" stroke-width="2"/>
+      <path d="M12 26 q4 -14 9 -9 q3 3 8 -1" fill="none" stroke="#3B79C9" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="28" cy="14" r="3.4" fill="rgba(242,196,74,.7)"/>
+    </svg>
+    <div>
+      <div class="t1">Texturização PBR</div>
+      <div class="t2">Guia Completo · 5.x</div>
+    </div>
+  </div>
+
+  <div class="parte">I · Fundamentos</div>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é texturizar e o PBR</a>
+    <a href="#cap2"><span class="n">02</span>Espaço de cor: a armadilha</a>
+    <a href="#cap3"><span class="n">03</span>O modo Texture Paint</a>
+  </nav>
+  <div class="parte">II · Pintar</div>
+  <nav>
+    <a href="#cap4"><span class="n">04</span>Brushes e o sistema de pincéis</a>
+    <a href="#cap5"><span class="n">05</span>Projection paint e seams</a>
+    <a href="#cap6"><span class="n">06</span>Stencils e máscaras</a>
+  </nav>
+  <div class="parte">III · O workflow PBR</div>
+  <nav>
+    <a href="#cap7"><span class="n">07</span>Montar um texture set</a>
+    <a href="#cap8"><span class="n">08</span>Máscaras a partir de bakes</a>
+    <a href="#cap9"><span class="n">09</span>Procedural vs pintado</a>
+  </nav>
+  <div class="parte">IV · Avançado</div>
+  <nav>
+    <a href="#cap10"><span class="n">10</span>Camadas sem destrutivo</a>
+    <a href="#cap11"><span class="n">11</span>Materiais inteligentes e o limite</a>
+    <a href="#cap12"><span class="n">12</span>Decals e detalhe</a>
+    <a href="#cap13"><span class="n">13</span>Tileáveis e trim sheets</a>
+  </nav>
+  <div class="parte">V · Integração e saída</div>
+  <nav>
+    <a href="#cap14"><span class="n">14</span>Ligar tudo no shader</a>
+    <a href="#cap15"><span class="n">15</span>Exportar para engines</a>
+    <a href="#cap16"><span class="n">16</span>Diagnóstico</a>
+  </nav>
+  <div class="parte">VI · Prática</div>
+  <nav>
+    <a href="#cap17"><span class="n">17</span>Projeto: texturizar o asset</a>
+    <a href="#cap18"><span class="n">18</span>Glossário, atalhos e 5.x</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="capa">
+  <svg class="capa-art" width="430" height="450" viewBox="0 0 430 450" aria-hidden="true">
+    <!-- pilha de canais PBR -->
+    <g transform="translate(120,70)" opacity=".92">
+      <rect x="0" y="0" width="150" height="60" rx="6" fill="rgba(242,194,78,.22)" stroke="rgba(242,196,74,.7)" stroke-width="1.6"/>
+      <rect x="20" y="60" width="150" height="60" rx="6" fill="rgba(178,58,44,.18)" stroke="rgba(178,58,44,.7)" stroke-width="1.6"/>
+      <rect x="40" y="120" width="150" height="60" rx="6" fill="rgba(111,160,232,.2)" stroke="rgba(111,160,232,.7)" stroke-width="1.6"/>
+      <rect x="60" y="180" width="150" height="60" rx="6" fill="rgba(79,138,69,.2)" stroke="rgba(79,138,69,.7)" stroke-width="1.6"/>
+    </g>
+    <text x="150" y="105" font-family="JetBrains Mono" font-size="11" fill="rgba(242,194,78,.9)">base color</text>
+    <text x="170" y="165" font-family="JetBrains Mono" font-size="11" fill="rgba(238,232,218,.7)">roughness</text>
+    <text x="190" y="225" font-family="JetBrains Mono" font-size="11" fill="rgba(238,232,218,.7)">metallic</text>
+    <text x="210" y="285" font-family="JetBrains Mono" font-size="11" fill="rgba(238,232,218,.7)">normal</text>
+  </svg>
+  <div class="miolo">
+    <span class="selo">✷ GUIA COMPLETO DA COLEÇÃO · TEXTURIZAÇÃO</span>
+    <h1>Texturização <em>PBR</em> no Blender: pintar a superfície</h1>
+    <p class="sub">Depois de desdobrar (vol. 7) e assar (vol. 9), é hora de dar matéria à forma. Este guia cobre o modelo PBR e seus canais, a armadilha do espaço de cor, o modo Texture Paint e seu novo sistema de pincéis, projection painting, stencils e máscaras, o workflow de texture set por camadas, o uso dos bakes (AO, curvature, cavity) como máscaras procedurais, decals, trim sheets, e como exportar conjuntos de textura prontos para engines. Da malha cinza ao material que conta uma história.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>18 capítulos · 6 partes</span>
+      <span>PBR · metal/rough</span>
+      <span>Channel packing</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como ler este guia</h2>
+  <p class="lead">Texturizar é responder, para cada ponto da superfície, três perguntas: <strong>de que cor é? quão liso/áspero é? é metal?</strong> — e mais algumas. O modelo PBR organiza essas respostas em canais (mapas), e a textura é o conjunto desses mapas. A <strong>Parte I</strong> dá o vocabulário PBR, a armadilha do espaço de cor e o ambiente de pintura; a <strong>II</strong> ensina a pintar de fato (brushes, projeção, máscaras); a <strong>III</strong> monta o workflow completo de um texture set apoiado nos bakes; a <strong>IV</strong> é o avançado (camadas, decals, trim sheets); a <strong>V</strong> liga ao shader e exporta; a <strong>VI</strong> aplica tudo num projeto. Este guia assume que você já tem UVs limpas (vol. 7) — sem elas, nada cola.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é texturizar e o modelo PBR</a>
+    <a href="#cap2"><span class="n">02</span>Espaço de cor: a armadilha que arruína mapas</a>
+    <a href="#cap3"><span class="n">03</span>O modo Texture Paint e o ambiente</a>
+    <a href="#cap4"><span class="n">04</span>Brushes e o sistema de pincéis</a>
+    <a href="#cap5"><span class="n">05</span>Projection paint e o problema das seams</a>
+    <a href="#cap6"><span class="n">06</span>Stencils, máscaras e pintar com imagens</a>
+    <a href="#cap7"><span class="n">07</span>Montar um texture set por canais</a>
+    <a href="#cap8"><span class="n">08</span>Máscaras a partir de bakes (AO, curvature)</a>
+    <a href="#cap9"><span class="n">09</span>Procedural vs pintado: quando cada um</a>
+    <a href="#cap10"><span class="n">10</span>Camadas de textura sem destrutivo</a>
+    <a href="#cap11"><span class="n">11</span>Materiais inteligentes e o limite do Blender</a>
+    <a href="#cap12"><span class="n">12</span>Decals e detalhe</a>
+    <a href="#cap13"><span class="n">13</span>Texturas tileáveis e trim sheets</a>
+    <a href="#cap14"><span class="n">14</span>Ligar tudo no shader</a>
+    <a href="#cap15"><span class="n">15</span>Exportar texture sets para engines</a>
+    <a href="#cap16"><span class="n">16</span>Diagnóstico e troubleshooting</a>
+    <a href="#cap17"><span class="n">17</span>Projeto: texturizar o asset completo</a>
+    <a href="#cap18"><span class="n">18</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">✷ Sobre a versão</div>
+    <p>Escrito para o <strong>Blender 5.x</strong>. O destaque recente é o <strong>novo sistema de pincéis baseado em assets</strong> (brushes viraram data-blocks na Asset Library, compartilhados entre Sculpt, Texture Paint e Grease Pencil), além de melhorias em projection painting, no <em>color attribute</em> (vertex paint integrado), e na integração com o color management AgX. O Blender não substitui o Substance Painter para pipelines AAA, mas faz texturização completa de PBR — e este guia mostra até onde ir nele e quando exportar. Novidades em caixas âmbar e no Capítulo 18.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE I ===================== -->
+<div class="parte-cover" id="parte1">
+  <div class="pn">PARTE I</div>
+  <h2>Fundamentos</h2>
+  <p>Antes de pintar um pixel, três bases: o que o modelo PBR pede (quais canais existem e o que cada um significa), por que o espaço de cor errado destrói roughness e normal maps silenciosamente, e como o ambiente de Texture Paint do Blender funciona.</p>
+</div>
+
+<!-- ===== CAP 1 ===== -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é texturizar e o modelo PBR</h2>
+
+  <p class="lead">Texturizar é dar à superfície suas propriedades de material ponto a ponto. No modelo moderno — <strong>PBR (Physically Based Rendering)</strong> — essas propriedades são padronizadas em alguns canais que descrevem como a luz interage com a superfície, exatamente os mesmos parâmetros do Principled BSDF (vol. de BSDFs).</p>
+
+  <h3>1.1 — Os canais do PBR metal/rough</h3>
+  <p>O fluxo dominante é o <strong>metallic/roughness</strong>. Os mapas essenciais:</p>
+  <table>
+    <tr><th>Canal</th><th>O que descreve</th><th>Espaço de cor</th></tr>
+    <tr><td><strong>Base Color (Albedo)</strong></td><td>A cor "pura" da superfície, sem sombra nem brilho embutidos</td><td>sRGB (cor)</td></tr>
+    <tr><td><strong>Roughness</strong></td><td>Quão áspera (fosca) vs lisa (espelhada) é a superfície. 0 = espelho, 1 = fosco</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>Metallic</strong></td><td>É metal (1) ou dielétrico/não-metal (0)? Quase sempre preto ou branco puro</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>Normal</strong></td><td>Microrrelevo: direções de superfície que fingem detalhe geométrico</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>Height / Displacement</strong></td><td>Altura real ou para parallax; cinza médio = nível zero</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>AO (Ambient Occlusion)</strong></td><td>Sombreamento de contato pré-calculado nas fendas</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>Emission</strong></td><td>Luz que a superfície emite (telas, LEDs)</td><td>sRGB (cor)</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Base color é "cor crua"</div>
+    <p>O erro número um do iniciante é pintar sombras e brilhos no base color. <strong>Não pinte luz na textura.</strong> O base color é a cor do material sob luz neutra e plana — a iluminação (vol. 10) e o roughness é que criam sombra e brilho na hora do render. Se você pinta uma "sombra" embaixo de um cano no base color, ela vai aparecer mesmo quando a luz vem de baixo — e parece errado. Deixe a luz para o motor; a textura guarda só a matéria.</p>
+  </div>
+
+  <h3>1.2 — O texture set</h3>
+  <p>Um <strong>texture set</strong> é o conjunto de mapas que veste uma malha (ou uma região de material): base color + roughness + metallic + normal, no mínimo. Todos compartilham as mesmas UVs (vol. 7) e a mesma resolução. Um modelo pode ter vários texture sets — um por material/região — ou um só num atlas. A texturização é o ato de produzir esses mapas, seja pintando, seja gerando proceduralmente, seja assando (vol. 9).</p>
+
+  <h3>1.3 — Os três caminhos para um texture set no Blender</h3>
+  <ul>
+    <li><strong>Pintar</strong> — Texture Paint mode: você pinta à mão sobre a malha, criando imagens para cada canal. Controle total, trabalhoso.</li>
+    <li><strong>Procedural</strong> — Shader Nodes: ruídos, gradientes e máscaras geram a aparência sem imagens (vol. de Shader Nodes). Resolução infinita, mas difícil de controlar detalhe específico.</li>
+    <li><strong>Assar</strong> — Baking: projeta detalhe de um high-poly ou converte procedural em imagem (vol. 9). Geralmente combinado com os outros.</li>
+  </ul>
+  <p>Na prática, você mistura os três: asse AO/curvature, use-os como máscaras procedurais para misturar materiais, e pinte detalhes específicos por cima. Este guia costura os três.</p>
+</section>
+
+<!-- ===== CAP 2 ===== -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">Espaço de cor: a armadilha que arruína mapas</h2>
+
+  <p class="lead">Este capítulo evita o bug mais silencioso da texturização. Carregar um roughness ou normal map no espaço de cor errado não dá erro — só faz o material parecer sutilmente (ou grosseiramente) errado, e você perde horas procurando a causa no lugar errado.</p>
+
+  <h3>2.1 — Cor vs dado</h3>
+  <p>Há duas naturezas de imagem num texture set: imagens de <strong>cor</strong> (que o olho deve ver "corretamente" — base color, emission) e imagens de <strong>dado</strong> (números codificados como pixels — roughness, metallic, normal, AO, height). A diferença crucial: imagens de cor são guardadas em <strong>sRGB</strong> (com uma curva gamma para o olho); imagens de dado precisam ser lidas como <strong>Non-Color</strong> (linear, sem curva), porque o valor do pixel <em>é</em> o número, não uma cor a ser corrigida.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 180" role="img" aria-label="sRGB vs Non-Color">
+      <g transform="translate(60,30)">
+        <rect x="0" y="0" width="120" height="80" fill="rgba(242,194,78,.25)" stroke="#E0982C" stroke-width="1.6"/>
+        <text x="60" y="-10" text-anchor="middle" class="q-lbl" font-size="12">imagem de COR</text>
+        <text x="60" y="45" text-anchor="middle" class="q-sub" fill="#f2c24e">base color</text>
+        <text x="60" y="62" text-anchor="middle" class="q-sub">emission</text>
+        <text x="60" y="105" text-anchor="middle" class="q-sub">→ sRGB ✔</text>
+      </g>
+      <g transform="translate(280,30)">
+        <rect x="0" y="0" width="120" height="80" fill="rgba(111,160,232,.18)" stroke="#6FA0E8" stroke-width="1.6"/>
+        <text x="60" y="-10" text-anchor="middle" class="q-lbl" font-size="12">imagem de DADO</text>
+        <text x="60" y="40" text-anchor="middle" class="q-sub" fill="#6FA0E8">roughness · metallic</text>
+        <text x="60" y="57" text-anchor="middle" class="q-sub" fill="#6FA0E8">normal · AO · height</text>
+        <text x="60" y="105" text-anchor="middle" class="q-sub">→ Non-Color ✔</text>
+      </g>
+      <g transform="translate(500,30)">
+        <text x="0" y="0" class="q-lbl" font-size="12">Se trocar:</text>
+        <text x="0" y="24" class="q-sub">roughness em sRGB →</text>
+        <text x="0" y="40" class="q-sub">reflexo errado, fosco/liso</text>
+        <text x="0" y="40" class="q-sub" dy="18">demais</text>
+        <text x="0" y="78" class="q-sub" fill="#B23A2C">normal em sRGB →</text>
+        <text x="0" y="96" class="q-sub" fill="#B23A2C">relevo achatado/torto</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 2.1 — A regra que evita 80% dos bugs de material.</b> Base color e emission são <em>cor</em> (sRGB). Todo o resto — roughness, metallic, normal, AO, height — é <em>dado</em> e deve ser lido como <em>Non-Color</em>. Trocar não gera erro visível na hora; só faz o render parecer "quase certo, mas estranho".</figcaption>
+  </figure>
+
+  <h3>2.2 — Onde se define no Blender</h3>
+  <p>No nó <strong>Image Texture</strong> do shader, há um seletor de <em>Color Space</em>. Para mapas de dado, mude de <code>sRGB</code> para <code>Non-Color</code>. Ao <em>pintar</em> um mapa de dado (ex.: roughness), crie a imagem e ajuste seu color space para Non-Color antes — e lembre que o que você vê pintando passa pelo view transform; o que importa é o valor numérico.</p>
+
+  <h3>2.3 — Normal map: o caso especial</h3>
+  <p>O normal map é sempre Non-Color e ainda passa por um nó <strong>Normal Map</strong> (que decodifica o RGB em direções). Nunca conecte a Image Texture do normal direto no Normal do Principled — passe pelo nó Normal Map. E cuidado com a convenção de canal verde (Y+ OpenGL vs Y− DirectX), a "armadilha do verde" detalhada no vol. 9: a engine de destino dita qual usar.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ O sintoma de color space errado</div>
+    <p>Material "lavado", reflexos fracos demais ou fortes demais, normal map que parece "inflado" ou "afundado" sem motivo — antes de mexer em qualquer outra coisa, <strong>cheque o Color Space de cada Image Texture</strong>. É a primeira suspeita sempre. Mapas de dado em Non-Color; só base color e emission em sRGB.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 3 ===== -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">O modo Texture Paint e o ambiente</h2>
+
+  <p class="lead">O Blender pinta texturas de dois jeitos ao mesmo tempo: direto na malha 3D (você passa o pincel no objeto) e no UV/Image Editor (você pinta a imagem plana). O workspace <strong>Texture Paint</strong> mostra os dois lado a lado.</p>
+
+  <h3>3.1 — Preparar para pintar</h3>
+  <ol class="passos">
+    <li><h4>Tenha UVs</h4><p>Pintar exige UVs (vol. 7). Sem elas, o Blender não sabe onde no plano cada pincelada cai.</p></li>
+    <li><h4>Crie a imagem do canal</h4><p>No material, adicione um nó Image Texture e crie uma imagem nova (resolução, cor de fundo). Ou use o atalho do modo Texture Paint que cria e conecta sozinho.</p></li>
+    <li><h4>Entre em Texture Paint</h4><p>Aba <span class="menupath">Texture Paint</span> no topo. À esquerda o Image Editor (modo Paint), à direita o viewport 3D pintável.</p></li>
+    <li><h4>Escolha o slot</h4><p>No painel <em>Texture Slots</em>, escolha qual imagem/canal você está pintando (base color, roughness…). O Blender pinta na imagem do slot ativo.</p></li>
+  </ol>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Single Image vs Material</div>
+    <p>O modo de pintura tem dois "Mode" no painel de slots: <strong>Material</strong> (segue os nós Image Texture do material — o jeito PBR, vários canais) e <strong>Single Image</strong> (pinta uma imagem avulsa, sem material — bom para testes ou texturas simples). Para um texture set PBR, use <strong>Material</strong> e tenha um Image Texture por canal no shader.</p>
+  </div>
+
+  <h3>3.2 — O essencial do viewport de pintura</h3>
+  <p>Para pintar na malha você precisa ver o resultado: no header do viewport, use o modo de shading <strong>Material Preview</strong> (mostra as texturas com luz de estúdio) ou <strong>Rendered</strong>. Pinte com o botão esquerdo; <kbd>F</kbd> ajusta o raio do pincel, <kbd>Shift</kbd>+<kbd>F</kbd> a força. A barra <kbd>N</kbd> e a <kbd>T</kbd> expõem cor, raio, força, blend mode e a textura/máscara do pincel.</p>
+
+  <h3>3.3 — O fluxo mínimo de pintura</h3>
+  <p>Pinte uma cor base no slot Base Color → troque o slot para Roughness e pinte variações (áreas mais gastas ficam mais ásperas ou mais lisas conforme o material) → salve as imagens (<span class="menupath">Image ▸ Save</span> — imagens pintadas <strong>não</strong> são salvas automaticamente no .blend; precisam ser exportadas/salvas como arquivo, ou marcadas como packed).</p>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ Salve suas imagens pintadas</div>
+    <p>Texturas pintadas vivem na memória até você <strong>salvar a imagem em disco</strong> (ou empacotar no .blend com <span class="menupath">File ▸ External Data ▸ Pack Resources</span>). Fechar sem salvar = perder o trabalho, mesmo que salve o .blend. Pegue o hábito de <span class="menupath">Image ▸ Save All Images</span> antes de fechar.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE II ===================== -->
+<div class="parte-cover" id="parte2">
+  <div class="pn">PARTE II</div>
+  <h2>Pintar</h2>
+  <p>O ato em si. O sistema de pincéis (renovado no 5.x), como pintar projetando na malha sem que as seams estraguem tudo, e como usar stencils e máscaras para aplicar imagens, logos e padrões com precisão.</p>
+</div>
+
+<!-- ===== CAP 4 ===== -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">Brushes e o sistema de pincéis</h2>
+
+  <p class="lead">O pincel é a ferramenta, mas seus ajustes — força, queda, textura, blend mode — é que produzem efeitos críveis. No 5.x os pincéis viraram <em>assets</em>, compartilhados entre os modos de pintura e escultura.</p>
+
+  <h3>4.1 — Os pincéis essenciais de Texture Paint</h3>
+  <table>
+    <tr><th>Pincel</th><th>Uso</th></tr>
+    <tr><td><strong>Draw</strong></td><td>O pincel-padrão: aplica cor. O cavalo de batalha.</td></tr>
+    <tr><td><strong>Soften</strong></td><td>Borra/suaviza o que já está pintado. Para transições.</td></tr>
+    <tr><td><strong>Smear</strong></td><td>Arrasta os pixels, como esfregar tinta molhada.</td></tr>
+    <tr><td><strong>Clone</strong></td><td>Copia de outra área (ou de outra imagem fonte) — para remendar e duplicar detalhe.</td></tr>
+    <tr><td><strong>Fill</strong></td><td>Preenche grandes áreas; com gradiente, faz degradês.</td></tr>
+    <tr><td><strong>Mask</strong></td><td>Pinta uma máscara que protege/limita onde os outros pincéis agem.</td></tr>
+  </table>
+
+  <h3>4.2 — Os ajustes que dão realismo</h3>
+  <ul>
+    <li><strong>Falloff</strong> (queda) — a suavidade da borda do pincel. Bordas duras para detalhe nítido, suaves para misturas.</li>
+    <li><strong>Strength / Flow</strong> — a opacidade por pincelada. Baixa força + várias passadas = controle.</li>
+    <li><strong>Texture & Texture Mask</strong> — aplicar uma imagem como "ponta" do pincel: pintar com grão, sujeira, padrão. Essencial para variação natural (nada na realidade é cor chapada).</li>
+    <li><strong>Blend mode</strong> — Mix, Multiply, Add, Lighten, Darken… Multiply para escurecer fendas, Add para realces.</li>
+    <li><strong>Stroke method</strong> — Space, Airbrush, Anchored, Line… e <em>Stabilize Stroke</em> para linhas firmes.</li>
+    <li><strong>Pressão da caneta</strong> — se você usa tablet, mapeie pressão para força/raio (ícone de pressão ao lado do campo).</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">✷ 5.x — Pincéis como assets</div>
+    <p>Desde o 4.3, pincéis são <strong>data-blocks na Asset Library</strong>, não mais entradas fixas. Você acessa pelo <em>asset shelf</em> (a barra inferior, tecla de atalho no viewport), pode favoritar, organizar em catálogos e <strong>compartilhar entre Sculpt, Texture Paint, Vertex Paint e Grease Pencil</strong>. Crie seu próprio pincel ajustado (com sua textura de grão favorita) e salve-o como asset reutilizável em qualquer projeto.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Nunca pinte cor 100% chapada</div>
+    <p>Superfícies reais têm variação: poeira, oxidação, gordura, desgaste. Ative uma <strong>Texture</strong> de grão no pincel (mesmo sutil) e varie levemente a cor (HSV) enquanto pinta. Uma parede "branca" real tem dezenas de tons de quase-branco. Essa quebra de uniformidade é o que separa textura amadora de profissional — e vale para todos os canais, não só o base color.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 5 ===== -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">Projection paint e o problema das seams</h2>
+
+  <p class="lead">Pintar na malha 3D é, por baixo, uma <strong>projeção</strong>: a pincelada que você vê é projetada da tela para a textura via UV. Isso é intuitivo, mas cria dois problemas que todo texturizador precisa dominar: as bordas das ilhas (seams) e as áreas que a câmera não alcança.</p>
+
+  <h3>5.1 — Como a projeção funciona</h3>
+  <p>Ao pintar no viewport, o Blender projeta o que está sob o pincel para o espaço UV e grava na imagem. Por isso a pintura "respeita" a forma 3D. Mas a projeção só atinge o que está <strong>visível e de frente</strong> para você — superfícies em ângulo raso recebem tinta esticada, e o que está atrás não recebe nada.</p>
+
+  <h3>5.2 — O problema das seams</h3>
+  <p>Quando uma pincelada cruza uma seam (a borda entre duas ilhas), os dois lados da costura estão longe um do outro na imagem — e a tinta pode não casar perfeitamente, deixando uma linha visível. Soluções:</p>
+  <ul>
+    <li><strong>Bleed / Dilate</strong> — o Blender estende a tinta um pouco além das bordas das ilhas (o <em>Bleed</em> nas opções de projeção) para cobrir a seam quando a textura é reduzida.</li>
+    <li><strong>Pintar atravessando a seam pelos dois lados</strong> — gire o modelo e repasse a área da costura de ambos os ângulos.</li>
+    <li><strong>Esconder seams desde o UV</strong> — a melhor defesa é colocar seams em lugares discretos (vol. 7). Pintura não conserta UV ruim.</li>
+  </ul>
+
+  <h3>5.3 — Normais e oclusão na projeção</h3>
+  <p>As opções de projeção (painel do pincel, seção <em>Advanced</em>) controlam o que recebe tinta:</p>
+  <table>
+    <tr><th>Opção</th><th>Efeito</th></tr>
+    <tr><td><strong>Occlude</strong></td><td>Não pinta o que está escondido atrás de outra geometria. Ligue para não vazar tinta para trás.</td></tr>
+    <tr><td><strong>Backface Culling</strong></td><td>Não pinta faces viradas para o lado contrário.</td></tr>
+    <tr><td><strong>Normal Falloff</strong></td><td>Reduz a tinta em superfícies em ângulo raso (que esticariam), pela diferença de normal.</td></tr>
+    <tr><td><strong>Bleed</strong></td><td>Quantos pixels de transbordo além das ilhas, contra seams.</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 720 190" role="img" aria-label="Projeção de pintura e seam">
+      <g transform="translate(60,30)">
+        <path d="M20 20 L120 10 L130 120 L10 130 Z" class="q-obj"/>
+        <path d="M60 0 L70 140" class="q-seam"/>
+        <g class="q-ray"><path d="M40 -15 L55 30"/><path d="M70 -15 L85 30"/><path d="M100 -15 L112 30"/></g>
+        <text x="70" y="160" text-anchor="middle" class="q-sub">pincel projeta da tela →</text>
+        <text x="70" y="174" text-anchor="middle" class="q-sub" fill="#E0982C">seam pode partir a pincelada</text>
+      </g>
+      <g transform="translate(330,30)">
+        <rect x="0" y="0" width="150" height="140" class="q-uvgrid"/>
+        <rect x="10" y="20" width="55" height="100" class="q-coolf"/>
+        <rect x="85" y="20" width="55" height="100" class="q-coolf"/>
+        <path d="M30 50 q15 10 25 0" class="q-ray"/>
+        <path d="M105 50 q15 10 25 0" class="q-ray" opacity=".5"/>
+        <text x="75" y="160" text-anchor="middle" class="q-sub">ilhas separadas: pinte os 2 lados + Bleed</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 5.1 — A costura na pintura.</b> Uma pincelada que cruza uma seam grava em duas ilhas distantes na imagem; sem cuidado, fica uma linha. Ligue Occlude e Normal Falloff para tinta limpa, use Bleed contra a seam, e repasse a costura por ambos os ângulos.</figcaption>
+  </figure>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 5.1 — A esfera pintada</div>
+    <p>Crie uma UV Sphere, desdobre (Sphere Projection), entre em Texture Paint e pinte um continente sobre ela girando o modelo. Observe: onde a seam dos polos atrapalha? Ative Bleed e Normal Falloff e repinte. Depois pinte com Occlude desligado e ligado e veja a diferença na tinta que vaza para o lado de trás.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 6 ===== -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Stencils, máscaras e pintar com imagens</h2>
+
+  <p class="lead">Pintar à mão livre tem limite. Para aplicar um logo, um número de série, um padrão preciso ou uma foto de superfície, você usa <strong>stencils</strong> e <strong>texturas de pincel</strong> — e para limitar onde a tinta age, <strong>máscaras</strong>.</p>
+
+  <h3>6.1 — Texture do pincel vs Stencil</h3>
+  <p>Uma imagem pode ser anexada ao pincel de dois modos (no painel da Texture do pincel, opção <em>Mapping</em>):</p>
+  <ul>
+    <li><strong>Tiled / View Plane</strong> — a imagem vira a "ponta" do pincel e se repete conforme você pinta (grão, padrão).</li>
+    <li><strong>Stencil</strong> — a imagem fica fixa na tela como um decalque posicionável; você pinta "através" dela, transferindo-a para a superfície. Move com <kbd>RMB</kbd>, escala com <kbd>Shift</kbd>+<kbd>RMB</kbd>, gira com <kbd>Ctrl</kbd>+<kbd>RMB</kbd>. Perfeito para logos e decals.</li>
+  </ul>
+
+  <h3>6.2 — Máscaras de textura (Texture Mask)</h3>
+  <p>Além da Texture (que dá cor), o pincel tem uma <strong>Texture Mask</strong> separada que controla só <em>onde</em> a tinta sai (a forma/alpha), independente da cor. Use uma imagem de grão como máscara para um efeito de spray realista, ou um alpha de respingo para sujeira.</p>
+
+  <h3>6.3 — Masking: proteger regiões</h3>
+  <p>Para confinar a pintura, o Blender oferece várias máscaras:</p>
+  <ul>
+    <li><strong>Stencil Mask (imagem)</strong> — uma imagem em tons de cinza que define onde se pode pintar (preto protege).</li>
+    <li><strong>Cavity Mask</strong> — pinta só nas fendas (ou só nas saliências), ótimo para sujeira e desgaste automáticos sem assar nada.</li>
+    <li><strong>Seleção de faces (Face Mask)</strong> — entre em modo de seleção de face (<kbd>2</kbd> no header de Texture Paint), selecione faces, e a pintura só age nelas. Indispensável para pintar uma peça sem invadir a vizinha.</li>
+    <li><strong>Vertex/Paint Mask</strong> — máscaras pintadas que modulam a intensidade.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Face mask = o melhor amigo do hard surface</div>
+    <p>Antes de pintar uma peça específica de um modelo complexo, ative <strong>Face Mask</strong> e selecione só as faces daquele material (ou use <kbd>L</kbd> para pegar a ilha conectada). Agora você pode pintar livre e agressivo sem medo de manchar a peça do lado. Combine com a <strong>Cavity Mask</strong> para que o desgaste caia automaticamente nas quinas — sujeira realista quase de graça.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE III ===================== -->
+<div class="parte-cover" id="parte3">
+  <div class="pn">PARTE III</div>
+  <h2>O workflow PBR</h2>
+  <p>Juntar tudo num conjunto de mapas coerente. Como montar um texture set canal a canal, como usar os bakes (AO, curvature, cavity) do vol. 9 como máscaras que geram desgaste e sujeira automaticamente, e como decidir entre o caminho procedural e o pintado em cada situação.</p>
+</div>
+
+<!-- ===== CAP 7 ===== -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Montar um texture set por canais</h2>
+
+  <p class="lead">Texturizar profissionalmente é construir os canais em ordem, cada um informando o próximo. Não se pinta o base color e pronto — cada canal conta parte da história do material.</p>
+
+  <h3>7.1 — A ordem de construção</h3>
+  <ol class="passos">
+    <li><h4>Materiais base por máscara</h4><p>Defina os materiais grandes (metal, plástico, borracha) e separe-os por Face Mask ou por máscaras de bake (ID map). Cada um tem seu base color, roughness e metallic característicos.</p></li>
+    <li><h4>Base color</h4><p>Cores cruas dos materiais. Sem sombra/brilho. Adicione variação sutil (manchas, tom) com textura de pincel.</p></li>
+    <li><h4>Roughness</h4><p>O canal que mais "vende" o material: gordura deixa liso, poeira deixa áspero, uso polido deixa liso nas bordas. Varie muito — roughness chapado parece CG.</p></li>
+    <li><h4>Metallic</h4><p>Geralmente binário (metal=1, resto=0). Cuidado: oxidação e tinta sobre metal viram dielétrico (metallic=0 ali).</p></li>
+    <li><h4>Normal / Height</h4><p>Vem em grande parte do bake do high-poly (vol. 9). Pinte detalhes adicionais (arranhões, gravações) por cima com um pincel de altura.</p></li>
+    <li><h4>Desgaste e sujeira</h4><p>A camada que dá vida: edge wear (metal aparecendo nas quinas), grime nas fendas, poeira no topo. Quase tudo guiado por máscaras de bake (Cap. 8).</p></li>
+  </ol>
+
+  <h3>7.2 — Roughness é o canal-rei</h3>
+  <p>Se você só puder caprichar em um canal, capriche no roughness. Ele controla os reflexos, e reflexos são o que o cérebro usa para julgar material. Um base color medíocre com roughness rico parece bom; um base color lindo com roughness chapado parece plástico de videogame antigo. Pense em histórias de superfície: <em>onde a mão toca fica liso e gorduroso; onde a chuva bate fica limpo; onde acumula poeira fica fosco.</em></p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Contar a história do objeto</div>
+    <p>Texturas boas têm <strong>narrativa</strong>: este objeto foi usado, e onde? As quinas perdem tinta e mostram metal (edge wear). As partes baixas acumulam sujeira (gravity dirt). O cabo onde a mão segura fica polido. Pingos escorrem para baixo. Antes de pintar, imagine a vida do objeto — e cada máscara passa a ter um motivo, não só um efeito.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 8 ===== -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Máscaras a partir de bakes (AO, curvature, cavity)</h2>
+
+  <p class="lead">Aqui está o segredo do realismo eficiente. Em vez de pintar desgaste à mão em mil lugares, você assa mapas de dados geométricos (vol. 9) e os usa como <strong>máscaras procedurais</strong> que sabem onde estão as quinas, as fendas e as cavidades — e dirigem o desgaste e a sujeira automaticamente.</p>
+
+  <h3>8.1 — Os mapas-máscara e o que cada um dirige</h3>
+  <table>
+    <tr><th>Mapa assado</th><th>O que marca</th><th>Dirige</th></tr>
+    <tr><td><strong>AO (Ambient Occlusion)</strong></td><td>Fendas e áreas oclusas</td><td>Sujeira acumulada, escurecimento em recantos</td></tr>
+    <tr><td><strong>Curvature</strong></td><td>Quinas convexas (claras) e côncavas (escuras)</td><td>Edge wear (desgaste nas quinas), realce de bordas</td></tr>
+    <tr><td><strong>Cavity</strong></td><td>Pequenas reentrâncias</td><td>Grime fino, sujeira nos sulcos</td></tr>
+    <tr><td><strong>Position (gradiente)</strong></td><td>Altura no objeto</td><td>Poeira no topo, lama embaixo, escorrimentos</td></tr>
+    <tr><td><strong>Thickness</strong></td><td>Partes finas vs grossas</td><td>SSS, desgaste em bordas finas</td></tr>
+    <tr><td><strong>ID map</strong></td><td>Regiões por cor/material</td><td>Selecionar e mascarar materiais distintos</td></tr>
+  </table>
+
+  <h3>8.2 — Como usar a máscara no Blender</h3>
+  <p>Há dois caminhos. <strong>(a) Procedural no shader:</strong> conecte o mapa de curvature num <em>Color Ramp</em> para isolar as quinas e use o resultado como fator de um <em>Mix</em> entre o material base e o material "metal exposto". Mudou o curvature, mudou o desgaste — não-destrutivo. <strong>(b) Como Stencil Mask na pintura:</strong> carregue o curvature como máscara de pintura e pinte só nas quinas — você ganha controle manual sobre um resultado guiado pela geometria.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Curvature dirige edge wear">
+      <g transform="translate(50,25)">
+        <rect x="0" y="0" width="140" height="150" fill="#1f1c15"/>
+        <rect x="20" y="20" width="100" height="110" fill="#2a2620" stroke="#6b6453" stroke-width="2"/>
+        <rect x="18" y="18" width="104" height="114" fill="none" stroke="#cfc7b5" stroke-width="2.5"/>
+        <text x="70" y="172" text-anchor="middle" class="q-sub">curvature: quinas em claro</text>
+      </g>
+      <text x="215" y="100" class="q-sub">→ Color Ramp →</text>
+      <g transform="translate(330,25)">
+        <rect x="0" y="0" width="140" height="150" fill="#1f1c15"/>
+        <rect x="18" y="18" width="104" height="114" fill="none" stroke="#fff" stroke-width="3"/>
+        <text x="70" y="172" text-anchor="middle" class="q-sub" fill="#6FA0E8">máscara: só as quinas</text>
+      </g>
+      <text x="495" y="100" class="q-sub">→ Mix →</text>
+      <g transform="translate(560,25)">
+        <rect x="0" y="0" width="120" height="150" fill="#3a2f22"/>
+        <rect x="20" y="20" width="80" height="110" fill="#4a3d2c"/>
+        <rect x="16" y="16" width="88" height="118" fill="none" stroke="#c8b48a" stroke-width="3" opacity=".9"/>
+        <text x="60" y="172" text-anchor="middle" class="q-sub" fill="#E0982C">metal exposto nas quinas ✔</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 8.1 — Desgaste guiado pela geometria.</b> O curvature marca as quinas; um Color Ramp isola-as numa máscara; um Mix troca o material base por "metal exposto" só ali. O resultado é edge wear convincente sem pintar manualmente — e ajustável a qualquer momento mudando o ramp.</figcaption>
+  </figure>
+
+  <div class="caixa dica">
+    <div class="rot">✔ O combo que parece mágica</div>
+    <p><strong>AO multiplicando o base color</strong> (escurece fendas) + <strong>curvature dirigindo edge wear</strong> (clareia/expõe metal nas quinas) + <strong>um gradiente de posição</strong> (poeira no topo). Esses três, ligados por Color Ramps e Mix no shader, já produzem 80% de um material "usado" crível — antes de você pintar uma única pincelada manual. É a essência do que o Substance Painter automatiza, montável no shader do Blender.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 9 ===== -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Procedural vs pintado: quando cada um</h2>
+
+  <p class="lead">A escolha mais estratégica da texturização. Procedural (no shader, sem imagens) e pintado (imagens fixas) têm forças opostas. Saber qual usar — e como misturá-los — economiza tempo e eleva a qualidade.</p>
+
+  <h3>9.1 — A comparação honesta</h3>
+  <table>
+    <tr><th>Critério</th><th>Procedural (nodes)</th><th>Pintado (imagens)</th></tr>
+    <tr><td>Resolução</td><td>Infinita (não pixela)</td><td>Limitada pela textura</td></tr>
+    <tr><td>Controle de detalhe específico</td><td>Difícil (é matemático)</td><td>Total (você pinta exatamente)</td></tr>
+    <tr><td>Ajuste posterior</td><td>Fácil (mudar um valor)</td><td>Trabalhoso (repintar)</td></tr>
+    <tr><td>Peso de arquivo</td><td>Leve (sem imagens)</td><td>Pesado (cada mapa é um arquivo)</td></tr>
+    <tr><td>Exportar para engine</td><td>Precisa assar antes</td><td>Pronto (já é imagem)</td></tr>
+    <tr><td>Variação orgânica</td><td>Ótima (ruídos)</td><td>Manual</td></tr>
+  </table>
+
+  <h3>9.2 — A regra prática</h3>
+  <ul>
+    <li><strong>Use procedural</strong> para: materiais grandes e repetitivos (madeira, concreto, metal escovado), variação de base (ruído sutil em tudo), e máscaras geométricas (Cap. 8).</li>
+    <li><strong>Use pintado</strong> para: detalhes únicos e narrativos (um arranhão específico, um logo, manchas onde a mão pega), e quando o destino é uma engine (texturas fixas).</li>
+    <li><strong>Misture:</strong> base procedural + detalhe pintado por cima é o melhor dos mundos. No Blender, isso é um Mix entre uma textura procedural e uma Image Texture que você pinta.</li>
+  </ul>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ Procedural não exporta direto</div>
+    <p>Game engines (Unity, Unreal) e a maioria dos formatos (glTF, FBX) <strong>não entendem</strong> a árvore de nós procedural do Blender — eles só leem imagens. Se você texturizou proceduralmente e vai exportar, precisa <strong>assar</strong> (vol. 9) cada canal numa imagem antes. Materiais procedurais brilham em renders feitos <em>no</em> Blender (Cycles/EEVEE); para tempo real externo, asse.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE IV ===================== -->
+<div class="parte-cover" id="parte4">
+  <div class="pn">PARTE IV</div>
+  <h2>Avançado</h2>
+  <p>As técnicas que aproximam o Blender de um pipeline dedicado: simular camadas não-destrutivas com node groups, montar "materiais inteligentes" reutilizáveis (e reconhecer quando o Substance vale a pena), aplicar decals, e os dois truques de economia de textura mais usados na indústria — tileáveis e trim sheets.</p>
+</div>
+
+<!-- ===== CAP 10 ===== -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Camadas de textura sem destrutivo</h2>
+
+  <p class="lead">Substance Painter trabalha em camadas: cada efeito numa layer com máscara, empilháveis e editáveis. O Blender não tem um sistema de camadas de pintura nativo robusto, mas você o recria no shader — cada "camada" é um Mix mascarado, na ordem da pilha de nós.</p>
+
+  <h3>10.1 — A pilha de Mix como camadas</h3>
+  <p>O padrão: comece com o material base, e para cada "camada" adicione um nó <strong>Mix</strong> que sobrepõe um novo material/cor, controlado por um <em>Factor</em> que é a máscara daquela camada. Empilhe: base → camada de sujeira (máscara AO) → camada de edge wear (máscara curvature) → camada de detalhe pintado (máscara pintada à mão). A ordem dos Mix é a ordem das camadas.</p>
+
+  <pre><code>Base material
+  └─Mix(fac = AO)──────────► + sujeira nas fendas
+      └─Mix(fac = curvature)──► + metal exposto nas quinas
+          └─Mix(fac = imagem pintada)─► + arranhão específico
+              └─► Principled BSDF</code></pre>
+
+  <h3>10.2 — Node groups como "camadas reutilizáveis"</h3>
+  <p>Encapsule cada efeito num <strong>Node Group</strong> (vol. de Shader Nodes) com entradas de máscara e cor — vira uma "camada" reutilizável que você pluga em qualquer material. Um grupo "Edge Wear" com entradas (curvature, cor do metal, intensidade) é aplicável a qualquer asset. Construir uma biblioteca desses grupos é o equivalente Blender dos "smart materials".</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Pense em pilha, não em pixel</div>
+    <p>O instinto do iniciante é pintar tudo numa imagem só. O profissional pensa em <strong>camadas mascaradas</strong>: cada efeito é separado, com sua própria máscara, sobreponível e reversível. Mesmo no Blender, onde você acaba assando tudo no fim, <strong>construa em camadas no shader</strong> e asse só no final — assim você pode ajustar qualquer camada até o último minuto. É a mesma filosofia não-destrutiva dos Modifiers (vol. 5).</p>
+  </div>
+</section>
+
+<!-- ===== CAP 11 ===== -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 11</div><div class="fio"></div></div>
+  <h2 class="titulo">Materiais inteligentes e o limite do Blender</h2>
+
+  <p class="lead">Vale ser honesto sobre onde o Blender termina e onde uma ferramenta dedicada começa. Saber o limite evita lutar contra a ferramenta — e saber recriar "smart materials" no Blender estende muito esse limite.</p>
+
+  <h3>11.1 — O que o Blender faz bem em texturização</h3>
+  <ul>
+    <li>Pintura projetada, stencils, máscaras por face e cavity.</li>
+    <li>Materiais procedurais riquíssimos (o shader é poderoso — vol. de Shader Nodes).</li>
+    <li>Máscaras guiadas por bake (AO/curvature/position) montadas no shader.</li>
+    <li>Baking completo para converter tudo em imagens (vol. 9).</li>
+    <li>Tudo integrado num app só, de graça.</li>
+  </ul>
+
+  <h3>11.2 — Onde o Substance Painter ainda ganha</h3>
+  <ul>
+    <li><strong>Sistema de camadas dedicado</strong> com pilha visual, blend modes e máscaras por camada — mais fluido que recriar Mix no shader.</li>
+    <li><strong>Smart materials e smart masks</strong> prontos, que se adaptam ao bake do modelo automaticamente.</li>
+    <li><strong>Geradores procedurais de desgaste</strong> sofisticados e biblioteca enorme de materiais/alphas.</li>
+    <li><strong>Pintura sem seams</strong> mais robusta e preview de canal instantâneo.</li>
+  </ul>
+
+  <h3>11.3 — O fluxo híbrido comum</h3>
+  <p>Muitos artistas fazem: <strong>modelar + UV + bake no Blender</strong> → <strong>texturizar no Substance Painter</strong> → voltar com os mapas para o render no Blender ou exportar para a engine. O Blender exporta o low-poly + as UVs + os bakes, que o Substance consome. Se o seu pipeline é só Blender (render no Cycles), você faz tudo aqui. Se mira AAA ou precisa de smart materials pesados, o híbrido compensa.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Construa sua biblioteca de node groups</div>
+    <p>A melhor forma de estender o Blender em texturização: invista uma vez em <strong>node groups</strong> de efeitos (Edge Wear, Dirt, Dust, Scratches, Metal Base, Painted Metal) com entradas claras, salvos numa biblioteca de assets (vol. de pipeline, futuro). Com 10–15 desses grupos você reproduz a maior parte do que um smart material faz — e exclusivamente dentro do Blender, sem custo de licença.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 12 ===== -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">Decals e detalhe</h2>
+
+  <p class="lead">Decals são "adesivos" — detalhes (parafusos, avisos, gravações, sujeira localizada) aplicados sobre a superfície sem fazer parte da textura base. Eles permitem detalhe nítido sem gastar resolução da textura inteira, e reposicionável.</p>
+
+  <h3>12.1 — As três formas de decal no Blender</h3>
+  <ul>
+    <li><strong>Stencil na pintura</strong> (Cap. 6) — você "carimba" o decal direto na textura. Simples, mas vira parte do mapa (não é mais editável depois).</li>
+    <li><strong>Geometria de decal</strong> — um plano com a imagem (e alpha) flutuando sobre a superfície, com Shrinkwrap (vol. 5) para colar na forma. Editável, mas adiciona geometria. É o método dos add-ons "DECALmachine".</li>
+    <li><strong>Decal por UV extra / projeção</strong> — o modifier UV Project (vol. 7) ou um segundo canal de UV projeta a imagem do decal, misturada no shader. Não-destrutivo.</li>
+  </ul>
+
+  <h3>12.2 — Detalhe que não cabe na textura base</h3>
+  <p>Letras pequenas, texto de série, logos finos: se você os pintasse na textura base, precisaria de resolução enorme. Como decal (numa imagem própria, alta resolução, alpha), eles ficam nítidos onde estão e custam pouco. O decal traz seus próprios canais (cor, normal para a gravação em relevo, roughness) misturados sobre o material base por alpha.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Decals = resolução localizada</div>
+    <p>O princípio: a textura base cobre tudo com densidade média; os decals adicionam ilhas de altíssima resolução só onde o detalhe importa (um painel de instrumentos, um aviso de perigo). É o mesmo raciocínio de texel density (vol. 7) levado adiante — gastar pixels onde o olho olha. Em hard surface, decals são onipresentes.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 13 ===== -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Texturas tileáveis e trim sheets</h2>
+
+  <p class="lead">Duas técnicas de economia massiva, essenciais em games e em ambientes grandes: a textura <strong>tileável</strong> (que se repete sem emenda) e a <strong>trim sheet</strong> (uma tira de detalhes reutilizada em muita geometria). Ambas dão alta resolução com pouca textura.</p>
+
+  <h3>13.1 — Texturas tileáveis (seamless)</h3>
+  <p>Uma textura tileável se repete infinitamente sem mostrar a emenda — as bordas casam. Você a aplica a uma parede, um chão, um terreno enorme com UVs que "estouram" o quadrado 0–1 (tiling), e a mesma imagem pequena cobre tudo com nitidez. Para tornar uma textura tileável: pinte/processe de modo que a borda direita case com a esquerda e a de cima com a de baixo (o filtro Offset no editor de imagem ajuda a revelar e corrigir as emendas).</p>
+
+  <h3>13.2 — Trim sheets</h3>
+  <p>Uma <strong>trim sheet</strong> é uma textura organizada em <em>faixas horizontais</em>, cada uma com um detalhe (uma borda metálica, um friso, rebites, um painel, uma fita). Você modela a geometria e mapeia as UVs para "pescar" a faixa que precisa — uma viga usa a faixa de metal, uma moldura usa a faixa de friso. Uma única trim sheet texturiza um cenário inteiro com consistência e altíssima densidade, porque cada faixa é reutilizada centenas de vezes.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Trim sheet com faixas reutilizadas">
+      <g transform="translate(60,25)">
+        <rect x="0" y="0" width="120" height="150" class="q-uvgrid"/>
+        <rect x="6" y="6" width="108" height="22" fill="rgba(242,194,78,.25)" stroke="#E0982C" stroke-width="1.2"/>
+        <rect x="6" y="32" width="108" height="34" fill="rgba(111,160,232,.2)" stroke="#6FA0E8" stroke-width="1.2"/>
+        <rect x="6" y="70" width="108" height="18" fill="rgba(79,138,69,.25)" stroke="#4F8A45" stroke-width="1.2"/>
+        <rect x="6" y="92" width="108" height="52" fill="rgba(210,203,188,.12)" stroke="#cfc7b5" stroke-width="1.2"/>
+        <text x="60" y="172" text-anchor="middle" class="q-sub">1 trim sheet (faixas)</text>
+      </g>
+      <text x="210" y="100" class="q-sub">faixas reusadas →</text>
+      <g transform="translate(350,25)">
+        <rect x="0" y="0" width="60" height="150" fill="rgba(242,194,78,.25)" stroke="#E0982C" stroke-width="1.2"/>
+        <rect x="80" y="40" width="120" height="34" fill="rgba(111,160,232,.2)" stroke="#6FA0E8" stroke-width="1.2"/>
+        <rect x="80" y="90" width="120" height="18" fill="rgba(79,138,69,.25)" stroke="#4F8A45" stroke-width="1.2"/>
+        <rect x="220" y="0" width="60" height="150" fill="rgba(242,194,78,.25)" stroke="#E0982C" stroke-width="1.2"/>
+        <text x="140" y="172" text-anchor="middle" class="q-sub" fill="#6FA0E8">cenário inteiro, mesma textura ✔</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 13.1 — Uma textura, mil usos.</b> A trim sheet organiza detalhes em faixas; a geometria mapeia suas UVs para a faixa certa. Vigas, molduras, painéis e frisos de um nível inteiro saem de uma única textura — densidade altíssima, VRAM mínima. É o pilar da texturização de ambientes em games.</figcaption>
+  </figure>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Combine com modular</div>
+    <p>Trim sheets brilham com <strong>modelagem modular</strong>: peças padronizadas (paredes, pilares, vigas) que se repetem e compartilham a trim sheet. O cenário vira um Lego texturizado por uma textura só. Ambientes de games AAA são feitos quase inteiros assim — vale estudar mesmo que você renderize no Blender, pela eficiência.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE V ===================== -->
+<div class="parte-cover" id="parte5">
+  <div class="pn">PARTE V</div>
+  <h2>Integração e saída</h2>
+  <p>O texture set pronto precisa virar material no shader e, muitas vezes, sair do Blender. Como conectar cada mapa ao Principled corretamente, como exportar conjuntos de textura para engines (nomes, channel packing ORM/RMA) e como diagnosticar os problemas que aparecem no fim.</p>
+</div>
+
+<!-- ===== CAP 14 ===== -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">Ligar tudo no shader</h2>
+
+  <p class="lead">Os mapas só viram material quando conectados ao Principled BSDF (vol. de BSDFs) nos slots certos, com os color spaces certos. Esta é a fiação padrão de um texture set PBR.</p>
+
+  <h3>14.1 — A fiação canônica</h3>
+  <table>
+    <tr><th>Mapa</th><th>Color Space</th><th>Conecta em</th><th>Via</th></tr>
+    <tr><td>Base Color</td><td>sRGB</td><td>Base Color</td><td>Direto (talvez × AO)</td></tr>
+    <tr><td>Roughness</td><td>Non-Color</td><td>Roughness</td><td>Direto</td></tr>
+    <tr><td>Metallic</td><td>Non-Color</td><td>Metallic</td><td>Direto</td></tr>
+    <tr><td>Normal</td><td>Non-Color</td><td>Normal</td><td>Pelo nó <strong>Normal Map</strong></td></tr>
+    <tr><td>Height</td><td>Non-Color</td><td>Displacement (saída do Material)</td><td>Pelo nó <strong>Displacement</strong></td></tr>
+    <tr><td>Emission</td><td>sRGB</td><td>Emission Color</td><td>Direto (+ Strength)</td></tr>
+    <tr><td>AO</td><td>Non-Color</td><td>multiplicar no Base Color</td><td>Mix/Multiply</td></tr>
+  </table>
+
+  <h3>14.2 — Os detalhes que erram</h3>
+  <ul>
+    <li><strong>Normal Map sempre pelo nó Normal Map</strong> — nunca direto. E ajuste a força ali se precisar.</li>
+    <li><strong>AO não tem slot próprio</strong> no Principled — multiplique-o no Base Color (com cautela: muito AO "queima" o material; alguns pipelines deixam o AO só para a engine).</li>
+    <li><strong>Height/Displacement</strong> vai na saída <em>Displacement</em> do Material Output, não no Principled. Em EEVEE, use como bump; em Cycles, displacement real (vol. 9 trata Multires/displacement).</li>
+    <li><strong>Confira UV</strong> — se todos os Image Texture devem usar o mesmo canal, um nó UV Map evita surpresas (vol. 7).</li>
+  </ul>
+
+  <pre><code>UV Map ─┬─► Base Color (sRGB) ──────────────► Base Color
+        ├─► Roughness (Non-Color) ──────────► Roughness
+        ├─► Metallic (Non-Color) ───────────► Metallic
+        └─► Normal (Non-Color) ─► Normal Map ► Normal      ► Principled BSDF</code></pre>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Arraste e solte um set inteiro</div>
+    <p>O add-on embutido <strong>Node Wrangler</strong> tem o atalho <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> sobre um Principled: selecione todos os arquivos do texture set de uma vez e ele <strong>monta a fiação inteira automaticamente</strong> — reconhece pelos nomes (BaseColor, Roughness, Normal…), ajusta os color spaces e adiciona os nós Normal Map/Displacement. Nomeie seus mapas com sufixos padrão e isso vira um clique. Ative o Node Wrangler em Preferences ▸ Add-ons.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 15 ===== -->
+<section class="cap" id="cap15">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 15</div><div class="fio"></div></div>
+  <h2 class="titulo">Exportar texture sets para engines</h2>
+
+  <p class="lead">A engine não importa seu material do Blender — ela importa as <strong>imagens</strong> e remonta o material lá. Exportar bem é uma questão de nomes consistentes, color space correto e, muitas vezes, <em>channel packing</em>.</p>
+
+  <h3>15.1 — Convenção de nomes</h3>
+  <p>Engines e o Node Wrangler reconhecem mapas pelos sufixos no nome. Padronize: <code>Asset_BaseColor</code>, <code>Asset_Roughness</code>, <code>Asset_Metallic</code>, <code>Asset_Normal</code>, <code>Asset_AO</code>, <code>Asset_Emissive</code>. Consistência aqui automatiza a importação dos dois lados.</p>
+
+  <h3>15.2 — Channel packing (ORM / RMA)</h3>
+  <p>Roughness, metallic e AO são imagens em <strong>tons de cinza</strong> — cada uma usa só um canal, desperdiçando dois. <strong>Channel packing</strong> junta três mapas grayscale nos canais R, G, B de uma única imagem, economizando 2/3 das texturas de dado. O padrão mais comum é <strong>ORM</strong>: <em>Occlusion</em> no R, <em>Roughness</em> no G, <em>Metallic</em> no B (Unreal usa exatamente isso; Unity usa variações como metallic+smoothness).</p>
+
+  <figure>
+    <svg viewBox="0 0 720 180" role="img" aria-label="Channel packing ORM">
+      <g transform="translate(50,30)">
+        <rect x="0" y="0" width="70" height="70" fill="#444"/><text x="35" y="95" text-anchor="middle" class="q-sub">AO</text>
+        <rect x="90" y="0" width="70" height="70" fill="#888"/><text x="125" y="95" text-anchor="middle" class="q-sub">Roughness</text>
+        <rect x="180" y="0" width="70" height="70" fill="#bbb"/><text x="215" y="95" text-anchor="middle" class="q-sub">Metallic</text>
+        <text x="125" y="120" text-anchor="middle" class="q-sub">3 imagens grayscale</text>
+      </g>
+      <text x="305" y="65" class="q-sub">pack →</text>
+      <g transform="translate(380,30)">
+        <rect x="0" y="0" width="90" height="70" fill="url(#orm)"/>
+        <defs><linearGradient id="orm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c08040"/><stop offset="1" stop-color="#4080c0"/></linearGradient></defs>
+        <text x="45" y="92" text-anchor="middle" class="q-sub" fill="#E0982C">1 imagem ORM</text>
+        <g transform="translate(110,4)">
+          <rect x="0" y="0" width="14" height="14" fill="#c33"/><text x="22" y="11" class="q-sub">R = Occlusion</text>
+          <rect x="0" y="22" width="14" height="14" fill="#3c3"/><text x="22" y="33" class="q-sub">G = Roughness</text>
+          <rect x="0" y="44" width="14" height="14" fill="#36c"/><text x="22" y="55" class="q-sub">B = Metallic</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption><b>Figura 15.1 — Três mapas, uma imagem.</b> ORM empacota Occlusion/Roughness/Metallic nos canais RGB. Uma textura no lugar de três: menos VRAM, menos arquivos, menos draw setup. Monte com nós Separate/Combine Color no Blender, ou exporte no layout que a engine espera (ORM no Unreal; metallic+smoothness no Unity).</figcaption>
+  </figure>
+
+  <h3>15.3 — Como empacotar no Blender</h3>
+  <p>Use nós <strong>Combine Color</strong> (modo RGB): conecte AO→R, Roughness→G, Metallic→B, ligue a uma saída e <strong>asse</strong> (vol. 9) numa imagem Non-Color. Ou monte no compositor. Cheque o que a engine de destino espera — a ordem dos canais e se o roughness deve ser invertido (smoothness = 1 − roughness no fluxo Unity antigo).</p>
+
+  <div class="caixa atencao">
+    <div class="rot">▲ Color space ao exportar dados packed</div>
+    <p>A imagem ORM (e qualquer mapa de dado) deve ser exportada como <strong>Non-Color / linear</strong> — se sair com gamma sRGB, a engine lê valores errados de roughness/metallic. Base color e emissive saem sRGB. Ao salvar PNG, confira o color space da imagem e as configurações de save. Esse é o mesmo cuidado do Cap. 2, agora na saída.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 16 ===== -->
+<section class="cap" id="cap16">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 16</div><div class="fio"></div></div>
+  <h2 class="titulo">Diagnóstico e troubleshooting</h2>
+
+  <p class="lead">A tabela de socorro da texturização — sintoma, causa, correção.</p>
+
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável</th><th>Correção</th></tr>
+    <tr><td>Material "lavado", reflexo errado</td><td>Color space trocado (dado em sRGB)</td><td>Roughness/metallic/normal → Non-Color (Cap. 2)</td></tr>
+    <tr><td>Normal map inflado/afundado/torto</td><td>Sem nó Normal Map, ou convenção de canal verde errada</td><td>Passe pelo nó Normal Map; inverta o verde se a engine pedir (vol. 9)</td></tr>
+    <tr><td>Linha visível numa costura</td><td>Seam exposta + sem bleed</td><td>Aumente Bleed; repinte os dois lados; mova a seam (vol. 7)</td></tr>
+    <tr><td>Tinta vazou para trás do objeto</td><td>Occlude desligado na projeção</td><td>Ligue Occlude e Backface Culling</td></tr>
+    <tr><td>Pintura sumiu ao reabrir</td><td>Imagem não foi salva em disco</td><td>Image ▸ Save All; ou Pack Resources</td></tr>
+    <tr><td>Textura esticada/borrada numa parte</td><td>UV ruim (distorção / texel density)</td><td>Conserte no vol. 7 antes de repintar</td></tr>
+    <tr><td>Material parece plástico chapado</td><td>Roughness uniforme demais</td><td>Adicione variação de roughness (Cap. 7)</td></tr>
+    <tr><td>Engine mostra cores/brilho errados</td><td>Channel packing/color space na exportação</td><td>Cheque ORM e Non-Color na saída (Cap. 15)</td></tr>
+    <tr><td>Sujeira/desgaste parece aleatório</td><td>Máscaras sem lógica de história</td><td>Guie por AO/curvature/posição (Cap. 8)</td></tr>
+  </table>
+
+  <div class="caixa dica">
+    <div class="rot">✔ O teste dos três color spaces</div>
+    <p>Quando um material "está estranho" e você não sabe por quê, comece sempre pelo color space: abra cada Image Texture e confirme — base color/emission em <strong>sRGB</strong>, todo o resto em <strong>Non-Color</strong>, e o normal passando pelo <strong>nó Normal Map</strong>. Esse trio resolve a maioria dos "por que isso parece errado?". Só depois investigue roughness, máscaras e iluminação.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VI ===================== -->
+<div class="parte-cover" id="parte6">
+  <div class="pn">PARTE VI</div>
+  <h2>Prática</h2>
+  <p>Tudo aplicado num projeto, e a referência de bolso: glossário, atalhos e novidades do 5.x.</p>
+</div>
+
+<!-- ===== CAP 17 ===== -->
+<section class="cap" id="cap17">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 17</div><div class="fio"></div></div>
+  <h2 class="titulo">Projeto: texturizar o asset completo</h2>
+
+  <p class="lead">Vamos texturizar o <strong>rádio portátil</strong> que desdobramos no vol. 7 — corpo plástico, alça de borracha, antena metálica, grade, parafusos. O fluxo serve para qualquer asset hard surface.</p>
+
+  <ol class="passos">
+    <li><h4>Asse as máscaras</h4><p>Antes de texturizar: asse AO, curvature e (se houver high-poly) normal (vol. 9). Esses mapas vão dirigir tudo.</p></li>
+    <li><h4>Separe os materiais</h4><p>Por Face Mask ou ID map: plástico do corpo, borracha da alça, metal da antena/parafusos, plástico escuro da grade. Cada um com seu base/roughness/metallic.</p></li>
+    <li><h4>Base colors</h4><p>Plástico azul-acinzentado, borracha preta fosca, metal cinza. Adicione variação sutil (textura de grão no pincel) — nada chapado.</p></li>
+    <li><h4>Roughness por material</h4><p>Plástico semi-fosco, borracha bem fosca, metal mais liso. Onde a mão pega (alça, botões), deixe mais liso/gorduroso.</p></li>
+    <li><h4>Edge wear (curvature)</h4><p>Mix mascarado por curvature: quinas do corpo perdem tinta e mostram plástico mais claro; quinas do metal ficam polidas/brilhantes.</p></li>
+    <li><h4>Sujeira (AO + posição)</h4><p>AO escurece as fendas (em volta dos botões, na grade). Gradiente de posição: leve poeira no topo, sujeira acumulada na base.</p></li>
+    <li><h4>Decals</h4><p>Carimbe (stencil) o logo da marca, o "POWER", as marcações de volume. Numa imagem própria de alta resolução se forem finos.</p></li>
+    <li><h4>Detalhe pintado</h4><p>Um arranhão específico onde o rádio "caiu", uma mancha de dedo na tela. A camada narrativa final.</p></li>
+    <li><h4>Asse e exporte</h4><p>Se vai para engine: asse cada canal, empacote ORM, nomeie com sufixos padrão, exporte com color space correto (Cap. 15). Se é render no Blender: já está pronto.</p></li>
+  </ol>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ A ordem que nunca muda</div>
+    <p><strong>UV (vol. 7) → bake das máscaras (vol. 9) → separar materiais → base colors → roughness → edge wear → sujeira → decals → detalhe pintado → asse/exporte.</strong> Do geral ao específico, do procedural ao manual. Seguir essa ordem é a diferença entre uma textura que "cresce" coerente e uma que vira remendo.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 17.1 — Conte a história</div>
+    <p>Texturize um objeto seu (o do exercício do vol. 7) escolhendo uma <strong>história</strong>: é novo na caixa? Velho e abandonado num galpão? Usado todo dia há 10 anos? Cada história muda onde cai o desgaste, a poeira, o polimento. Faça duas versões (novo vs surrado) do mesmo modelo só mudando as máscaras e camadas — e veja como a narrativa, não o modelo, define o realismo.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 18 ===== -->
+<section class="cap" id="cap18">
+  <div class="cap-tag"><svg class="sun" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#E0982C" stroke-width="1.6"/><path d="M6 14 q3 -9 6 -5 q2 2 5 -1" fill="none" stroke="#3B79C9" stroke-width="1.4" stroke-linecap="round"/></svg><div class="num">CAPÍTULO 18</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>18.1 — Glossário essencial</h3>
+  <table>
+    <tr><th>Termo</th><th>Significado</th></tr>
+    <tr><td><strong>PBR</strong></td><td>Physically Based Rendering: materiais descritos por propriedades físicas padronizadas.</td></tr>
+    <tr><td><strong>Texture set</strong></td><td>O conjunto de mapas (base color, roughness…) que veste uma malha/material.</td></tr>
+    <tr><td><strong>Base Color / Albedo</strong></td><td>A cor crua da superfície, sem luz embutida.</td></tr>
+    <tr><td><strong>Roughness</strong></td><td>Aspereza: 0 = espelho, 1 = fosco. O canal que mais define material.</td></tr>
+    <tr><td><strong>Metallic</strong></td><td>Metal (1) vs dielétrico (0). Quase sempre binário.</td></tr>
+    <tr><td><strong>Non-Color</strong></td><td>Color space linear para mapas de dado (roughness, normal, etc.).</td></tr>
+    <tr><td><strong>Projection paint</strong></td><td>Pintar projetando da tela para a textura via UV.</td></tr>
+    <tr><td><strong>Stencil</strong></td><td>Imagem fixa na tela usada como decalque para pintar através.</td></tr>
+    <tr><td><strong>Mask</strong></td><td>Tons de cinza que limitam onde a tinta/efeito age.</td></tr>
+    <tr><td><strong>Edge wear</strong></td><td>Desgaste nas quinas (guiado por curvature).</td></tr>
+    <tr><td><strong>Channel packing / ORM</strong></td><td>Juntar 3 mapas grayscale nos canais RGB de uma imagem.</td></tr>
+    <tr><td><strong>Decal</strong></td><td>Detalhe aplicado como adesivo sobre a superfície.</td></tr>
+    <tr><td><strong>Trim sheet</strong></td><td>Textura em faixas de detalhe, reutilizada em muita geometria.</td></tr>
+    <tr><td><strong>Tileável (seamless)</strong></td><td>Textura que se repete sem mostrar emenda.</td></tr>
+    <tr><td><strong>Smart material</strong></td><td>Material em camadas que se adapta ao bake do modelo (Substance); recriável com node groups.</td></tr>
+  </table>
+
+  <h3>18.2 — Atalhos de bancada</h3>
+  <table>
+    <tr><th>Atalho</th><th>Ação</th></tr>
+    <tr><td><kbd>F</kbd> / <kbd>Shift</kbd>+<kbd>F</kbd></td><td>Raio / força do pincel</td></tr>
+    <tr><td><kbd>X</kbd></td><td>Trocar cor primária/secundária</td></tr>
+    <tr><td><kbd>S</kbd> (Texture Paint)</td><td>Color picker (pegar cor da imagem)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></td><td>Node Wrangler: importar texture set inteiro no Principled</td></tr>
+    <tr><td><kbd>2</kbd> (header)</td><td>Ativar Face Mask (seleção de faces)</td></tr>
+    <tr><td><kbd>RMB</kbd> / <kbd>Shift</kbd>+<kbd>RMB</kbd> / <kbd>Ctrl</kbd>+<kbd>RMB</kbd></td><td>Mover / escalar / girar o stencil</td></tr>
+    <tr><td>Asset shelf</td><td>Acessar pincéis (assets) no viewport</td></tr>
+    <tr><td><span class="menupath">Image ▸ Save All Images</span></td><td>Salvar texturas pintadas em disco</td></tr>
+  </table>
+
+  <h3>18.3 — Novidades 4.x → 5.x para texturização</h3>
+  <ul>
+    <li><strong>Pincéis como assets (4.3+):</strong> data-blocks na Asset Library, organizados em catálogos, compartilhados entre Sculpt/Texture Paint/Vertex Paint/Grease Pencil, acessíveis pelo asset shelf.</li>
+    <li><strong>Color Attributes:</strong> vertex paint integrado como atributos de cor (por vértice ou por canto de face), úteis como máscaras e dados de material.</li>
+    <li><strong>AgX por padrão:</strong> o view transform afeta como você vê a pintura — pinte avaliando pelo resultado final, e lembre que o valor numérico de um mapa de dado independe do view transform.</li>
+    <li><strong>Principled BSDF v2:</strong> Coat, Sheen, Thin Film e mais slots — o texture set pode dirigir mais propriedades (vol. de BSDFs).</li>
+    <li><strong>Melhorias de projection paint:</strong> bleed/oclusão mais robustos e melhor performance em malhas densas.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Onde isto se encaixa na coleção</div>
+    <p>Texturização é o passo entre <strong>UV (vol. 7)</strong> e o <strong>render</strong>. Ela consome as UVs limpas do vol. 7 e os mapas assados do <strong>Baking (vol. 9)</strong>, monta os materiais que os <strong>Shader Nodes</strong> e <strong>BSDFs</strong> descrevem, e entrega a superfície que a <strong>Iluminação (vol. 10)</strong> vai revelar. Para tempo real, fecha com a exportação do vol. 9. Domine os três color spaces, as máscaras guiadas por geometria e a ideia de contar a história do objeto — e suas superfícies deixam de parecer CG. O manual oficial cobre as ferramentas em <a class="ext" href="https://docs.blender.org/manual/en/latest/sculpt_paint/texture_paint/index.html">docs.blender.org</a>. Agora vá dar matéria à forma.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Texturização PBR no Blender 5.x — Guia Completo · da coleção de apostilas · 18 capítulos em 6 partes<br>
+  A forma diz o que o objeto é; a textura diz o que ele viveu. Conte a história na superfície.
+</footer>
+
+</main>
+</div><!-- /layout -->
+<script src="./apostilas-nav.js" defer></script>
+</body>
+</html>

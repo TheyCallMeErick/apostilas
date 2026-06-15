@@ -8,6 +8,14 @@
     "title": "Geometry Nodes no Blender — Apostila completa: modelagem como função"
   },
   {
+    "file": "guia-completo-uv-mapping-blender-5x.html",
+    "title": "UV Mapping no Blender 5.x — Guia Completo: planificar a superfície"
+  },
+  {
+    "file": "guia-completo-texturizacao-pbr-blender-5x.html",
+    "title": "Texturização PBR no Blender 5.x — Guia Completo: pintar a superfície"
+  },
+  {
     "file": "apostila-shader-nodes-blender.html",
     "title": "Shader Nodes no Blender — Apostila completa: a linguagem visual dos materiais"
   },
@@ -16,8 +24,16 @@
     "title": "BSDFs no Blender — Guia completo: da física à prática"
   },
   {
+    "file": "guia-completo-baking-exportacao-blender-5x.html",
+    "title": "Baking e Exportação no Blender 5.x — Guia Completo"
+  },
+  {
     "file": "apostila-luz-e-camera-blender.html",
     "title": "Luz e Câmera no Blender — Apostila completa: fotografia dentro do render"
+  },
+  {
+    "file": "guia-completo-iluminacao-eevee-cycles-blender-5x.html",
+    "title": "Iluminação no Blender 5.x — EEVEE e Cycles · A Apostila Completa"
   },
   {
     "file": "livro-composicao-cena-blender-5x.html",

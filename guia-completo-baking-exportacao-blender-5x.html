@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baking e Exportação no Blender 5.x — Guia Completo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F1EFEA;--tinta:#1B1813;--tinta-suave:#56524A;
+  --bake:#BC6A2C;--bake-escuro:#8A4A18;
+  --saida:#198A78;--saida-escuro:#0E5E50;
+  --verde:#4A7A3C;--vermelho:#B0342A;--spark:#E0A52E;
+  --linha:#DAD4C8;--cartao:#FFFFFF;--quadro:#161310;
+  --q-base:#CFC8BA;--q-dim:#857E70;--q-bake:#E0995A;--q-saida:#4FB8A4;--q-cream:#EFE7D6;
+  --code-bg:#1F1A14;--code-fg:#ECE6DA;
+  --sombra:0 1px 3px rgba(27,24,19,.09), 0 8px 24px rgba(27,24,19,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{background:var(--papel);color:var(--tinta);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.64}
+::selection{background:var(--bake);color:#fff}
+.layout{display:grid;grid-template-columns:296px minmax(0,1fr);min-height:100vh}
+.sidebar{border-right:1px solid var(--linha);background:linear-gradient(180deg,#EAE6DC,#F1EFEA 260px);padding:28px 21px 56px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar .parte{font-family:"Archivo",sans-serif;font-stretch:88%;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--bake-escuro);margin:23px 0 7px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sidebar .parte::before{content:"";width:13px;height:1.5px;background:var(--saida)}
+.sidebar nav a{display:block;text-decoration:none;color:var(--tinta-suave);font-family:"Archivo",sans-serif;font-size:.82rem;line-height:1.33;padding:4px 8px 4px 13px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+.sidebar nav a:hover{color:var(--tinta);background:rgba(188,106,44,.1);border-left-color:var(--bake)}
+.sidebar nav a .n{color:var(--bake-escuro);font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px}
+.logo-b{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.logo-b .t1{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.02rem;line-height:1.05;font-stretch:104%}
+.logo-b .t2{font-family:"JetBrains Mono",monospace;font-size:.63rem;color:var(--saida-escuro)}
+main{padding:0 0 120px}
+.miolo{max-width:795px;margin:0 auto;padding:0 38px}
+.capa{background:radial-gradient(1000px 520px at 80% -8%, rgba(188,106,44,.42), transparent 58%),radial-gradient(780px 460px at 4% 116%, rgba(25,138,120,.32), transparent 60%),var(--quadro);color:#EDE7DB;padding:88px 38px 76px;position:relative;overflow:hidden}
+.capa .miolo{position:relative;z-index:2}
+.capa .selo{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.08em;color:var(--q-bake);border:1px solid rgba(224,153,90,.42);border-radius:999px;padding:6px 14px;margin-bottom:26px;background:rgba(22,19,16,.5)}
+.capa h1{font-family:"Archivo",sans-serif;font-stretch:112%;font-weight:880;font-size:clamp(2.1rem,5.3vw,3.6rem);line-height:1.0;letter-spacing:-.02em;max-width:16ch;margin-bottom:22px}
+.capa h1 em{font-style:normal;color:var(--q-bake)}
+.capa p.sub{font-size:1.08rem;max-width:62ch;color:#C7C1B4;margin-bottom:34px}
+.capa .meta{display:flex;flex-wrap:wrap;gap:10px}
+.capa .meta span{font-family:"Archivo",sans-serif;font-size:.78rem;letter-spacing:.04em;border:1px solid rgba(237,231,219,.26);border-radius:6px;padding:6px 12px;color:#D2CCBE}
+.capa-art{position:absolute;right:-10px;top:50%;transform:translateY(-50%);z-index:1;opacity:.5}
+.parte-cover{padding:62px 0 8px;border-bottom:1px solid var(--linha);margin-top:40px}
+.parte-cover .pn{font-family:"JetBrains Mono",monospace;font-size:.8rem;letter-spacing:.2em;color:var(--bake-escuro)}
+.parte-cover h2{font-family:"Archivo",sans-serif;font-stretch:110%;font-weight:870;font-size:clamp(1.85rem,4vw,2.65rem);line-height:1.04;letter-spacing:-.015em;margin:8px 0 12px}
+.parte-cover p{font-size:1.05rem;color:var(--tinta-suave);max-width:62ch;margin-bottom:18px}
+section.cap{padding-top:60px}
+.cap-tag{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cap-tag .bk{width:19px;height:19px;flex:0 0 auto}
+.cap-tag .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--bake-escuro);letter-spacing:.12em}
+.cap-tag .fio{flex:1;height:1px;background:var(--linha)}
+h2.titulo{font-family:"Archivo",sans-serif;font-stretch:108%;font-weight:830;font-size:clamp(1.55rem,3.2vw,2.15rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:20px}
+h3{font-family:"Archivo",sans-serif;font-weight:740;font-size:1.18rem;margin:38px 0 12px;letter-spacing:-.005em}
+h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;margin:26px 0 8px}
+p{margin:0 0 15px}
+p.lead{font-size:1.1rem;color:var(--tinta-suave)}
+strong{font-weight:700}
+em.term{font-style:italic;color:var(--bake-escuro);font-weight:600}
+a.ext{color:var(--saida-escuro)}
+ul,ol{margin:0 0 18px 26px}
+li{margin-bottom:7px}
+hr.fim{border:0;height:1px;background:var(--linha);margin:64px 0 0}
+kbd{font-family:"JetBrains Mono",monospace;font-size:.78em;background:#fff;border:1px solid #C6BFB0;border-bottom-width:2.5px;border-radius:5px;padding:1.5px 7px;white-space:nowrap;color:var(--tinta)}
+code{font-family:"JetBrains Mono",monospace;font-size:.84em;background:#E7E1D5;border-radius:4px;padding:1.5px 6px}
+pre{background:var(--code-bg);color:var(--code-fg);font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.55;border-radius:10px;padding:18px 20px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit;color:inherit}
+.menupath{font-family:"Archivo",sans-serif;font-size:.86em;font-weight:600;color:var(--bake-escuro)}
+.caixa{border-radius:12px;padding:19px 22px;margin:22px 0;box-shadow:var(--sombra);background:var(--cartao);border:1px solid var(--linha)}
+.caixa .rot{display:flex;align-items:center;gap:8px;font-family:"Archivo",sans-serif;font-weight:800;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.caixa p:last-child,.caixa ul:last-child,.caixa ol:last-child{margin-bottom:0}
+.caixa.conceito{border-left:4px solid var(--bake)}
+.caixa.conceito .rot{color:var(--bake-escuro)}
+.caixa.dica{border-left:4px solid var(--verde)}
+.caixa.dica .rot{color:var(--verde)}
+.caixa.atencao{border-left:4px solid var(--vermelho)}
+.caixa.atencao .rot{color:var(--vermelho)}
+.caixa.exercicio{border-left:4px solid var(--saida)}
+.caixa.exercicio .rot{color:var(--saida-escuro)}
+.caixa.v5{border-left:4px solid var(--bake);background:#FAF2E9}
+.caixa.v5 .rot{color:var(--bake-escuro)}
+ol.passos{list-style:none;margin-left:0;counter-reset:passo}
+ol.passos>li{counter-increment:passo;position:relative;padding:0 0 16px 52px;margin:0}
+ol.passos>li::before{content:counter(passo);position:absolute;left:0;top:1px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:"Archivo",sans-serif;font-weight:800;font-size:.86rem;display:flex;align-items:center;justify-content:center}
+ol.passos>li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:2px;width:1px;background:var(--linha)}
+ol.passos>li:last-child::after{display:none}
+ol.passos h4{margin:4px 0 6px}
+table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:.9rem;background:var(--cartao);box-shadow:var(--sombra);border-radius:10px;overflow:hidden}
+th{font-family:"Archivo",sans-serif;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;text-align:left;background:var(--tinta);color:var(--papel);padding:9px 13px}
+td{padding:9px 13px;border-top:1px solid var(--linha);vertical-align:top}
+tr:nth-child(even) td{background:#FAF7F0}
+figure{margin:26px 0;background:var(--quadro);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:"Archivo",sans-serif;font-size:.82rem;color:#A8A294;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(207,200,186,.3)}
+figcaption b{color:#EDE7DB}
+.q-lbl{font-family:"Archivo",sans-serif;font-size:12.5px;font-weight:700;fill:#EDE7DB}
+.q-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;fill:var(--q-dim)}
+.q-wire{fill:none;stroke:var(--q-base);stroke-width:1.3;stroke-linejoin:round}
+.q-obj{fill:rgba(207,200,186,.1);stroke:var(--q-base);stroke-width:1.5}
+.q-bake-f{fill:rgba(224,153,90,.16);stroke:var(--q-bake);stroke-width:1.7;stroke-linejoin:round}
+.q-saida-f{fill:rgba(79,184,164,.16);stroke:var(--q-saida);stroke-width:1.7;stroke-linejoin:round}
+.q-arrow{fill:none;stroke:var(--q-bake);stroke-width:2.4;stroke-linecap:round}
+.q-axis{fill:none;stroke:var(--q-dim);stroke-width:1.2}
+.q-bad{fill:none;stroke:var(--vermelho);stroke-width:2.2}
+.sumario{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin:24px 0 10px}
+.sumario a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--tinta);font-family:"Archivo",sans-serif;font-size:.88rem;padding:7px 11px;border-radius:8px;border:1px solid transparent;line-height:1.22}
+.sumario a:hover{background:#fff;border-color:var(--linha)}
+.sumario .n{font-family:"JetBrains Mono",monospace;color:var(--bake-escuro);font-size:.76rem;flex:0 0 auto}
+footer{border-top:1px solid var(--linha);margin-top:90px;padding:36px;text-align:center;font-family:"Archivo",sans-serif;font-size:.82rem;color:var(--tinta-suave)}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--linha)}.sumario{grid-template-columns:1fr}.miolo{padding:0 20px}.capa{padding:60px 20px 52px}.capa-art{display:none}}
+@media print{.sidebar{display:none}.layout{display:block}.capa{background:#fff;color:#000}.capa h1 em{color:#000}.capa-art{display:none}figure{background:#fff;border:1px solid #999}figure,.caixa,table{box-shadow:none}section.cap{page-break-inside:avoid}.parte-cover{page-break-before:always}}
+:focus-visible{outline:3px solid var(--bake);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo-b">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <path d="M6 12 l8 -5 l8 5 l-8 5 z" fill="#BC6A2C" opacity=".85"/>
+      <path d="M6 12 v9 l8 5 v-9 z" fill="#BC6A2C" opacity=".5"/>
+      <path d="M22 12 v9 l-8 5 v-9 z" fill="#BC6A2C" opacity=".65"/>
+      <path d="M26 20 H35 M31 16 l4 4 l-4 4" fill="none" stroke="#198A78" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="26" y="27" width="9" height="7" rx="1" fill="none" stroke="#198A78" stroke-width="1.6"/>
+    </svg>
+    <div>
+      <div class="t1">Baking &amp; Exportação</div>
+      <div class="t2">Guia Completo · Blender 5.x</div>
+    </div>
+  </div>
+
+  <div class="parte">I · Baking: fundamentos</div>
+  <nav>
+    <a href="#cap1"><span class="n">01</span>O que é baking e por que importa</a>
+    <a href="#cap2"><span class="n">02</span>O ambiente de bake</a>
+    <a href="#cap3"><span class="n">03</span>Selected to Active: high → low</a>
+    <a href="#cap4"><span class="n">04</span>A cage e a distância de raio</a>
+  </nav>
+  <div class="parte">II · Os mapas</div>
+  <nav>
+    <a href="#cap5"><span class="n">05</span>Normal maps</a>
+    <a href="#cap6"><span class="n">06</span>AO, curvature e cavity</a>
+    <a href="#cap7"><span class="n">07</span>Diffuse, roughness, metallic, emit</a>
+    <a href="#cap8"><span class="n">08</span>Position, thickness e máscaras</a>
+    <a href="#cap9"><span class="n">09</span>Multires: displacement</a>
+  </nav>
+  <div class="parte">III · Baking especializado</div>
+  <nav>
+    <a href="#cap10"><span class="n">10</span>Lightmaps e luz assada</a>
+    <a href="#cap11"><span class="n">11</span>Animação e simulação</a>
+    <a href="#cap12"><span class="n">12</span>Troubleshooting de baking</a>
+  </nav>
+  <div class="parte">IV · Exportação: fundamentos</div>
+  <nav>
+    <a href="#cap13"><span class="n">13</span>Escala, eixos e transformações</a>
+    <a href="#cap14"><span class="n">14</span>Preparar o modelo</a>
+    <a href="#cap15"><span class="n">15</span>O panorama dos formatos</a>
+  </nav>
+  <div class="parte">V · Os formatos</div>
+  <nav>
+    <a href="#cap16"><span class="n">16</span>glTF / GLB</a>
+    <a href="#cap17"><span class="n">17</span>FBX</a>
+    <a href="#cap18"><span class="n">18</span>USD</a>
+    <a href="#cap19"><span class="n">19</span>Alembic, OBJ, STL e os demais</a>
+  </nav>
+  <div class="parte">VI · Pipelines de destino</div>
+  <nav>
+    <a href="#cap20"><span class="n">20</span>Game engines (Unity, Unreal)</a>
+    <a href="#cap21"><span class="n">21</span>Impressão 3D</a>
+  </nav>
+  <div class="parte">VII · Na prática e referência</div>
+  <nav>
+    <a href="#cap22"><span class="n">22</span>Texturas na entrega</a>
+    <a href="#cap23"><span class="n">23</span>Pipeline completo, ponta a ponta</a>
+    <a href="#cap24"><span class="n">24</span>Glossário e novidades 5.x</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="capa">
+  <svg class="capa-art" width="420" height="430" viewBox="0 0 420 430" aria-hidden="true">
+    <!-- high poly blob -->
+    <path d="M60 130 Q70 80 120 90 Q160 70 175 120 Q200 150 165 190 Q170 230 120 225 Q75 235 65 190 Q40 165 60 130 Z" fill="none" stroke="rgba(224,153,90,.45)" stroke-width="1.4"/>
+    <path d="M80 120 L120 110 M100 150 L140 145 M85 180 L130 185 M110 200 L150 195" stroke="rgba(224,153,90,.3)" stroke-width="1"/>
+    <!-- arrow -->
+    <path d="M200 160 L260 160" stroke="rgba(224,153,90,.6)" stroke-width="2.5" marker-end="url(#ca)"/>
+    <defs><marker id="ca" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="rgba(224,153,90,.7)"/></marker></defs>
+    <!-- baked texture tile -->
+    <rect x="280" y="110" width="100" height="100" rx="4" fill="rgba(224,153,90,.12)" stroke="rgba(224,153,90,.5)" stroke-width="1.5"/>
+    <path d="M280 160 H380 M330 110 V210" stroke="rgba(224,153,90,.3)" stroke-width="1"/>
+    <text x="330" y="235" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="rgba(224,153,90,.7)">mapa assado</text>
+    <!-- export badges -->
+    <g font-family="JetBrains Mono" font-size="12">
+      <rect x="90" y="300" width="70" height="34" rx="6" fill="none" stroke="rgba(79,184,164,.5)" stroke-width="1.4"/>
+      <text x="125" y="322" text-anchor="middle" fill="rgba(79,184,164,.85)">glTF</text>
+      <rect x="175" y="300" width="70" height="34" rx="6" fill="none" stroke="rgba(79,184,164,.5)" stroke-width="1.4"/>
+      <text x="210" y="322" text-anchor="middle" fill="rgba(79,184,164,.85)">FBX</text>
+      <rect x="260" y="300" width="70" height="34" rx="6" fill="none" stroke="rgba(79,184,164,.5)" stroke-width="1.4"/>
+      <text x="295" y="322" text-anchor="middle" fill="rgba(79,184,164,.85)">USD</text>
+    </g>
+    <path d="M210 250 L210 295" stroke="rgba(79,184,164,.5)" stroke-width="2" marker-end="url(#cb)"/>
+    <defs><marker id="cb" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="rgba(79,184,164,.6)"/></marker></defs>
+  </svg>
+  <div class="miolo">
+    <span class="selo">▣ GUIA COMPLETO · VOLUME 9 DA COLEÇÃO</span>
+    <h1>Baking e <em>Exportação</em> no Blender</h1>
+    <p class="sub">Como tirar o trabalho do Blender: primeiro <strong>assar</strong> o detalhe e a luz em mapas (normal, AO, curvature, PBR, displacement, lightmaps), depois <strong>exportar</strong> o asset no formato certo (glTF, FBX, USD, Alembic, OBJ, STL) para games, web, VFX e impressão 3D — sem quebrar escala, eixos ou materiais no caminho.</p>
+    <div class="meta">
+      <span>Blender 5.0 — 5.2 LTS</span>
+      <span>24 capítulos · 7 partes</span>
+      <span>FBX C++ · USD · glTF</span>
+      <span>Cycles bake</span>
+    </div>
+  </div>
+</div>
+
+<div class="miolo">
+
+<section class="cap" id="sumario">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">SUMÁRIO</div><div class="fio"></div></div>
+  <h2 class="titulo">Como ler este guia</h2>
+  <p class="lead">São dois ofícios irmãos. <strong>Baking</strong> (Partes I–III) transfere detalhe e luz para mapas de textura — a etapa que faz um modelo leve parecer pesado de detalhe. <strong>Exportação</strong> (Partes IV–VI) empacota o asset num formato que outro software entenda — sem perder escala, materiais ou animação. Leia a metade que você precisa agora; as duas se encontram no destino final do seu trabalho.</p>
+  <div class="sumario">
+    <a href="#cap1"><span class="n">01</span>O que é baking e por que importa</a>
+    <a href="#cap2"><span class="n">02</span>O ambiente de bake</a>
+    <a href="#cap3"><span class="n">03</span>Selected to Active: high → low</a>
+    <a href="#cap4"><span class="n">04</span>A cage e a distância de raio</a>
+    <a href="#cap5"><span class="n">05</span>Normal maps</a>
+    <a href="#cap6"><span class="n">06</span>AO, curvature e cavity</a>
+    <a href="#cap7"><span class="n">07</span>Diffuse, roughness, metallic, emit</a>
+    <a href="#cap8"><span class="n">08</span>Position, thickness e máscaras</a>
+    <a href="#cap9"><span class="n">09</span>Multires: displacement</a>
+    <a href="#cap10"><span class="n">10</span>Lightmaps e luz assada</a>
+    <a href="#cap11"><span class="n">11</span>Baking de animação e simulação</a>
+    <a href="#cap12"><span class="n">12</span>Troubleshooting de baking</a>
+    <a href="#cap13"><span class="n">13</span>Escala, eixos e transformações</a>
+    <a href="#cap14"><span class="n">14</span>Preparar o modelo para exportar</a>
+    <a href="#cap15"><span class="n">15</span>O panorama dos formatos</a>
+    <a href="#cap16"><span class="n">16</span>glTF / GLB (web, AR, realtime)</a>
+    <a href="#cap17"><span class="n">17</span>FBX (game engines)</a>
+    <a href="#cap18"><span class="n">18</span>USD (pipeline e VFX)</a>
+    <a href="#cap19"><span class="n">19</span>Alembic, OBJ, STL e os demais</a>
+    <a href="#cap20"><span class="n">20</span>Exportar para game engines</a>
+    <a href="#cap21"><span class="n">21</span>Exportar para impressão 3D</a>
+    <a href="#cap22"><span class="n">22</span>Texturas na entrega: packing e caminhos</a>
+    <a href="#cap23"><span class="n">23</span>Um pipeline completo, ponta a ponta</a>
+    <a href="#cap24"><span class="n">24</span>Glossário, atalhos e novidades 5.x</a>
+  </div>
+  <div class="caixa v5">
+    <div class="rot">▣ Sobre a versão</div>
+    <p>Escrito para o <strong>Blender 5.x</strong>, que mexeu bastante na entrada/saída de dados: o <strong>importador FBX em C++</strong> (muito mais rápido) virou padrão, o <strong>Collada foi removido</strong>, o <strong>USD</strong> ganhou OpenPBR via MaterialX e mais recursos, o <strong>glTF</strong> passou a ser add-on de núcleo, e o <strong>baking</strong> ficou mais previsível (assar só nas imagens selecionadas, subdivisão e interpolação de UV casando com o modifier). Tudo marcado em caixas cobre e resumido no Capítulo 24.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE I ===================== -->
+<div class="parte-cover" id="parte1">
+  <div class="pn">PARTE I</div>
+  <h2>Baking: fundamentos</h2>
+  <p>Baking é "fotografar" informação de uma fonte e gravá-la numa textura: o relevo de uma escultura densa, a oclusão de uma superfície, a luz de uma cena. Esta parte estabelece o que é, como montar o ambiente de bake, e o fluxo central de transferir detalhe de um modelo high-poly para um low-poly — a base de todo o resto.</p>
+</div>
+
+<!-- ===== CAP 1 ===== -->
+<section class="cap" id="cap1">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 01</div><div class="fio"></div></div>
+  <h2 class="titulo">O que é baking e por que importa</h2>
+
+  <p class="lead"><strong>Baking</strong> (assar) é o processo de calcular uma informação e gravá-la numa textura para uso posterior. Em vez de recalcular detalhe, sombra ou luz a cada frame, você os "assa" uma vez numa imagem — que depois é lida instantaneamente. É o que permite modelos leves parecerem ricos e games rodarem em tempo real.</p>
+
+  <p>O exemplo canônico: você esculpe uma estátua com 10 milhões de polígonos cheios de poros, rugas e arranhões. Esse modelo é pesado demais para um game ou uma cena complexa. A solução é o baking: você cria uma versão leve (<em>low-poly</em>, alguns milhares de polígonos) e <strong>assa o detalhe</strong> do modelo pesado num <em>normal map</em> — uma textura que, ao ser lida pela luz, faz a superfície lisa do low-poly <em>parecer</em> ter todo aquele relevo. O detalhe foi transferido da geometria para a textura.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Detalhe do high-poly assado num mapa para o low-poly">
+      <g transform="translate(30,30)">
+        <!-- high poly -->
+        <circle cx="70" cy="70" r="48" class="q-obj"/>
+        <path d="M40 50 q10 -8 18 2 M60 45 q12 -6 20 4 M35 75 q14 6 24 -2 M58 92 q12 8 22 -2 M80 60 q10 8 16 0" stroke="var(--q-bake)" stroke-width="1.3" fill="none" opacity=".8"/>
+        <text x="70" y="140" text-anchor="middle" class="q-sub">high-poly (10M)</text>
+        <text x="70" y="156" text-anchor="middle" class="q-sub">detalhe esculpido</text>
+        <!-- arrow + map -->
+        <path d="M135 70 L195 70" class="q-arrow" marker-end="url(#a1)"/>
+        <defs><marker id="a1" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="var(--q-bake)"/></marker></defs>
+        <text x="165" y="60" text-anchor="middle" class="q-sub">assa</text>
+        <rect x="210" y="22" width="96" height="96" rx="3" class="q-bake-f"/>
+        <path d="M210 70 H306 M258 22 V118" class="q-axis" opacity=".5"/>
+        <text x="258" y="140" text-anchor="middle" class="q-sub">normal map</text>
+        <!-- arrow + low poly -->
+        <path d="M325 70 L385 70" class="q-arrow" marker-end="url(#a1)"/>
+        <text x="355" y="60" text-anchor="middle" class="q-sub">aplica</text>
+        <g transform="translate(400,0)">
+          <path d="M70 26 L116 52 L116 100 L70 126 L24 100 L24 52 Z" class="q-saida-f"/>
+          <path d="M40 50 q10 -8 18 2 M60 45 q12 -6 20 4 M35 75 q14 6 24 -2 M58 92 q12 8 22 -2" stroke="var(--q-saida)" stroke-width="1.1" fill="none" opacity=".7"/>
+          <text x="70" y="146" text-anchor="middle" class="q-sub">low-poly (5k)</text>
+          <text x="70" y="162" text-anchor="middle" class="q-sub">parece detalhado</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption><b>Figura 1.1 — A mágica do baking.</b> O detalhe esculpido no modelo pesado é assado num normal map; aplicado ao modelo leve, ele engana a luz e faz a superfície lisa parecer cheia de relevo. Geometria virou textura — e o desempenho disparou.</figcaption>
+  </figure>
+
+  <h3>1.1 — O que se pode assar</h3>
+  <table>
+    <tr><th>Categoria</th><th>O que captura</th><th>Capítulo</th></tr>
+    <tr><td><strong>Relevo</strong></td><td>Normal map, displacement, bump — o detalhe de forma</td><td>5, 9</td></tr>
+    <tr><td><strong>Oclusão e bordas</strong></td><td>Ambient Occlusion, curvature, cavity — sombra e desgaste</td><td>6</td></tr>
+    <tr><td><strong>Aparência PBR</strong></td><td>Diffuse/base color, roughness, metallic, emit</td><td>7</td></tr>
+    <tr><td><strong>Máscaras de dados</strong></td><td>Position, thickness — para texturização procedural</td><td>8</td></tr>
+    <tr><td><strong>Iluminação</strong></td><td>Lightmaps — luz e sombra pré-calculadas (games)</td><td>10</td></tr>
+    <tr><td><strong>Movimento</strong></td><td>Animação e simulação assadas (Alembic, cache)</td><td>11</td></tr>
+  </table>
+
+  <h3>1.2 — Por que assar, afinal</h3>
+  <ul>
+    <li><strong>Performance:</strong> ler uma textura é trivial; recalcular geometria densa, sombra ou luz a cada frame é caro. Baking troca cálculo por leitura.</li>
+    <li><strong>Tempo real:</strong> games e AR/VR exigem que detalhe e luz estejam pré-calculados — não há orçamento para resolver tudo ao vivo.</li>
+    <li><strong>Portabilidade:</strong> um normal map viaja para qualquer engine; 10 milhões de polígonos não.</li>
+    <li><strong>Controle:</strong> mapas assados (AO, curvature) viram base para texturização procedural sofisticada (Substance, nodes).</li>
+  </ul>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Baking é transferência</div>
+    <p>A ideia única por trás de toda forma de baking é <strong>transferir informação de um lugar caro para um lugar barato</strong>: de geometria densa para textura, de cálculo de luz por frame para imagem fixa, de simulação por frame para cache em disco. Sempre que você se pegar recalculando a mesma coisa repetidamente — detalhe, sombra, luz, movimento — pergunte se dá para assar uma vez e ler depois. Essa pergunta é o coração da otimização em 3D.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ O baking conecta os volumes</div>
+    <p>Baking é o ponto de encontro de quase tudo da coleção: você precisa de <strong>retopologia</strong> (vol. 6) para ter o low-poly, de <strong>UVs limpas</strong> (vol. 7) para a textura assada morar, de um <strong>high-poly</strong> esculpido ou modelado (vols. 2, 3) como fonte, e o resultado alimenta os <strong>materiais</strong> e a <strong>exportação</strong>. Se algum bake der errado, a causa costuma estar num desses pré-requisitos — especialmente nas UVs.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 2 ===== -->
+<section class="cap" id="cap2">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 02</div><div class="fio"></div></div>
+  <h2 class="titulo">O ambiente de bake</h2>
+
+  <p class="lead">No Blender, o baking de texturas é feito pelo <strong>Cycles</strong> (o motor que resolve a luz com precisão). Antes de assar qualquer mapa, é preciso montar o ambiente: o motor certo, uma imagem de destino, o nó que a recebe, e os ajustes de qualidade.</p>
+
+  <h3>2.1 — O fluxo mínimo de um bake</h3>
+  <ol class="passos">
+    <li><h4>Use o Cycles</h4><p>O baking de texturas roda no Cycles (em <span class="menupath">Render Properties ▸ Render Engine</span>). É lá que ficam as opções de Bake.</p></li>
+    <li><h4>Tenha UVs no objeto de destino</h4><p>O mapa assado mora no espaço UV do low-poly — sem UVs limpas, não há onde gravar (vol. 7).</p></li>
+    <li><h4>Crie uma imagem nova</h4><p>No editor de imagem, crie a textura de destino (ex.: 2048×2048). Para normal maps, use 32-bit float ou ao menos sem compressão agressiva.</p></li>
+    <li><h4>Adicione um Image Texture node no material</h4><p>No material do low-poly, adicione um nó <em>Image Texture</em> apontando para a imagem criada e <strong>deixe-o selecionado/ativo</strong> — o bake grava no nó ativo.</p></li>
+    <li><h4>Escolha o Bake Type e asse</h4><p>Em <span class="menupath">Render Properties ▸ Bake</span>, escolha o tipo (Normal, AO, Diffuse...) e clique <em>Bake</em>.</p></li>
+    <li><h4>Salve a imagem</h4><p>O resultado fica só na memória até você salvar (<em>Image ▸ Save As</em>). Não esqueça — é o erro nº 1.</p></li>
+  </ol>
+
+  <h3>2.2 — Os ajustes que definem a qualidade</h3>
+  <table>
+    <tr><th>Ajuste</th><th>O que faz</th></tr>
+    <tr><td><strong>Samples</strong></td><td>Quantidade de amostras (mais = menos ruído, mais lento). Mapas como AO se beneficiam de mais samples</td></tr>
+    <tr><td><strong>Margin / Extrusion</strong></td><td>Sangramento das ilhas UV para fora das bordas — evita costuras pretas; aumente para texturas pequenas/mipmaps (vol. 7)</td></tr>
+    <tr><td><strong>Clear Image</strong></td><td>Limpa a imagem antes de assar (desligue para assar por cima/acumular)</td></tr>
+    <tr><td><strong>Selected to Active</strong></td><td>Liga o modo high → low (Cap. 3)</td></tr>
+    <tr><td><strong>Denoise</strong></td><td>Reduz ruído em mapas de luz/AO no pós</td></tr>
+  </table>
+
+  <div class="caixa v5">
+    <div class="rot">▣ Blender 5.0 — baking mais previsível</div>
+    <p>O 5.0 melhorou o baking em pontos práticos: agora você pode <strong>assar apenas para as imagens selecionadas/ativas</strong> (em vez de todas de uma vez), o <strong>nível de subdivisão e a interpolação de UV</strong> usados no bake passaram a <strong>corresponder ao modifier Subdivision Surface</strong> (resultados fiéis ao que você vê), e foram corrigidos problemas de assar em níveis de subdivisão diferentes de zero. O bake a partir do <strong>Multiresolution</strong> ganhou suporte a <strong>n-gons e vector displacement</strong> (Cap. 9). Na prática: menos surpresas entre o que você vê e o que assa.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Salve a imagem assada — sempre</div>
+    <p>A imagem que você assa existe só na <strong>memória</strong> até ser salva em disco. Fechar o Blender (ou até trocar de imagem sem salvar) perde o resultado. Pegue o hábito: assou, salvou (<em>Image ▸ Save As</em>, em formato sem perdas como PNG ou EXR para normal/displacement). Para muitos mapas, considere salvar tudo de uma vez e empacotar no .blend só como backup. Perder um bake demorado por não salvar é uma das frustrações mais comuns — e mais evitáveis.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 3 ===== -->
+<section class="cap" id="cap3">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 03</div><div class="fio"></div></div>
+  <h2 class="titulo">Selected to Active: high-poly → low-poly</h2>
+
+  <p class="lead">O fluxo mais importante do baking é transferir detalhe de um modelo denso (high-poly) para um leve (low-poly). No Blender, isso é o <strong>Selected to Active</strong>: você seleciona o high, depois o low (que vira o "ativo"), e o Blender projeta um no outro.</p>
+
+  <h3>3.1 — Como o Blender projeta</h3>
+  <p>Com <em>Selected to Active</em> ligado, o Blender lança raios a partir da superfície do low-poly em direção ao high-poly próximo, captura a informação (relevo, cor, oclusão...) onde o raio encontra o high, e grava no espaço UV do low. É como envolver o modelo leve numa pele que "lê" o modelo pesado por baixo.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" role="img" aria-label="Raios do low-poly lendo o high-poly">
+      <g transform="translate(60,30)">
+        <!-- high poly surface (bumpy) -->
+        <path d="M0 120 q20 -30 40 0 q20 -28 40 2 q20 -32 40 0 q20 -26 40 4 q20 -30 40 0 q20 -28 40 2 q20 -30 40 0 q20 -26 40 4 l0 40 l-320 0 z" class="q-bake-f"/>
+        <text x="160" y="185" text-anchor="middle" class="q-sub" fill="var(--q-bake)">high-poly (detalhe real)</text>
+        <!-- low poly surface (flat) -->
+        <path d="M0 70 L320 70" class="q-saida-f" fill="none" stroke="var(--q-saida)" stroke-width="2"/>
+        <text x="370" y="74" class="q-sub" fill="var(--q-saida)">low-poly (liso)</text>
+        <!-- rays -->
+        <g stroke="var(--q-dim)" stroke-width="1" stroke-dasharray="3 3">
+          <path d="M30 70 L30 102"/><path d="M90 70 L90 96"/><path d="M150 70 L150 104"/><path d="M210 70 L210 96"/><path d="M270 70 L270 104"/>
+        </g>
+        <text x="160" y="40" text-anchor="middle" class="q-sub">raios do low leem o high → gravam no mapa</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 3.1 — Projeção de superfície.</b> Cada ponto do low-poly liso lança um raio que encontra a superfície detalhada do high-poly e captura o que há ali (a inclinação vira normal map, a oclusão vira AO...). O resultado é gravado nas UVs do low.</figcaption>
+  </figure>
+
+  <h3>3.2 — Preparar o par high/low</h3>
+  <table>
+    <tr><th>Requisito</th><th>Por quê</th></tr>
+    <tr><td><strong>Mesma posição/escala</strong></td><td>Os dois modelos devem ocupar o mesmo espaço, sobrepostos, com escala aplicada (Cap. 13)</td></tr>
+    <tr><td><strong>Low com UVs limpas</strong></td><td>O mapa mora nas UVs do low — sem sobreposição, boa margem (vol. 7)</td></tr>
+    <tr><td><strong>Formas correspondentes</strong></td><td>O low deve "envelopar" o high de perto, sem detalhe ausente que cause raios perdidos</td></tr>
+    <tr><td><strong>Nomes / organização</strong></td><td>Muitos artistas usam sufixos <code>_high</code> / <code>_low</code> e separam por collection</td></tr>
+  </table>
+
+  <h3>3.3 — O fluxo passo a passo</h3>
+  <ol class="passos">
+    <li><h4>Posicione high e low sobrepostos</h4><p>Mesma localização, ambos com escala aplicada.</p></li>
+    <li><h4>Prepare o low</h4><p>UVs limpas, material com Image Texture node ativo apontando para a imagem de destino (Cap. 2).</p></li>
+    <li><h4>Ligue Selected to Active</h4><p>Em Bake, marque <em>Selected to Active</em> e ajuste a <em>Ray Distance</em> / Extrusion (Cap. 4).</p></li>
+    <li><h4>Selecione na ordem certa</h4><p>Primeiro o <strong>high</strong> (selecionado), depois o <strong>low</strong> com <kbd>Shift</kbd> (ativo, contorno mais claro). A ordem importa: o ativo é o destino.</p></li>
+    <li><h4>Asse cada mapa</h4><p>Normal primeiro (Cap. 5), depois AO, curvature etc. (Cap. 6), salvando cada um.</p></li>
+  </ol>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Asse por partes para evitar projeção cruzada</div>
+    <p>Em modelos com partes próximas (dedos, fivelas, peças sobrepostas), os raios de uma parte podem "pegar" o high-poly da parte vizinha — projeção cruzada, que suja o mapa. Soluções: assar as partes <strong>separadamente</strong> (isolando cada par high/low), usar <strong>cage</strong> bem ajustada (Cap. 4), ou explodir o modelo (afastar as peças no espaço, assar, e elas voltam alinhadas porque as UVs não mudaram). Ferramentas externas (Substance, Marmoset) usam <em>match by name</em> para isso — o Blender pede um pouco mais de cuidado manual.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 4 ===== -->
+<section class="cap" id="cap4">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 04</div><div class="fio"></div></div>
+  <h2 class="titulo">A cage e a distância de raio</h2>
+
+  <p class="lead">No Selected to Active, a grande dúvida é: até onde os raios procuram o high-poly? Curto demais, perdem detalhe; longo demais, captam o que não devem. A <strong>cage</strong> e a <strong>Ray Distance</strong> controlam exatamente isso — e dominá-las é o que separa bakes limpos de bakes cheios de artefatos.</p>
+
+  <h3>4.1 — Ray Distance / Extrusion</h3>
+  <p>Sem cage explícita, o Blender usa dois números: <strong>Extrusion</strong> (o quanto "infla" o low-poly para fora antes de lançar os raios para dentro) e <strong>Max Ray Distance</strong> (até onde o raio vai). A ideia é que os raios partam de uma casca ligeiramente maior que o low e mergulhem no high, capturando todo o relevo. Valores muito pequenos deixam partes salientes do high de fora; muito grandes fazem raios de regiões diferentes se cruzarem.</p>
+
+  <h3>4.2 — A cage</h3>
+  <p>A <strong>cage</strong> (gaiola) é o controle preciso: uma cópia do low-poly levemente <em>inflada</em> que você usa como ponto de partida dos raios. Em vez de confiar num número de extrusão uniforme, você modela onde a cage precisa ser maior (sobre saliências) e onde pode ser justa — controlando a projeção região a região. É essencial para modelos onde a distância ideal varia (uma fivela alta ao lado de um cinto raso).</p>
+
+  <figure>
+    <svg viewBox="0 0 720 190" role="img" aria-label="A cage envolvendo o modelo para a projeção">
+      <g transform="translate(80,25)">
+        <!-- high poly bumpy -->
+        <path d="M0 110 q25 -22 50 2 q25 -26 50 0 q25 -20 50 4 q25 -24 50 0 q25 -22 50 2 l0 30 l-300 0 z" class="q-bake-f"/>
+        <text x="150" y="170" text-anchor="middle" class="q-sub" fill="var(--q-bake)">high-poly</text>
+        <!-- low poly -->
+        <path d="M0 95 L300 95" stroke="var(--q-saida)" stroke-width="2" fill="none"/>
+        <text x="315" y="99" class="q-sub" fill="var(--q-saida)">low</text>
+        <!-- cage (inflated) -->
+        <path d="M0 55 L300 55" stroke="var(--q-cream)" stroke-width="1.6" stroke-dasharray="6 4" fill="none"/>
+        <text x="315" y="59" class="q-sub" fill="var(--q-cream)">cage</text>
+        <!-- rays from cage -->
+        <g stroke="var(--q-dim)" stroke-width="1" stroke-dasharray="2 3">
+          <path d="M40 55 L40 100"/><path d="M110 55 L110 96"/><path d="M180 55 L180 102"/><path d="M250 55 L250 96"/>
+        </g>
+        <text x="150" y="30" text-anchor="middle" class="q-sub">a cage define de onde os raios partem para dentro</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 4.1 — A gaiola que guia a projeção.</b> A cage é uma casca inflada do low-poly; os raios partem dela e mergulham até o high, captando todo o relevo. Ajustá-la por região evita tanto detalhe perdido (cage justa demais) quanto projeção cruzada (cage larga demais).</figcaption>
+  </figure>
+
+  <h3>4.3 — Os artefatos clássicos e seus consertos</h3>
+  <table>
+    <tr><th>Artefato</th><th>Causa</th><th>Conserto</th></tr>
+    <tr><td><strong>Detalhe cortado/faltando</strong></td><td>Ray distance / cage curta demais</td><td>Aumentar extrusion / inflar a cage onde há saliências</td></tr>
+    <tr><td><strong>Projeção cruzada (sujeira)</strong></td><td>Raios captando partes vizinhas</td><td>Reduzir distância; usar cage justa; assar por partes / explodir</td></tr>
+    <tr><td><strong>Costuras visíveis no normal</strong></td><td>Seams em lugar ruim; margem pequena</td><td>Esconder seams; aumentar margin; suavizar normais</td></tr>
+    <tr><td><strong>"Waviness" / ondulação</strong></td><td>Low-poly distante demais do high</td><td>Aproximar o low da forma do high; mais loops onde curva</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ A cage é negociação entre dois erros</div>
+    <p>Todo ajuste de cage/ray distance equilibra dois erros opostos: <strong>curto</strong> demais perde relevo (saliências do high ficam de fora); <strong>longo</strong> demais capta o que não devia (peças vizinhas se contaminam). Não existe número universal — depende da distância entre o low e o high e da proximidade das partes. Por isso a cage modelável existe: onde o high se afasta muito do low, infle; onde as partes se aproximam, mantenha justa. Pensar nesses dois erros guia cada decisão de projeção.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Quando o Blender luta, considere um bake dedicado</div>
+    <p>O baking nativo do Blender é capaz, mas para hero assets de game com muitas partes próximas, ferramentas dedicadas como <strong>Marmoset Toolbag</strong> e <strong>Substance 3D Painter/Designer</strong> oferecem cage por nome, preview em tempo real e correção de costura mais fina. Um fluxo comum: modelar e fazer UV no Blender, assar no Marmoset/Substance, voltar para texturizar/montar. Saber que essa opção existe evita brigar horas com a projeção nativa num caso difícil — embora para a maioria dos assets o Blender resolva bem.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE II ===================== -->
+<div class="parte-cover" id="parte2">
+  <div class="pn">PARTE II</div>
+  <h2>Os mapas</h2>
+  <p>Cada tipo de mapa captura uma informação diferente da superfície. Esta parte é o catálogo completo: o normal map (o mais importante), os mapas de oclusão e borda (AO, curvature, cavity), os mapas PBR de aparência (diffuse, roughness, metallic), os mapas de dados para texturização procedural, e o displacement do Multiresolution. Saber o que cada um faz é saber texturizar com profundidade.</p>
+</div>
+
+<!-- ===== CAP 5 ===== -->
+<section class="cap" id="cap5">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 05</div><div class="fio"></div></div>
+  <h2 class="titulo">Normal maps</h2>
+
+  <p class="lead">O <strong>normal map</strong> é o mais importante de todos os mapas assados. Ele guarda, em cores RGB, a direção da normal de cada ponto do high-poly — e quando a luz lê esse mapa sobre o low-poly liso, ela é desviada como se a superfície tivesse todo aquele relevo. É a ilusão que sustenta o 3D moderno.</p>
+
+  <h3>5.1 — Como um normal map funciona</h3>
+  <p>Cada pixel do normal map é uma cor RGB que codifica um vetor (a direção para onde a superfície "aponta" naquele ponto). O característico tom <strong>azul-arroxeado</strong> de um normal map é a cor de uma normal que aponta direto para fora (sem relevo); os desvios para outros tons indicam inclinações. A luz, ao iluminar a superfície, usa essas normais codificadas em vez da geometria lisa real — e o olho vê relevo onde há só uma textura.</p>
+
+  <h3>5.2 — Tangent space vs. object space</h3>
+  <table>
+    <tr><th>Tipo</th><th>Característica</th><th>Uso</th></tr>
+    <tr><td><strong>Tangent Space</strong></td><td>As normais são relativas à superfície; o objeto pode deformar e mover que o mapa continua válido</td><td>O padrão para quase tudo — personagens, objetos animados, games</td></tr>
+    <tr><td><strong>Object Space</strong></td><td>As normais são relativas ao objeto; visualmente colorido, mas só funciona se o objeto não deforma</td><td>Objetos rígidos estáticos; alguns pipelines específicos</td></tr>
+  </table>
+  <p>Na prática, <strong>tangent space é o que você quase sempre quer</strong>: é o que permite que um personagem riggado (vol. 1) deforme com o normal map ainda correto. Object space é nicho.</p>
+
+  <h3>5.3 — A convenção dos canais: a armadilha do verde</h3>
+  <p>Há uma incompatibilidade infame: o canal <strong>verde</strong> (o eixo Y) pode ser interpretado para cima (<em>OpenGL</em>) ou para baixo (<em>DirectX</em>), dependendo do destino. O Blender e engines como o Unreal usam convenções que podem diferir do que o seu mapa foi assado.</p>
+  <table>
+    <tr><th>Convenção</th><th>Usado por</th></tr>
+    <tr><td><strong>OpenGL (+Y)</strong></td><td>Blender, Unity, Substance (padrão), Godot</td></tr>
+    <tr><td><strong>DirectX (−Y)</strong></td><td>Unreal Engine (tradicionalmente), 3ds Max</td></tr>
+  </table>
+  <p>Se um normal map parecer "invertido" (o relevo afunda onde deveria saltar) no destino, a solução é <strong>inverter o canal verde</strong> — no software de destino, no Substance ao exportar, ou com um nó de separação/combinação no Blender. É a causa nº 1 de normal maps "errados" entre softwares.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Normal map é dado, não cor — não use sRGB</div>
+    <p>Um normal map guarda <strong>direções</strong> codificadas como números, não cores para o olho. Por isso ele deve ser tratado como <strong>dado não-colorido</strong> (Non-Color / Linear), nunca como sRGB. No nó Image Texture do Blender, defina <em>Color Space: Non-Color</em>. Se você deixar como sRGB, os valores são "corrigidos" para a visão humana e o relevo fica sutilmente errado. A mesma regra vale para roughness, metallic, displacement e máscaras — todos são dados, não cor.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Conecte pelo Normal Map node</div>
+    <p>No material do Blender, não ligue o normal map direto no Principled BSDF — passe-o por um nó <strong>Normal Map</strong> (que decodifica o tangent space corretamente) antes de conectar ao input Normal. E confirme que o <em>Color Space</em> da imagem está em Non-Color. Esses dois cuidados — nó Normal Map + Non-Color — fazem o relevo aparecer exatamente como assado. Para displacement de verdade (que move geometria), o caminho é outro (Cap. 9).</p>
+  </div>
+</section>
+
+<!-- ===== CAP 6 ===== -->
+<section class="cap" id="cap6">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 06</div><div class="fio"></div></div>
+  <h2 class="titulo">Ambient Occlusion, curvature e cavity</h2>
+
+  <p class="lead">Depois do normal, vêm os mapas que descrevem <strong>como a forma se relaciona consigo mesma</strong>: onde a luz não chega (oclusão), onde há bordas salientes ou cavidades (curvature). Eles raramente vão direto no render — viram <strong>máscaras</strong> para texturização procedural: sujeira nas fendas, desgaste nas quinas.</p>
+
+  <h3>6.1 — Ambient Occlusion (AO)</h3>
+  <p>O <strong>AO</strong> mede quanto cada ponto está "escondido" da luz ambiente — fendas, cantos internos e contatos ficam escuros; superfícies expostas ficam claras. Assado num mapa, o AO adiciona sombras de contato sutis que ancoram o objeto e dão profundidade. Em PBR moderno, o AO costuma ser usado como <strong>máscara</strong> (para acumular sujeira nas áreas ocluídas) mais do que multiplicado direto na cor — multiplicar AO na base color é uma prática antiga que o PBR correto evita em parte.</p>
+
+  <h3>6.2 — Curvature e cavity</h3>
+  <table>
+    <tr><th>Mapa</th><th>O que captura</th><th>Uso típico como máscara</th></tr>
+    <tr><td><strong>Curvature</strong></td><td>Onde a superfície é convexa (bordas salientes) ou côncava (fendas)</td><td>Desgaste/arranhões nas quinas; sujeira nas fendas; bordas metálicas expostas</td></tr>
+    <tr><td><strong>Cavity</strong></td><td>Pequenas concavidades e detalhe fino côncavo</td><td>Sujeira em poros, riscos, microdetalhe</td></tr>
+    <tr><td><strong>AO</strong></td><td>Oclusão da luz ambiente (sombras de contato)</td><td>Escurecer fendas, ancorar contato, máscara de sujeira</td></tr>
+    <tr><td><strong>Thickness</strong> (Cap. 8)</td><td>Espessura local do objeto</td><td>Subsurface, translucência, máscara de partes finas</td></tr>
+  </table>
+
+  <figure>
+    <svg viewBox="0 0 720 180" role="img" aria-label="Onde AO e curvature aparecem numa forma">
+      <g transform="translate(120,25)">
+        <!-- a beveled block -->
+        <path d="M40 40 L200 40 L240 80 L240 130 L80 130 L40 90 Z" class="q-obj"/>
+        <!-- edges (curvature convex) -->
+        <path d="M40 40 L200 40 L240 80" class="q-arrow" stroke="var(--q-bake)" stroke-width="3" fill="none"/>
+        <text x="270" y="60" class="q-sub" fill="var(--q-bake)">curvature:</text>
+        <text x="270" y="76" class="q-sub" fill="var(--q-bake)">bordas → desgaste</text>
+        <!-- concave corner (AO) -->
+        <path d="M80 130 L40 90 L40 40" stroke="var(--q-saida)" stroke-width="3" fill="none" stroke-dasharray="4 3"/>
+        <text x="270" y="115" class="q-sub" fill="var(--q-saida)">AO / cavity:</text>
+        <text x="270" y="131" class="q-sub" fill="var(--q-saida)">fendas → sujeira</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 6.1 — Bordas vs. fendas.</b> A curvature destaca as quinas convexas (onde a tinta lasca e o metal aparece); o AO e a cavity destacam as concavidades (onde poeira e sujeira se acumulam). Como máscaras, eles dirigem o desgaste procedural de forma fisicamente plausível.</figcaption>
+  </figure>
+
+  <h3>6.3 — Por que assar máscaras em vez de pintar à mão</h3>
+  <p>Você <em>poderia</em> pintar sujeira e desgaste manualmente, mas mapas como AO e curvature deixam isso <strong>automático e fisicamente coerente</strong>: a sujeira vai onde a sujeira iria (fendas), o desgaste vai onde o desgaste iria (quinas). Em software de texturização procedural (Substance Painter, ou os nós do Blender), você conecta esses mapas a máscaras de geradores e o material "envelhece" sozinho de forma crível. É a base do PBR moderno: a forma do objeto dirige sua aparência desgastada.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Asse o conjunto, texturize depois</div>
+    <p>O fluxo profissional assa de uma vez um <strong>conjunto de mapas</strong> do high → low: normal, AO, curvature, position, thickness, e (se aplicável) um ID/material map. Esse "kit" alimenta o software de texturização, onde o material final é construído proceduralmente usando os mapas como máscaras. Pensar no baking como "gerar os ingredientes para a texturização" — e não como o produto final — é o que destrava workflows de aparência ricos e rápidos de iterar.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 7 ===== -->
+<section class="cap" id="cap7">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 07</div><div class="fio"></div></div>
+  <h2 class="titulo">Diffuse, roughness, metallic, emit (o conjunto PBR)</h2>
+
+  <p class="lead">Para exportar um material para outro software, você precisa convertê-lo num conjunto de <strong>texturas PBR</strong> — porque shaders complexos do Blender não viajam, mas imagens sim. Assar base color, roughness, metallic e emit transforma seu material num pacote universal que qualquer engine lê.</p>
+
+  <h3>7.1 — O conjunto PBR padrão</h3>
+  <table>
+    <tr><th>Mapa</th><th>O que guarda</th><th>Color space</th></tr>
+    <tr><td><strong>Base Color / Diffuse</strong></td><td>A cor da superfície (sem luz nem sombra)</td><td>sRGB (é cor)</td></tr>
+    <tr><td><strong>Roughness</strong></td><td>Quão áspera/fosca (0 espelho, 1 fosco)</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>Metallic</strong></td><td>Metal (1) vs. não-metal (0)</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>Normal</strong></td><td>O relevo (Cap. 5)</td><td>Non-Color (dado)</td></tr>
+    <tr><td><strong>Emission</strong></td><td>Luz emitida pela própria superfície</td><td>sRGB (é cor)</td></tr>
+    <tr><td><strong>AO</strong> (opcional)</td><td>Oclusão (Cap. 6)</td><td>Non-Color (dado)</td></tr>
+  </table>
+  <p>Esse conjunto (às vezes empacotado como <em>ORM</em>: Occlusion-Roughness-Metallic nos canais R-G-B de uma imagem) é o que engines como Unreal e Unity esperam, e o que o glTF (Cap. 16) transporta.</p>
+
+  <h3>7.2 — Assar a aparência (não só o high→low)</h3>
+  <p>Há dois cenários de bake PBR:</p>
+  <ul>
+    <li><strong>Do high para o low</strong> (Selected to Active): captura cor/rugosidade do modelo detalhado no leve — como os outros mapas.</li>
+    <li><strong>Do material para textura</strong> (mesmo objeto): você tem um material procedural complexo (nós, noise, gradientes) e quer "achatá-lo" numa imagem para exportar. Aqui o bake lê o próprio material do objeto e grava o resultado plano. Tipos como <em>Diffuse</em> (só a cor, desligando luz direta/indireta nas opções) servem a isso.</li>
+  </ul>
+
+  <h3>7.3 — Assar Diffuse sem luz "grudada"</h3>
+  <p>Ao assar a base color, você quer a <strong>cor pura</strong> — sem sombras nem reflexos da iluminação da cena gravados nela (isso é trabalho do engine em tempo real). No tipo <em>Diffuse</em>, desmarque as contribuições <em>Direct</em> e <em>Indirect</em>, deixando só <em>Color</em>. Assim o mapa guarda a cor do material, não uma "foto iluminada" dele. (A exceção é lightmap, Cap. 10, onde justamente se quer a luz assada — mas num canal separado.)</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Por que achatar o material em imagens</div>
+    <p>O Principled BSDF e os nós do Blender são ricos, mas <strong>não existem fora do Blender</strong>. Um game engine não roda seus node trees — ele lê texturas PBR e as alimenta no <em>seu</em> shader. Assar é traduzir "meu material complexo" para "o conjunto de imagens que qualquer PBR entende". É a ponte entre a liberdade criativa do Blender e a padronização exigida pelo destino. Por isso material procedural lindo no Blender precisa ser assado antes de virar um asset de game.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 8 ===== -->
+<section class="cap" id="cap8">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 08</div><div class="fio"></div></div>
+  <h2 class="titulo">Position, thickness e mapas de máscara</h2>
+
+  <p class="lead">Além dos mapas "visíveis", há os <strong>mapas de dados</strong> — position, thickness, material ID — que não vão no render, mas alimentam a texturização procedural com informação geométrica preciosa. São os ingredientes avançados do material.</p>
+
+  <h3>8.1 — Os mapas de dados</h3>
+  <table>
+    <tr><th>Mapa</th><th>O que codifica</th><th>Para quê</th></tr>
+    <tr><td><strong>Position</strong></td><td>A posição XYZ de cada ponto como cor</td><td>Máscaras por altura/posição (gradiente de sujeira de baixo para cima, neve no topo)</td></tr>
+    <tr><td><strong>Thickness</strong></td><td>Espessura local do objeto</td><td>Subsurface scattering, translucência, máscara de partes finas (orelhas, folhas)</td></tr>
+    <tr><td><strong>Material ID</strong></td><td>Cada material/parte com uma cor sólida única</td><td>Selecionar partes por cor na texturização (mascarar o metal, o couro, o plástico)</td></tr>
+    <tr><td><strong>UV / Vertex Color</strong></td><td>As próprias coordenadas/cores como imagem</td><td>Workflows específicos, transferência de dados</td></tr>
+  </table>
+
+  <h3>8.2 — O ID map: o organizador da texturização</h3>
+  <p>O <strong>material ID</strong> (ou color ID) é especialmente útil: você pinta as diferentes partes do modelo com cores sólidas distintas (a fivela de uma cor, o couro de outra, a costura de outra) e assa esse "mapa de cores chapadas". No software de texturização, você seleciona instantaneamente cada material só clicando na cor — aplicando metal só na fivela, couro só na correia, sem máscaras manuais. É o atalho que organiza a texturização de objetos com muitos materiais.</p>
+
+  <h3>8.3 — Position e máscaras procedurais</h3>
+  <p>O <strong>position map</strong> codifica onde cada ponto está no espaço, o que permite máscaras baseadas em <em>localização</em>: sujeira que acumula na base e some no topo, musgo só no lado norte, gelo só na parte alta. Combinado com curvature e AO (Cap. 6), você constrói materiais que "sabem" a forma e a posição do objeto e se desgastam de modo coerente — o ápice da texturização procedural orientada por baking.</p>
+
+  <h3>8.4 — Opacity / alpha e hair cards</h3>
+  <p>Há um mapa que não descreve a superfície, mas o seu <strong>recorte</strong>: o <strong>opacity</strong> (ou alpha) define o que é opaco e o que é transparente/vazado num plano. Ele é a base de uma técnica essencial em games — representar formas complexas e vazadas (folhagem, grama, cabelo, correntes, telas) como <strong>planos texturizados</strong> em vez de geometria, economizando milhões de polígonos.</p>
+  <p>O fluxo clássico dos <strong>hair cards</strong> e da <strong>folhagem</strong>: você modela e texturiza uma mecha de cabelo densa (ou um galho cheio de folhas) em alta qualidade, e <strong>assa</strong> esse "hero" — cor, normal, AO e <em>opacity</em> — num <strong>atlas</strong> aplicado a planos simples. No render, o opacity recorta o plano na silhueta dos fios/folhas, e dezenas de cartões reconstroem um cabelo ou uma árvore inteira com pouquíssima geometria. É como o detalhe vira textura no Cap. 1, levado ao extremo: a própria <em>forma vazada</em> vira recorte de imagem.</p>
+  <table>
+    <tr><th>Mapa</th><th>O que codifica</th><th>Uso</th></tr>
+    <tr><td><strong>Opacity / Alpha</strong></td><td>Opaco (branco) vs. transparente (preto)</td><td>Recortar folhagem, grama, cabelo, telas, decals</td></tr>
+    <tr><td><strong>Hair card atlas</strong></td><td>Mechas hero (cor+normal+AO+alpha) num atlas</td><td>Cabelo de games via planos (vol. 8 ↔ realtime)</td></tr>
+    <tr><td><strong>Decals</strong></td><td>Detalhe destacável (com alpha) sobre a superfície</td><td>Adesivos, sujeira localizada, parafusos, avisos</td></tr>
+  </table>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Pense nos mapas como sensores da forma</div>
+    <p>Cada mapa de dados é um "sensor" que mede algo da geometria e o entrega como imagem: o normal mede inclinação, o AO mede oclusão, o curvature mede bordas, o position mede localização, o thickness mede espessura. Quanto mais sensores você assa, mais a texturização pode ser <em>dirigida pela forma</em> — automática, plausível e rápida de iterar. Hero assets de produção costumam assar todo esse conjunto antes de uma única pincelada de textura.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 9 ===== -->
+<section class="cap" id="cap9">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 09</div><div class="fio"></div></div>
+  <h2 class="titulo">Multires: displacement e vector displacement</h2>
+
+  <p class="lead">O modifier <strong>Multiresolution</strong> permite esculpir em vários níveis de subdivisão sobre a mesma malha base. Dele se assa um tipo especial de mapa: o <strong>displacement</strong>, que — diferente do normal — desloca a geometria de verdade, e o <strong>vector displacement</strong>, que desloca em qualquer direção.</p>
+
+  <h3>9.1 — Displacement vs. normal map</h3>
+  <table>
+    <tr><th></th><th>Normal map</th><th>Displacement map</th></tr>
+    <tr><td><strong>O que faz</strong></td><td>Engana a luz (relevo aparente)</td><td>Move a geometria (relevo real)</td></tr>
+    <tr><td><strong>Silhueta</strong></td><td>Permanece lisa (a borda não muda)</td><td>Muda de verdade (a borda mostra o relevo)</td></tr>
+    <tr><td><strong>Custo</strong></td><td>Barato (só textura)</td><td>Caro (exige geometria densa/subdivisão)</td></tr>
+    <tr><td><strong>Uso</strong></td><td>Detalhe fino, games, tempo real</td><td>Relevo grande que precisa mudar a silhueta; render offline</td></tr>
+  </table>
+  <p>Na prática, frequentemente se usam <strong>os dois</strong>: displacement para o relevo grande (que altera a silhueta) e normal para o microdetalhe fino (poros, arranhões) — combinando real e aparente.</p>
+
+  <h3>9.2 — Assar do Multiresolution</h3>
+  <p>Com o Multiresolution, você esculpe detalhe nos níveis altos sobre uma base de nível baixo. O <em>Bake</em> de displacement captura a diferença entre o nível esculpido e a base, gravando-a num mapa. Aplicado de volta (via displacement no shader ou um modifier Displace sobre malha subdividida), ele reconstrói o relevo. O <strong>vector displacement</strong> vai além: em vez de só "para fora/para dentro", ele desloca em qualquer direção 3D — permitindo dobras, saliências curvas e detalhes que se sobrepõem (um cogumelo, uma orelha enrolada) que o displacement simples não consegue.</p>
+
+  <div class="caixa v5">
+    <div class="rot">▣ Blender 5.0 — multires bake melhorado</div>
+    <p>O 5.0 trouxe melhorias diretas ao bake de Multiresolution: agora há suporte a <strong>n-gons</strong> e a <strong>vector displacement</strong> no bake a partir do Multiresolution, e os problemas de assar em níveis de subdivisão diferentes de zero foram resolvidos. Combinado com a melhoria geral de baking (subdivisão e interpolação de UV casando com o modifier, Cap. 2), o fluxo de esculpir → assar displacement ficou mais robusto e fiel.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Displacement real exige geometria</div>
+    <p>Um displacement map só mostra relevo de verdade se houver <strong>geometria suficiente</strong> para ser deslocada — aplicado a uma malha de poucos polígonos, ele não tem o que mover e o relevo não aparece (ou aparece blocado). Por isso displacement real combina com subdivisão (adaptive displacement no Cycles, ou um Subdivision + Displace na pilha, vol. 5). Se você quer o relevo "de graça" sem geometria, é normal map que você quer (Cap. 5), não displacement. Escolha conforme a silhueta precisa ou não mudar.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE III ===================== -->
+<div class="parte-cover" id="parte3">
+  <div class="pn">PARTE III</div>
+  <h2>Baking especializado</h2>
+  <p>Além dos mapas de superfície, há formas de baking com lógica própria: assar a <strong>iluminação</strong> de uma cena em lightmaps (a base de games performáticos), assar <strong>animação e simulação</strong> em caches portáveis, e — porque baking dá errado de muitas formas — um capítulo dedicado a diagnosticar os artefatos.</p>
+</div>
+
+<!-- ===== CAP 10 ===== -->
+<section class="cap" id="cap10">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 10</div><div class="fio"></div></div>
+  <h2 class="titulo">Lightmaps e iluminação assada</h2>
+
+  <p class="lead">Calcular iluminação realista em tempo real é caro. A solução clássica dos games é <strong>assar a luz</strong> — pré-calcular sombras, bounce e oclusão de objetos estáticos numa textura (o <em>lightmap</em>) que o engine apenas lê. Iluminação de cinema, custo de leitura de imagem.</p>
+
+  <h3>10.1 — O que é um lightmap</h3>
+  <p>Um <strong>lightmap</strong> é uma textura que guarda a iluminação (luz direta, sombras, bounce indireto) de superfícies estáticas de uma cena. Em vez de calcular como a luz ricocheteia a cada frame, o engine lê o lightmap e aplica — entregando global illumination "de graça" no tempo real. É por isso que ambientes de games parados parecem tão ricos: a luz já está assada nas paredes, no chão, nos objetos fixos.</p>
+
+  <h3>10.2 — O requisito crítico: UVs sem sobreposição</h3>
+  <p>Lightmaps exigem um <strong>segundo canal UV não sobreposto</strong> (vol. 7, Cap. 11). Por quê? Porque cada ponto da superfície precisa de um lugar <em>único</em> na textura para guardar <em>sua</em> luz — se duas partes compartilham UV (como na textura, para economizar), a luz de uma vazaria na outra. Então: o canal principal pode ter overlap/tiling para a textura; o canal de lightmap precisa ser totalmente desdobrado, sem repetição, com boa margem. O <em>Lightmap Pack</em> (vol. 7, Cap. 5) ou ferramentas do engine geram esse canal.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 170" role="img" aria-label="Dois canais UV: textura e lightmap">
+      <g transform="translate(120,25)">
+        <text x="100" y="-4" text-anchor="middle" class="q-lbl">UV 1: textura (pode sobrepor)</text>
+        <rect x="0" y="10" width="120" height="120" fill="none" stroke="var(--q-bake)" stroke-width="1.5"/>
+        <rect x="10" y="20" width="50" height="45" class="q-bake-f"/>
+        <rect x="10" y="20" width="50" height="45" class="q-bake-f" transform="translate(55,0)"/>
+        <text x="60" y="148" text-anchor="middle" class="q-sub">ilhas repetidas/empilhadas</text>
+      </g>
+      <g transform="translate(420,25)">
+        <text x="100" y="-4" text-anchor="middle" class="q-lbl">UV 2: lightmap (sem sobrepor)</text>
+        <rect x="0" y="10" width="120" height="120" fill="none" stroke="var(--q-saida)" stroke-width="1.5"/>
+        <rect x="8" y="18" width="44" height="40" class="q-saida-f"/>
+        <rect x="60" y="18" width="44" height="40" class="q-saida-f"/>
+        <rect x="8" y="66" width="44" height="40" class="q-saida-f"/>
+        <rect x="60" y="66" width="44" height="40" class="q-saida-f"/>
+        <text x="60" y="148" text-anchor="middle" class="q-sub">cada parte com seu espaço único</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 10.1 — Dois canais, dois propósitos.</b> O canal de textura pode empilhar ilhas para economizar resolução; o canal de lightmap precisa de cada superfície num espaço próprio, sem repetição, para guardar sua luz individual. Confundir os dois é o erro clássico de lightmap.</figcaption>
+  </figure>
+
+  <h3>10.3 — Assar no Blender ou no engine</h3>
+  <p>Você pode assar lightmaps <strong>no Blender</strong> (assando o tipo <em>Combined</em> ou <em>Diffuse</em> com as contribuições de luz, no canal de lightmap) para usar a iluminação do Cycles, ou deixar o <strong>engine</strong> assar (Unreal Lightmass, Unity, Godot têm seus próprios bakers, que costumam ser o caminho preferido em produção de games, pois integram com o sistema de luz do engine). Em ambos, a preparação no Blender é a mesma: um canal UV de lightmap limpo. O resto é configuração do baker de luz escolhido.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Lightmap é para o que não se move</div>
+    <p>Iluminação assada só funciona para o que é <strong>estático</strong>: paredes, chão, prédios, objetos fixos. Coisas que se movem (personagens, portas, veículos) precisam de luz dinâmica em tempo real, porque sua relação com a luz muda. A divisão clássica de games: o cenário fixo recebe lightmaps (caro de calcular, barato de rodar); os atores recebem luz dinâmica (mais cara em tempo real, mas necessária). Saber o que é estático e o que é dinâmico decide o que merece lightmap.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 11 ===== -->
+<section class="cap" id="cap11">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 11</div><div class="fio"></div></div>
+  <h2 class="titulo">Baking de animação e simulação</h2>
+
+  <p class="lead">Baking não é só textura. Você também pode "assar" <strong>movimento</strong> — congelar o resultado de uma simulação ou de uma animação complexa numa forma fixa e portável. É como o detalhe vira textura no espaço; aqui o movimento vira cache no tempo.</p>
+
+  <h3>11.1 — Por que assar movimento</h3>
+  <ul>
+    <li><strong>Estabilidade no render:</strong> uma simulação assada (vol. 8, Cap. 2) renderiza igual sempre, em qualquer ordem de frame — essencial para render-farm.</li>
+    <li><strong>Performance:</strong> reproduzir um cache é trivial; recalcular física a cada frame é caro.</li>
+    <li><strong>Portabilidade:</strong> exportar animação/simulação para outro software exige "achatá-la" num formato que ele leia — o destino não roda os solvers do Blender.</li>
+    <li><strong>Desacoplar:</strong> assar permite editar/renderizar sem o setup de simulação pesado na cena.</li>
+  </ul>
+
+  <h3>11.2 — Os caminhos de bake de movimento</h3>
+  <table>
+    <tr><th>Método</th><th>O que assa</th><th>Uso</th></tr>
+    <tr><td><strong>Bake de física</strong> (point cache)</td><td>Caches internos de cloth, fluido, partículas, rigid body (vol. 8)</td><td>Estabilizar o render dentro do Blender</td></tr>
+    <tr><td><strong>Bake Action</strong></td><td>Converte simulação/constraints/drivers em keyframes diretos</td><td>"Congelar" movimento procedural em animação editável; exportar para engines</td></tr>
+    <tr><td><strong>Alembic (.abc)</strong></td><td>Geometria animada/deformada como cache de vértices</td><td>VFX, levar simulação/animação para Houdini, Maya, Nuke</td></tr>
+    <tr><td><strong>USD</strong></td><td>Cena + geometria animada (Cap. 18)</td><td>Pipeline moderno, troca entre DCCs</td></tr>
+    <tr><td><strong>MDD / mesh cache</strong></td><td>Cache de posições de vértice por frame</td><td>Transferir deformação de malha</td></tr>
+  </table>
+
+  <h3>11.3 — Bake Action: de procedural a keyframes</h3>
+  <p>O <span class="menupath">Object ▸ Animation ▸ Bake Action</span> é a ponte entre movimento <em>procedural</em> (constraints, drivers, IK do rig — vol. 1) e movimento <em>explícito</em> (keyframes em cada frame). Por que assar isso? Porque muitos exportadores (FBX, sobretudo) não entendem constraints e drivers do Blender — eles exportam <strong>keyframes</strong>. Então, para levar uma animação riggada para um game engine, você frequentemente assa a action primeiro (transformando o resultado do rig em keyframes diretos no esqueleto) e exporta isso. O IK vira FK assado, e o engine reproduz fielmente.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Assar é trocar "regra" por "resultado"</div>
+    <p>Há uma simetria elegante entre todas as formas de baking deste guia. Um normal map troca <em>geometria</em> (a regra do relevo) por uma <em>imagem</em> (o resultado). Um lightmap troca <em>cálculo de luz</em> por uma <em>textura</em>. Um Bake Action troca <em>rig procedural</em> por <em>keyframes</em>. Um Alembic troca <em>simulação</em> por <em>cache de vértices</em>. Em todos, você abre mão da flexibilidade da regra em troca da portabilidade e performance do resultado fixo. Entender essa troca é entender quando assar — e quando não.</p>
+  </div>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Asse uma cópia — o bake é destrutivo</div>
+    <p>Assar movimento costuma ser <strong>destrutivo</strong>: o Bake Action pode substituir a animação procedural por keyframes, e perder o setup original. Sempre asse numa <strong>cópia</strong> do objeto/cena (ou salve um .blend separado) antes de assar para exportar. Assim você mantém o rig editável e tem a versão assada para entregar. Vale a mesma regra dos caches de física (vol. 8): o assado é o entregável, não o arquivo de trabalho.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 12 ===== -->
+<section class="cap" id="cap12">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 12</div><div class="fio"></div></div>
+  <h2 class="titulo">Troubleshooting de baking</h2>
+
+  <p class="lead">Baking falha de formas características — e quase todas têm causa conhecida. A tabela é o seu mapa de diagnóstico: o sintoma, a causa provável, o conserto.</p>
+
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável</th><th>Conserto</th></tr>
+    <tr><td>Imagem assada toda preta</td><td>Nenhum Image node ativo; sem UVs; objeto errado ativo</td><td>Selecionar o Image Texture node; conferir UVs; ordem de seleção (Cap. 2, 3)</td></tr>
+    <tr><td>Costuras pretas nas bordas das ilhas</td><td>Margem/extrusion insuficiente</td><td>Aumentar Margin; espaçar as ilhas UV (vol. 7)</td></tr>
+    <tr><td>Detalhe do high faltando no normal</td><td>Ray distance / cage curta</td><td>Aumentar extrusion ou inflar a cage (Cap. 4)</td></tr>
+    <tr><td>Sujeira / projeção cruzada no mapa</td><td>Raios captando partes vizinhas</td><td>Cage justa; assar por partes; explodir o modelo (Cap. 3, 4)</td></tr>
+    <tr><td>Normal map "invertido" no destino</td><td>Convenção de canal verde (OpenGL vs DirectX)</td><td>Inverter o canal verde no destino/export (Cap. 5)</td></tr>
+    <tr><td>Relevo sutilmente errado</td><td>Imagem como sRGB em vez de Non-Color</td><td>Definir Color Space: Non-Color (Cap. 5)</td></tr>
+    <tr><td>Cor com sombras "grudadas"</td><td>Diffuse assado com Direct/Indirect ligados</td><td>Assar só a contribuição Color (Cap. 7)</td></tr>
+    <tr><td>AO/luz com ruído granulado</td><td>Samples baixos</td><td>Aumentar Samples; aplicar Denoise (Cap. 2)</td></tr>
+    <tr><td>Resultado não bate com o viewport</td><td>Subdivisão/escala não aplicada</td><td>Aplicar escala; no 5.0 a subdivisão do bake casa com o modifier (Cap. 2, 13)</td></tr>
+    <tr><td>Lightmap com luz vazando entre partes</td><td>UVs de lightmap sobrepostas</td><td>Canal de lightmap sem sobreposição, com margem (Cap. 10)</td></tr>
+    <tr><td>Displacement não aparece</td><td>Geometria insuficiente para deslocar</td><td>Subdividir / usar adaptive displacement (Cap. 9)</td></tr>
+    <tr><td>Bake demorado perdido ao fechar</td><td>Imagem não salva em disco</td><td>Salvar sempre após assar (Cap. 2)</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Protocolo de bake limpo</div>
+    <p>Antes de assar, rode esta checagem: <strong>(1)</strong> escala aplicada nos dois modelos (<kbd>Ctrl</kbd>+<kbd>A</kbd>); <strong>(2)</strong> UVs do low limpas, sem sobreposição, com margem; <strong>(3)</strong> Image Texture node criado, apontando para a imagem, <em>selecionado</em>; <strong>(4)</strong> Color Space correto (Non-Color para dados, sRGB para cor); <strong>(5)</strong> cage/ray distance ajustada; <strong>(6)</strong> ordem de seleção certa (high, depois low ativo). Seis itens que previnem a grande maioria dos bakes ruins — e o passo 1 e 3 sozinhos resolvem metade.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE IV ===================== -->
+<div class="parte-cover" id="parte4">
+  <div class="pn">PARTE IV</div>
+  <h2>Exportação: fundamentos</h2>
+  <p>Exportar parece simples — escolher um formato e clicar. Mas é onde mais coisas quebram silenciosamente: escala errada, modelo deitado, materiais perdidos. Esta parte estabelece os fundamentos que valem para qualquer formato: o problema da escala e dos eixos, o checklist de preparação do modelo, e o mapa de qual formato usar quando.</p>
+</div>
+
+<!-- ===== CAP 13 ===== -->
+<section class="cap" id="cap13">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 13</div><div class="fio"></div></div>
+  <h2 class="titulo">Escala, eixos e transformações</h2>
+
+  <p class="lead">Os três problemas que arruínam mais exportações não são bugs — são <strong>diferenças de convenção</strong> entre softwares: a escala/unidade, qual eixo é "para cima", e transformações não aplicadas. Entendê-los de antemão evita o clássico "meu modelo chegou gigante, deitado e do avesso".</p>
+
+  <h3>13.1 — O problema do eixo "para cima"</h3>
+  <p>Softwares discordam sobre qual eixo aponta para cima. O <strong>Blender usa Z-up</strong> (Z é vertical); muitos outros — e a maioria dos game engines — usam <strong>Y-up</strong> (Y é vertical). Se a conversão não é feita, o modelo chega <em>deitado</em> no destino (girado 90°).</p>
+  <table>
+    <tr><th>Convenção</th><th>Software</th></tr>
+    <tr><td><strong>Z-up</strong></td><td>Blender, 3ds Max, a maioria do CAD</td></tr>
+    <tr><td><strong>Y-up</strong></td><td>Maya, Unity, Unreal, glTF, a maioria das engines</td></tr>
+  </table>
+  <p>Os exportadores têm opções de <strong>Forward / Up axis</strong> justamente para converter. O glTF e o FBX do Blender já vêm com presets sensatos para engines (Y-up), mas vale conferir — e quase todo exportador deixa você definir os eixos.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 170" role="img" aria-label="Z-up do Blender vs Y-up do destino">
+      <g transform="translate(140,30)">
+        <text x="60" y="-6" text-anchor="middle" class="q-lbl">Blender (Z-up)</text>
+        <path d="M60 110 L60 30" class="q-arrow" stroke="var(--q-saida)" marker-end="url(#z1)"/>
+        <path d="M60 110 L120 130" class="q-arrow" stroke="var(--q-bake)" marker-end="url(#z1)"/>
+        <path d="M60 110 L10 130" class="q-arrow" stroke="var(--q-dim)" marker-end="url(#z1)"/>
+        <text x="60" y="22" class="q-sub" fill="var(--q-saida)">Z ↑</text>
+        <text x="128" y="135" class="q-sub" fill="var(--q-bake)">Y</text>
+        <defs><marker id="z1" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="context-stroke"/></marker></defs>
+      </g>
+      <g transform="translate(440,30)">
+        <text x="60" y="-6" text-anchor="middle" class="q-lbl">Engine (Y-up)</text>
+        <path d="M60 110 L60 30" class="q-arrow" stroke="var(--q-bake)" marker-end="url(#z1)"/>
+        <path d="M60 110 L120 130" class="q-arrow" stroke="var(--q-saida)" marker-end="url(#z1)"/>
+        <text x="60" y="22" class="q-sub" fill="var(--q-bake)">Y ↑</text>
+        <text x="128" y="135" class="q-sub" fill="var(--q-saida)">Z</text>
+      </g>
+    </svg>
+    <figcaption><b>Figura 13.1 — Quem aponta para cima?</b> No Blender, Z é vertical; na maioria das engines, Y. Sem a conversão de eixos no export, o modelo chega girado 90° (deitado). Os presets de eixo do exportador resolvem — confira-os ao mandar para um destino novo.</figcaption>
+  </figure>
+
+  <h3>13.2 — O pesadelo da escala (e o FBX)</h3>
+  <p>A escala é a outra grande fonte de dor, especialmente no <strong>FBX</strong>, infame por modelos que chegam 100× maiores ou menores. As causas: diferenças de <em>unidade</em> (Blender em metros, alguns destinos em centímetros) e <strong>escala não aplicada</strong> no objeto. A regra de ouro: <strong>aplique todas as transformações</strong> (<kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms) antes de exportar, e confira a unidade/escala do exportador. Com escala aplicada e unidade certa, a maioria dos problemas de tamanho desaparece.</p>
+
+  <h3>13.3 — Por que aplicar transformações</h3>
+  <p>Um objeto no Blender tem uma transformação de <em>objeto</em> (posição, rotação, escala) separada da geometria. Você pode ver um cubo "do tamanho certo" no viewport, mas internamente ele pode ser um cubo pequeno com escala 10× — e exportadores tratam isso de formas imprevisíveis. <strong>Aplicar</strong> "assa" a transformação na geometria (escala vira 1.0, rotação vira 0), eliminando a ambiguidade. É o equivalente, para exportação, de aplicar escala antes de simular (vol. 8) ou de fazer UV (vol. 7) — o mesmo hábito, salvando o mesmo tipo de dor.</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Aplique transformações — o hábito que salva exportações</div>
+    <p>Antes de qualquer export: <kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ <strong>All Transforms</strong> (ou ao menos Rotation & Scale) em todos os objetos. Modelos com escala/rotação não aplicada chegam ao destino com tamanho errado, normais invertidas, ou deformações estranhas — e o pior é que <em>parecem certos no Blender</em>, então você só descobre no engine. Para objetos com modifiers, aplique-os também (ou confirme que o exportador os aplica). Esse único hábito previne a maioria dos "bugs" de exportação.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 14 ===== -->
+<section class="cap" id="cap14">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 14</div><div class="fio"></div></div>
+  <h2 class="titulo">Preparar o modelo para exportar</h2>
+
+  <p class="lead">Um export limpo começa muito antes do clique em "Export". Esta é a <strong>checklist de preparação</strong> — os cuidados que garantem que o asset chegue ao destino íntegro, na escala certa, com materiais e nomes que o pipeline reconhece.</p>
+
+  <h3>14.1 — A checklist universal</h3>
+  <table>
+    <tr><th>Item</th><th>Por quê</th></tr>
+    <tr><td><strong>Aplicar transformações</strong></td><td>Escala/rotação aplicadas evitam tamanho e orientação errados (Cap. 13)</td></tr>
+    <tr><td><strong>Aplicar modifiers (ou confirmar export)</strong></td><td>O destino pode não entender modifiers; aplique o que precisa virar geometria</td></tr>
+    <tr><td><strong>UVs prontas</strong></td><td>Texturas dependem de UVs; lightmap em canal separado se for game (vol. 7)</td></tr>
+    <tr><td><strong>Materiais e texturas organizados</strong></td><td>PBR assado e nomeado; o que não viaja deve estar em texturas (Cap. 7)</td></tr>
+    <tr><td><strong>Origem correta</strong></td><td>A origem do objeto vira o pivô no destino — posicione-a com intenção</td></tr>
+    <tr><td><strong>Nomes limpos</strong></td><td>Objetos, materiais e UVs com nomes claros (sem "Cube.001") — o pipeline usa nomes</td></tr>
+    <tr><td><strong>Normais corretas</strong></td><td>Recalcular normais para fora (vol. 6); faces invertidas viram buracos no destino</td></tr>
+    <tr><td><strong>Escala 1.0 / unidade certa</strong></td><td>Conferir a unidade da cena vs. a do destino</td></tr>
+  </table>
+
+  <h3>14.2 — Triangulação e geometria</h3>
+  <p>Muitos destinos (game engines, sobretudo) <strong>triangulam</strong> a malha na importação. Para controlar <em>como</em> isso acontece (evitando que o engine triangule de um jeito que mude o shading), muitos artistas adicionam um modifier <strong>Triangulate</strong> antes de exportar — assim a triangulação é a que você escolheu, previsível. Confira também que não há geometria solta (vértices/arestas perdidos), n-gons onde o destino só aceita tris/quads, e faces duplicadas.</p>
+
+  <h3>14.3 — Exportar a seleção, não a cena</h3>
+  <p>Quase todo exportador tem <strong>Selected Objects</strong> (ou Limit to: Selected). Use-o: selecione só o que quer exportar e marque essa opção, para não levar lixo da cena (luzes de teste, câmeras, objetos auxiliares, a cage de bake). Organizar por collections e exportar seleções limpas mantém os arquivos enxutos e o destino sem surpresas. Para o asset de game, exporte o low-poly + as texturas assadas — não o high-poly nem a cage.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Faça um "export prep" e salve separado</div>
+    <p>Como preparar para export costuma ser destrutivo (aplicar transformações, modifiers, triangular), trabalhe numa <strong>cópia</strong>. Um fluxo comum: terminar o asset no .blend de trabalho, salvar uma cópia <code>_export.blend</code>, e nela aplicar tudo, limpar, e exportar. Assim o arquivo de trabalho permanece editável (com modifiers vivos, escala não destruída) e você tem um arquivo de exportação reproduzível. Nunca aplique tudo de forma irreversível no seu único arquivo bom.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 15 ===== -->
+<section class="cap" id="cap15">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 15</div><div class="fio"></div></div>
+  <h2 class="titulo">O panorama dos formatos</h2>
+
+  <p class="lead">Há muitos formatos de exportação, e escolher o certo é metade do trabalho. Cada um nasceu para um propósito e transporta um conjunto diferente de dados. Este capítulo é o mapa — qual usar para quê — antes de mergulharmos em cada um.</p>
+
+  <h3>15.1 — O mapa de decisão</h3>
+  <table>
+    <tr><th>Formato</th><th>Melhor para</th><th>Transporta</th></tr>
+    <tr><td><strong>glTF / GLB</strong></td><td>Web, AR/VR, realtime, visualizadores</td><td>Malha, PBR, animação, esqueleto — moderno e compacto (Cap. 16)</td></tr>
+    <tr><td><strong>FBX</strong></td><td>Game engines (Unity, Unreal), DCCs (Maya, Max)</td><td>Malha, materiais (básico), esqueleto, animação (Cap. 17)</td></tr>
+    <tr><td><strong>USD</strong></td><td>Pipeline/VFX, cenas grandes, troca entre estúdios</td><td>Cenas inteiras, layers, materiais, animação, instâncias (Cap. 18)</td></tr>
+    <tr><td><strong>Alembic (.abc)</strong></td><td>VFX: geometria animada/simulada</td><td>Cache de vértices animado (sem rig) — Houdini, Maya, Nuke (Cap. 19)</td></tr>
+    <tr><td><strong>OBJ</strong></td><td>Troca simples de geometria estática</td><td>Malha + UV + material básico; sem animação (Cap. 19)</td></tr>
+    <tr><td><strong>STL</strong></td><td>Impressão 3D, CAD</td><td>Só geometria (triângulos); sem cor, UV ou material (Cap. 21)</td></tr>
+    <tr><td><strong>PLY</strong></td><td>Point clouds, scans, vertex color</td><td>Geometria + vertex color (Cap. 19)</td></tr>
+  </table>
+
+  <h3>15.2 — As perguntas que decidem o formato</h3>
+  <ul>
+    <li><strong>O destino é tempo real / web?</strong> → glTF/GLB (o padrão moderno de realtime).</li>
+    <li><strong>É um game engine como Unity/Unreal?</strong> → FBX (tradicional) ou glTF; cada vez mais USD.</li>
+    <li><strong>É pipeline de VFX / cena complexa entre estúdios?</strong> → USD.</li>
+    <li><strong>É só geometria simulada/animada para VFX?</strong> → Alembic.</li>
+    <li><strong>É impressão 3D?</strong> → STL (ou OBJ/3MF).</li>
+    <li><strong>É só passar uma malha estática rápido?</strong> → OBJ.</li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">▣ Blender 5.0 — o cenário de I/O mudou</div>
+    <p>O 5.x reorganizou o suporte a formatos: o <strong>Collada (.dae) foi removido</strong> (era legado); o <strong>importador FBX em C++</strong> (muito mais rápido) virou padrão; o <strong>glTF</strong> agora é add-on de núcleo que já vem com o Blender; <strong>OBJ, PLY e STL</strong> têm implementações nativas em C++ (rápidas, com validação de malha ligada por padrão); e o <strong>USD</strong> segue recebendo forte investimento (OpenPBR via MaterialX, câmeras animadas, mais primitivas, API de hooks para estender o export). A direção é clara: glTF para realtime, USD para pipeline, ambos cada vez mais robustos.</p>
+  </div>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Nenhum formato transporta tudo</div>
+    <p>O erro conceitual mais comum é esperar que exportar "leve tudo". Não leva: cada formato é um <em>recorte</em> do que existe no Blender. Shaders procedurais não viajam (vire texturas, Cap. 7); constraints e drivers raramente viajam (asse em keyframes, Cap. 11); modifiers podem não viajar (aplique, Cap. 14); geometry nodes complexos não viajam (aplique/converta). Exportar bem é saber <strong>o que o formato carrega</strong> e <strong>preparar o resto</strong> de forma que sobreviva — assando, aplicando, achatando. O formato é um cano estreito; você adapta o que passa por ele.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE V ===================== -->
+<div class="parte-cover" id="parte5">
+  <div class="pn">PARTE V</div>
+  <h2>Os formatos, um a um</h2>
+  <p>Agora o detalhe de cada formato principal: o glTF (o padrão do tempo real e da web), o FBX (o cavalo de batalha dos game engines), o USD (o padrão emergente de pipeline) e o pelotão de apoio — Alembic, OBJ, STL, PLY. O que cada um carrega, suas opções-chave, e suas armadilhas.</p>
+</div>
+
+<!-- ===== CAP 16 ===== -->
+<section class="cap" id="cap16">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 16</div><div class="fio"></div></div>
+  <h2 class="titulo">glTF / GLB (web, AR, realtime)</h2>
+
+  <p class="lead">O <strong>glTF 2.0</strong> é o formato moderno para tempo real — chamado de "o JPEG do 3D". Compacto, baseado em PBR padronizado, e suportado por navegadores, AR, engines e visualizadores. Para web e realtime, é a primeira escolha.</p>
+
+  <h3>16.1 — glTF vs. GLB</h3>
+  <table>
+    <tr><th>Variante</th><th>Característica</th></tr>
+    <tr><td><strong>.gltf (separado)</strong></td><td>Um JSON + arquivos de textura e geometria separados; legível, editável</td></tr>
+    <tr><td><strong>.glb (binário)</strong></td><td>Tudo num único arquivo binário (malha + texturas + animação); ideal para distribuir</td></tr>
+  </table>
+  <p>Para entregar/publicar, o <strong>GLB</strong> (tudo num arquivo) é quase sempre o melhor — sem texturas soltas para perder. O glTF separado serve quando você quer editar ou compartilhar texturas.</p>
+
+  <h3>16.2 — O que o glTF transporta bem</h3>
+  <ul>
+    <li><strong>PBR padronizado:</strong> base color, metallic, roughness, normal, emission, occlusion — o glTF foi desenhado em torno do PBR metallic-roughness, então materiais do Principled BSDF mapeiam muito bem.</li>
+    <li><strong>Animação:</strong> esqueletal (skinning) e de transformações, com keyframes.</li>
+    <li><strong>Múltiplos objetos, hierarquia, instâncias.</strong></li>
+    <li><strong>Extensões KHR:</strong> recursos extras como transmission (vidro), specular, clearcoat, volume — o exportador do Blender ativa as extensões conforme você usa os inputs correspondentes do Principled BSDF.</li>
+  </ul>
+
+  <h3>16.3 — Boas práticas de export glTF</h3>
+  <ol class="passos">
+    <li><h4>Use o Principled BSDF</h4><p>O glTF mapeia o Principled muito bem; materiais procedurais complexos devem ser assados em texturas antes (Cap. 7).</p></li>
+    <li><h4>Escolha GLB para entregar</h4><p>Um arquivo só, com texturas embutidas — sem dependências perdidas.</p></li>
+    <li><h4>Confira a escala e Y-up</h4><p>O glTF é Y-up; o exportador converte, mas aplique transformações antes (Cap. 13).</p></li>
+    <li><h4>Asse o que não é PBR padrão</h4><p>Efeitos fora do PBR metallic-roughness (ou de extensões suportadas) não viajam — asse-os.</p></li>
+    <li><h4>Otimize as texturas</h4><p>Resolução adequada ao destino; o glTF suporta WebP para arquivos menores na web.</p></li>
+    <li><h4>Considere compressão Draco para a web</h4><p>Para entrega online, a compressão de malha <em>Draco</em> (opção no exportador) reduz muito o tamanho do arquivo; confirme que o visualizador de destino a suporta (Cap. 22).</p></li>
+  </ol>
+
+  <div class="caixa dica">
+    <div class="rot">✔ glTF é o caminho mais "sem dor"</div>
+    <p>Entre todos os formatos, o glTF costuma ser o que <strong>menos surpreende</strong>: por ter nascido para realtime/PBR e ser mantido como add-on de núcleo do Blender, um asset com Principled BSDF e texturas bem feitas exporta e abre no destino com aparência quase idêntica. Se você pode escolher o formato e o destino aceita glTF (web, muitos engines, visualizadores 3D, AR), comece por ele. Para testar, o próprio navegador (ou viewers online de glTF) abre o GLB na hora.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 17 ===== -->
+<section class="cap" id="cap17">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 17</div><div class="fio"></div></div>
+  <h2 class="titulo">FBX (o cavalo de batalha dos game engines)</h2>
+
+  <p class="lead">O <strong>FBX</strong> é o formato de troca mais difundido entre softwares 3D e game engines — Unity e Unreal o consomem nativamente, e Maya, 3ds Max e Cinema 4D o usam para trocar dados. Apesar de proprietário e cheio de peculiaridades, é onipresente e indispensável.</p>
+
+  <h3>17.1 — O que o FBX transporta</h3>
+  <ul>
+    <li><strong>Malha</strong> (com normais, UVs, vertex colors, vários UV maps).</li>
+    <li><strong>Esqueleto (armature) e skinning</strong> — fundamental para personagens (vol. 1).</li>
+    <li><strong>Animação</strong> por keyframes (cada "take" pode virar uma action no destino).</li>
+    <li><strong>Materiais básicos</strong> e referências de textura (mas não shaders complexos — asse-os, Cap. 7).</li>
+    <li><strong>Hierarquia de objetos.</strong></li>
+  </ul>
+
+  <div class="caixa v5">
+    <div class="rot">▣ Blender 5.0 — FBX em C++, muito mais rápido</div>
+    <p>O 5.0 tornou padrão o novo <strong>importador FBX em C++</strong>, bem mais rápido que o antigo (em Python), com melhor importação de materiais (mais parâmetros de shader: IOR, roughness, subsurface, transmission, coat, sheen; suporte a OpenPBR) e melhor tratamento de animação (cada "take" do FBX vira uma action com slots, texturas repetidas não duplicam). Também ganhou opção de <em>Material Name Collision</em>. O FBX é Y-up e cm em muitos pipelines — confira escala e eixos (Cap. 13).</p>
+  </div>
+
+  <h3>17.2 — As armadilhas clássicas do FBX</h3>
+  <table>
+    <tr><th>Armadilha</th><th>Conserto</th></tr>
+    <tr><td>Modelo chega 100× maior/menor</td><td>Aplicar escala (Cap. 13); conferir unit scale do exportador</td></tr>
+    <tr><td>Modelo chega deitado</td><td>Conferir Forward/Up axis (Z-up → Y-up)</td></tr>
+    <tr><td>Animação procedural (IK, drivers) não vai</td><td>Bake Action em keyframes antes (Cap. 11)</td></tr>
+    <tr><td>Shaders complexos sumiram</td><td>Assar PBR em texturas (Cap. 7); o FBX leva só material básico</td></tr>
+    <tr><td>Hierarquia/escala de armature estranha</td><td>Aplicar transformações; cuidar de "leaf bones" e empty</td></tr>
+  </table>
+
+  <h3>17.3 — Exportar para Unity / Unreal</h3>
+  <p>Cada engine tem convenções (Cap. 20), mas para FBX em geral: exporte <em>Selected Objects</em>, com escala aplicada, eixos conferidos, animação assada se houver rig procedural, e texturas PBR assadas à parte (engines querem as texturas, não o material do Blender). Para personagens, exporte a armature + a malha skinada juntas; para animações, é comum exportar a malha uma vez e as animações como FBX separados (ou usar takes).</p>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ FBX é prático, mas confira sempre no destino</div>
+    <p>O FBX "funciona", mas é o formato que mais exige <strong>verificar o resultado no destino</strong>, não só confiar no export. Escala, eixos, normais, ordem de animação e materiais têm histórico de pequenas divergências entre Blender e engines. Sempre importe o FBX de volta (ou abra no engine) e confira tamanho, orientação, deformação e materiais <em>antes</em> de considerar o asset entregue. É mais rápido pegar o problema agora do que depois de montar a cena inteira em cima dele.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 18 ===== -->
+<section class="cap" id="cap18">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 18</div><div class="fio"></div></div>
+  <h2 class="titulo">USD (o padrão de pipeline e VFX)</h2>
+
+  <p class="lead">O <strong>USD</strong> (Universal Scene Description), criado pela Pixar, é o padrão emergente para descrever <em>cenas inteiras</em> e trocá-las entre softwares e estúdios. Vai muito além de um único objeto: é a "linguagem comum" de pipelines modernos, e o Blender investe forte nele.</p>
+
+  <h3>18.1 — Por que o USD é diferente</h3>
+  <p>FBX e glTF transportam <em>assets</em>; o USD transporta <strong>cenas e pipelines</strong>. Seus conceitos-chave:</p>
+  <ul>
+    <li><strong>Layers e composição:</strong> uma cena USD é montada por camadas que se sobrepõem — um artista mexe na layer de layout, outro na de animação, outro na de shading, sem conflito. Não-destrutivo e colaborativo por design.</li>
+    <li><strong>Referências e instâncias:</strong> assets são referenciados (não copiados), então atualizar o asset-fonte atualiza toda a cena.</li>
+    <li><strong>Cenas grandes:</strong> projetado para cidades, florestas, produções inteiras — escala que FBX/glTF não suportam bem.</li>
+    <li><strong>Materiais (MaterialX/OpenPBR, UsdPreviewSurface):</strong> materiais padronizados que cruzam softwares.</li>
+  </ul>
+
+  <h3>18.2 — Quando usar USD</h3>
+  <table>
+    <tr><th>Cenário</th><th>Por que USD</th></tr>
+    <tr><td><strong>Pipeline de VFX / animação</strong></td><td>Troca entre Houdini, Maya, Katana, Nuke, Unreal — a língua franca</td></tr>
+    <tr><td><strong>Cenas grandes e colaborativas</strong></td><td>Layers e referências permitem times trabalhando em paralelo</td></tr>
+    <tr><td><strong>Asset referenciado e versionado</strong></td><td>Atualizar a fonte propaga para todas as cenas</td></tr>
+    <tr><td><strong>Unreal / Omniverse</strong></td><td>Suporte nativo crescente a USD</td></tr>
+  </table>
+
+  <div class="caixa v5">
+    <div class="rot">▣ Blender 5.0 — USD cada vez mais forte</div>
+    <p>O Blender tem investido pesado em USD, e o 5.x amplia bastante: o <strong>MaterialX agora escreve o Principled BSDF como OpenPBR Surface</strong> (materiais mais fiéis entre softwares), há <strong>melhor suporte a point instancing</strong>, importação de <strong>câmeras animadas</strong> e da <strong>rest pose de esqueletos USD</strong>, mais primitivas e tipos de luz, suporte a <strong>UsdPrimvarReader</strong>, e uma <strong>API de hooks (USDHook)</strong> que permite estender a exportação com scripts Python. A I/O de NURBS também melhorou. O USD deixou de ser experimental e virou um caminho de produção sério no Blender.</p>
+  </div>
+
+  <h3>18.3 — USD para quem não é estúdio</h3>
+  <p>Mesmo fora de grandes pipelines, o USD é útil para <strong>cenas com muitos objetos referenciados</strong>, para levar um ambiente inteiro (com luzes e câmeras) para o Unreal/Omniverse, ou para um fluxo não-destrutivo onde você quer atualizar assets sem refazer a cena. A curva de aprendizado é maior que a do glTF/FBX (é um sistema de cena, não um arquivo simples), mas para projetos que crescem, vale conhecer. Para um único objeto simples, porém, glTF ou FBX continuam mais diretos.</p>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Asset vs. cena: a escolha de fundo</div>
+    <p>A decisão entre os "três grandes" se resume a uma pergunta de escopo. Precisa entregar <strong>um objeto</strong> com aparência fiel para realtime? glTF. Precisa de <strong>um asset</strong> (com rig/animação) para um game engine consolidado? FBX. Precisa orquestrar <strong>uma cena ou um pipeline</strong> com múltiplos artistas, referências e versões? USD. À medida que projetos e equipes crescem, a gravidade puxa para o USD — é por isso que a indústria toda convergiu para ele, e por que o Blender o prioriza.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 19 ===== -->
+<section class="cap" id="cap19">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 19</div><div class="fio"></div></div>
+  <h2 class="titulo">Alembic, OBJ, STL e os demais</h2>
+
+  <p class="lead">Além dos três grandes, há um pelotão de formatos especializados — cada um afiado para uma tarefa. Conhecê-los é saber pegar a ferramenta certa para o trabalho exato, em vez de forçar um glTF ou FBX onde outro brilha.</p>
+
+  <h3>19.1 — Alembic (.abc): movimento congelado</h3>
+  <p>O <strong>Alembic</strong> guarda <strong>geometria animada como cache de vértices</strong> — não o rig nem a simulação, mas o <em>resultado</em> deles, posição de vértice por frame. É o padrão de VFX para levar animação e simulação pesadas (cloth, fluido, multidão, deformação complexa) entre softwares (Houdini, Maya, Nuke, Katana) sem precisar recriar o setup. Você assa o movimento no Blender e exporta o Alembic; o destino reproduz a deformação fielmente, como um "vídeo de geometria". É o irmão de exportação do bake de simulação (Cap. 11, vol. 8).</p>
+
+  <h3>19.2 — OBJ: o universal simples</h3>
+  <p>O <strong>OBJ</strong> é antigo, simples e quase universalmente suportado: carrega malha, UVs e materiais básicos (via .mtl), mas <strong>nenhuma animação</strong>. É perfeito para passar uma <em>geometria estática</em> rapidamente entre quaisquer dois softwares, para esculpir em ZBrush e voltar, ou quando você só precisa da forma. No 5.x o OBJ é nativo em C++ (rápido), com validação de malha e opção de aplicar transformação na importação.</p>
+
+  <h3>19.3 — Os especialistas</h3>
+  <table>
+    <tr><th>Formato</th><th>Especialidade</th><th>Carrega / não carrega</th></tr>
+    <tr><td><strong>STL</strong></td><td>Impressão 3D, CAD</td><td>Só malha de triângulos; <em>sem</em> cor, UV, material (Cap. 21)</td></tr>
+    <tr><td><strong>PLY</strong></td><td>Scans, point clouds, vertex color</td><td>Geometria + vertex color; bom para dados capturados</td></tr>
+    <tr><td><strong>3MF</strong></td><td>Impressão 3D moderna</td><td>Malha + cor + materiais + metadados (mais rico que STL)</td></tr>
+    <tr><td><strong>glTF</strong></td><td>Realtime/web (Cap. 16)</td><td>O padrão moderno; releia o Cap. 16</td></tr>
+    <tr><td><strong>X3D / VRML</strong></td><td>Web 3D legado</td><td>Pouco usado hoje</td></tr>
+  </table>
+  <p>Nota histórica: o <strong>Collada (.dae)</strong>, antes comum, foi <strong>removido no Blender 5.0</strong> por ser legado — se um pipeline antigo pedir Collada, considere glTF ou FBX no lugar.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Cada formato é uma ferramenta, não um rival</div>
+    <p>Não existe "o melhor formato" — existe o melhor para a tarefa. Geometria estática rápida? OBJ. Aparência fiel em realtime? glTF. Asset riggado para engine? FBX. Cena/pipeline? USD. Simulação para VFX? Alembic. Impressão? STL/3MF. Scan com cor? PLY. Dominar exportação é ter esse mapa na cabeça e escolher sem hesitar — e saber preparar o modelo (Cap. 14) para o recorte que cada um carrega.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VI ===================== -->
+<div class="parte-cover" id="parte6">
+  <div class="pn">PARTE VI</div>
+  <h2>Pipelines de destino</h2>
+  <p>Exportar não é genérico — cada destino tem suas convenções. Esta parte final desce ao concreto: como entregar para game engines (Unity, Unreal), como exportar para impressão 3D sem decepções, e a referência completa de termos, atalhos e novidades 5.x que fecha o guia e a coleção.</p>
+</div>
+
+<!-- ===== CAP 20 ===== -->
+<section class="cap" id="cap20">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 20</div><div class="fio"></div></div>
+  <h2 class="titulo">Exportar para game engines (Unity, Unreal)</h2>
+
+  <p class="lead">Game engines são o destino mais comum — e o mais exigente em convenções. Escala, eixos, naming, colisão, LODs e texturas têm regras que, seguidas, fazem o asset "simplesmente funcionar" no engine.</p>
+
+  <h3>20.1 — A checklist do asset de game</h3>
+  <table>
+    <tr><th>Item</th><th>Cuidado</th></tr>
+    <tr><td><strong>Escala</strong></td><td>Aplicar transformações; conferir unit scale (Unreal usa cm; Unity, m) — modelo no tamanho real (Cap. 13)</td></tr>
+    <tr><td><strong>Eixos</strong></td><td>Y-up no destino; usar os presets do exportador</td></tr>
+    <tr><td><strong>Texturas PBR assadas</strong></td><td>Base color, normal, roughness, metallic, AO — empacotadas (ORM) conforme o engine (Cap. 7)</td></tr>
+    <tr><td><strong>Canal de lightmap</strong></td><td>Segundo UV não sobreposto para objetos estáticos (Cap. 10)</td></tr>
+    <tr><td><strong>LODs</strong></td><td>Versões progressivamente mais leves do modelo para distância</td></tr>
+    <tr><td><strong>Colisão</strong></td><td>Malha de colisão simples (convex), por convenção de nome (ex.: UCX_ no Unreal)</td></tr>
+    <tr><td><strong>Animação assada</strong></td><td>Bake Action; rig procedural não viaja (Cap. 11)</td></tr>
+    <tr><td><strong>Pivô / origem</strong></td><td>Posicionar a origem onde o engine vai girar/posicionar o objeto</td></tr>
+  </table>
+
+  <h3>20.2 — Convenções por engine</h3>
+  <ul>
+    <li><strong>Unreal Engine:</strong> usa centímetros (cuidado com escala 100×), Y-up; aceita FBX e cada vez mais glTF e USD; colisão por prefixos de nome (UCX_, UBX_); normal map historicamente DirectX (canal verde invertido, Cap. 5).</li>
+    <li><strong>Unity:</strong> usa metros, Y-up; importa FBX e glTF nativamente; normal map OpenGL; bom suporte a prefabs e materiais; lightmaps via seu próprio sistema.</li>
+    <li><strong>Godot:</strong> prefere glTF (recomendado oficialmente); Y-up; fluxo moderno e direto.</li>
+  </ul>
+
+  <h3>20.3 — LODs e otimização de entrega</h3>
+  <p>Engines trocam o modelo por versões mais leves (<strong>LODs</strong> — Levels of Detail) conforme o objeto se afasta da câmera, economizando polígonos onde não se nota. Você gera o LOD0 (cheio), LOD1, LOD2... cada um com menos geometria (decimação cuidadosa, mantendo a silhueta — vol. 6). Combine com texturas em resolução adequada, sobreposição/empilhamento de UV onde possível (vol. 7), atlas e trim (vol. 7) — todas as decisões de otimização da coleção convergem aqui, no asset enxuto que o engine consome bem.</p>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Teste cedo, teste pequeno</div>
+    <p>Antes de produzir dezenas de assets, faça um <strong>teste de pipeline</strong> com um modelo simples: exporte, importe no engine, confira escala, eixos, materiais, normal map e animação. Acerte a configuração de export <em>uma vez</em>, salve como preset, e replique. Descobrir que todos os 50 assets vieram 100× grandes ou com normal invertido depois de exportados é o pesadelo evitável — um teste de cinco minutos com um cubo texturizado revela o problema antes de ele se multiplicar.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 21 ===== -->
+<section class="cap" id="cap21">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 21</div><div class="fio"></div></div>
+  <h2 class="titulo">Exportar para impressão 3D</h2>
+
+  <p class="lead">Impressão 3D tem exigências próprias e implacáveis: o modelo precisa ser <strong>sólido, fechado e em escala física real</strong>. Um modelo lindo para render pode ser impossível de imprimir. Esta é a preparação para o mundo físico.</p>
+
+  <h3>21.1 — O requisito-chave: malha "manifold" (à prova d'água)</h3>
+  <p>Para imprimir, a malha precisa ser <strong>manifold</strong> (watertight): um sólido fechado, sem buracos, sem faces internas, sem geometria não-manifold (arestas compartilhadas por mais de duas faces, vértices soltos). A impressora precisa saber inequivocamente o que é "dentro" e "fora" para depositar material. Uma malha aberta ou com erros confunde o fatiador (slicer) e falha na impressão.</p>
+  <table>
+    <tr><th>Problema</th><th>Por que impede a impressão</th></tr>
+    <tr><td><strong>Buracos (non-watertight)</strong></td><td>O slicer não sabe o que preencher</td></tr>
+    <tr><td><strong>Normais invertidas</strong></td><td>"Dentro" e "fora" ficam ambíguos</td></tr>
+    <tr><td><strong>Geometria non-manifold</strong></td><td>Arestas/vértices que não formam sólido válido</td></tr>
+    <tr><td><strong>Faces internas / sobrepostas</strong></td><td>Confundem o cálculo de volume</td></tr>
+    <tr><td><strong>Espessura zero</strong></td><td>Paredes finas demais não imprimem (precisam de volume real)</td></tr>
+  </table>
+
+  <h3>21.2 — Preparar e exportar</h3>
+  <ol class="passos">
+    <li><h4>Feche e valide a malha</h4><p>Sem buracos, manifold, normais para fora (vol. 6). O add-on <em>3D Print Toolbox</em> do Blender checa manifold, espessura, intersecções e ângulos problemáticos.</p></li>
+    <li><h4>Dê espessura real</h4><p>Superfícies finas precisam de volume (Solidify) — a impressora não imprime "papel" de espessura zero.</p></li>
+    <li><h4>Acerte a escala física</h4><p>Defina as unidades da cena e modele/escale no tamanho real (mm/cm). O STL não carrega unidade — o slicer assume um padrão, então a escala precisa estar correta.</p></li>
+    <li><h4>Exporte em STL (ou 3MF)</h4><p>STL é o universal da impressão (só geometria). 3MF é mais moderno (carrega cor/material/metadados) se a sua impressora/slicer suportar.</p></li>
+    <li><h4>Confira no slicer</h4><p>Abra no fatiador (Cura, PrusaSlicer...), que aponta erros restantes e mostra como vai imprimir.</p></li>
+  </ol>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Render-pronto ≠ impressão-pronto</div>
+    <p>Um modelo perfeito para render pode ser impossível de imprimir. Render perdoa: faces abertas, normais tortas, espessura zero, intersecções — nada disso aparece numa imagem se a câmera não vê. A impressão <strong>não perdoa</strong> nada disso: ela exige um sólido fechado e fisicamente coerente. Por isso preparar para impressão é quase um "modo" próprio — feche tudo, valide com o 3D Print Toolbox, dê espessura, confira escala. O mundo físico é o juiz mais rigoroso da sua malha.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 21</div>
+    <p>Pegue um modelo qualquer e prepare-o para impressão: ative o add-on 3D Print Toolbox, rode as checagens (manifold, espessura, intersecções) e conserte o que apontar. Aplique Solidify onde houver superfícies finas, defina as unidades da cena em milímetros e escale para um tamanho real (ex.: 5 cm). Exporte em STL e abra num slicer gratuito (Cura/PrusaSlicer) para ver se imprimiria.</p>
+  </div>
+</section>
+
+<!-- ===================== PARTE VII ===================== -->
+<div class="parte-cover" id="parte7">
+  <div class="pn">PARTE VII</div>
+  <h2>Na prática e referência</h2>
+  <p>Os dois ofícios — assar e exportar — só viram resultado quando se encadeiam num fluxo real, com as texturas empacotadas certas, os caminhos resolvidos e cada etapa na ordem. Esta parte final reúne os cuidados de entrega de texturas, um pipeline completo do alto-poli ao engine, e a referência que fecha o guia e a coleção.</p>
+</div>
+
+<!-- ===== CAP 22 ===== -->
+<section class="cap" id="cap22">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 22</div><div class="fio"></div></div>
+  <h2 class="titulo">Texturas na entrega: empacotamento, caminhos e compressão</h2>
+
+  <p class="lead">Assar os mapas é metade; <strong>entregá-los</strong> de forma que o destino os encontre, leia e carregue rápido é a outra. Empacotar canais, gerenciar caminhos e comprimir são os cuidados que separam um asset que "abre certinho" de um que chega sem textura ou pesado demais.</p>
+
+  <h3>22.1 — Channel packing: três mapas numa imagem</h3>
+  <p>Mapas de dados (AO, roughness, metallic) são <strong>cinza</strong> — usam só um canal. Desperdiçar uma imagem RGB inteira para guardar um valor em escala de cinza é ineficiente. A solução é o <strong>channel packing</strong>: empilhar três mapas grayscale nos canais R, G e B de uma única imagem. O empacotamento mais comum é o <strong>ORM</strong>:</p>
+  <table>
+    <tr><th>Canal</th><th>Guarda</th></tr>
+    <tr><td><strong>R (vermelho)</strong></td><td>Occlusion (AO)</td></tr>
+    <tr><td><strong>G (verde)</strong></td><td>Roughness</td></tr>
+    <tr><td><strong>B (azul)</strong></td><td>Metallic</td></tr>
+  </table>
+  <p>Uma textura ORM substitui três arquivos por um — menos memória, menos chamadas de leitura, carregamento mais rápido no engine. As convenções variam (Unreal e Unity têm preferências próprias; alguns usam outras ordens), então confirme o que o destino espera. No Blender, o packing se faz com nós (Combine Color / Separate Color) ou na exportação/no software de texturização, que costuma ter presets de ORM prontos.</p>
+
+  <h3>22.2 — Caminhos de textura: o pesadelo dos links quebrados</h3>
+  <p>O problema mais comum (e mais frustrante) de entrega: o modelo chega, mas as <strong>texturas não</strong> — aparece tudo rosa/magenta ou cinza. A causa é quase sempre <strong>caminho quebrado</strong>: o arquivo referencia texturas por um caminho que não existe na outra máquina (um <code>C:\Users\seu_nome\...</code> absoluto que ninguém mais tem).</p>
+  <ul>
+    <li><strong>Use caminhos relativos:</strong> em <span class="menupath">File ▸ External Data ▸ Make Paths Relative</span>, os links passam a apontar relativos ao .blend — sobrevivem a mudar de pasta/máquina junto com as texturas.</li>
+    <li><strong>Empacote no .blend:</strong> <span class="menupath">File ▸ External Data ▸ Pack Resources</span> embute as texturas dentro do arquivo — nada se perde, ao custo de um .blend maior.</li>
+    <li><strong>Entregue numa estrutura organizada:</strong> uma pasta do projeto com o modelo e uma subpasta <code>/textures</code> ao lado; nomes claros (<code>asset_basecolor</code>, <code>asset_normal</code>, <code>asset_orm</code>).</li>
+    <li><strong>GLB embute tudo:</strong> uma vantagem do GLB (Cap. 16) é justamente carregar as texturas dentro do arquivo — imune a links quebrados.</li>
+  </ul>
+
+  <h3>22.3 — Resolução e compressão</h3>
+  <p>O tamanho das texturas domina o "peso" de um asset. Dois eixos de decisão:</p>
+  <table>
+    <tr><th>Decisão</th><th>Orientação</th></tr>
+    <tr><td><strong>Resolução</strong></td><td>Adequada ao uso: 4K para hero em close, 2K para a maioria, 1K/512 para objetos distantes ou pequenos. Texel density consistente entre assets (vol. 7)</td></tr>
+    <tr><td><strong>Formato de imagem</strong></td><td>PNG/EXR sem perdas para assar; na entrega web, <strong>WebP</strong> (menor) ou <strong>KTX2/Basis</strong> (comprimido na GPU)</td></tr>
+    <tr><td><strong>Compressão de malha</strong></td><td><strong>Draco</strong> no glTF reduz muito o tamanho da geometria para a web (Cap. 16)</td></tr>
+    <tr><td><strong>Color space correto</strong></td><td>Base color/emission em sRGB; normal/roughness/metallic/ORM em Non-Color (Cap. 5)</td></tr>
+  </table>
+
+  <div class="caixa atencao">
+    <div class="rot">⚠ Tudo rosa no destino? É caminho de textura</div>
+    <p>Se o modelo importado aparece <strong>rosa/magenta</strong> (ou cinza chapado), quase nunca é a malha — é a textura que não foi encontrada. Antes de refazer qualquer coisa: confira se as texturas foram <strong>junto</strong> com o arquivo, se os <strong>caminhos são relativos</strong> (ou embutidos), e se os nomes batem. No Blender, o magenta é a cor-padrão de "textura faltando". Resolver isso é gerenciar caminhos (22.2), não retexturizar — e GLB/Pack Resources elimina o problema de vez.</p>
+  </div>
+
+  <div class="caixa dica">
+    <div class="rot">✔ Combine packing com a entrega</div>
+    <p>O conjunto enxuto de um asset de game moderno costuma ser: <strong>base color</strong> (sRGB), <strong>normal</strong> (Non-Color), e <strong>ORM</strong> empacotado (Non-Color) — três texturas em vez de cinco ou seis, mais opacity se houver recorte (Cap. 8). Entregue-as numa pasta organizada com caminhos relativos (ou embutidas no GLB), na resolução certa para o uso e comprimidas conforme o destino. Esse cuidado de entrega é invisível quando bem feito — e a causa de horas perdidas quando ignorado.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 23 ===== -->
+<section class="cap" id="cap23">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 23</div><div class="fio"></div></div>
+  <h2 class="titulo">Um pipeline completo, do alto-poli ao engine</h2>
+
+  <p class="lead">Os capítulos anteriores são as peças; este as encadeia. Vamos seguir um asset — digamos, uma <strong>caixa de munição</strong> de game — do bloco inicial até o arquivo pronto no engine, mostrando onde cada etapa (e cada volume da coleção) entra. É o mapa que costura tudo.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 130" role="img" aria-label="O encadeamento do pipeline de asset">
+      <g transform="translate(20,40)" font-family="JetBrains Mono">
+        <g>
+          <rect x="0" y="0" width="92" height="44" rx="6" class="q-bake-f"/>
+          <text x="46" y="20" text-anchor="middle" class="q-sub" fill="#cfc8ba">high-poly</text>
+          <text x="46" y="34" text-anchor="middle" class="q-sub">detalhe</text>
+        </g>
+        <g transform="translate(108,0)">
+          <rect x="0" y="0" width="92" height="44" rx="6" class="q-obj"/>
+          <text x="46" y="20" text-anchor="middle" class="q-sub" fill="#cfc8ba">retopo</text>
+          <text x="46" y="34" text-anchor="middle" class="q-sub">low-poly</text>
+        </g>
+        <g transform="translate(216,0)">
+          <rect x="0" y="0" width="92" height="44" rx="6" class="q-obj"/>
+          <text x="46" y="20" text-anchor="middle" class="q-sub" fill="#cfc8ba">UV</text>
+          <text x="46" y="34" text-anchor="middle" class="q-sub">desdobrar</text>
+        </g>
+        <g transform="translate(324,0)">
+          <rect x="0" y="0" width="92" height="44" rx="6" class="q-bake-f"/>
+          <text x="46" y="20" text-anchor="middle" class="q-sub" fill="#cfc8ba">BAKE</text>
+          <text x="46" y="34" text-anchor="middle" class="q-sub">os mapas</text>
+        </g>
+        <g transform="translate(432,0)">
+          <rect x="0" y="0" width="92" height="44" rx="6" class="q-obj"/>
+          <text x="46" y="20" text-anchor="middle" class="q-sub" fill="#cfc8ba">texturizar</text>
+          <text x="46" y="34" text-anchor="middle" class="q-sub">PBR</text>
+        </g>
+        <g transform="translate(540,0)">
+          <rect x="0" y="0" width="140" height="44" rx="6" class="q-saida-f"/>
+          <text x="70" y="20" text-anchor="middle" class="q-sub" fill="#cfc8ba">EXPORTAR</text>
+          <text x="70" y="34" text-anchor="middle" class="q-sub">→ engine</text>
+        </g>
+        <g stroke="var(--q-dim)" stroke-width="1.5" fill="none" marker-end="url(#pp)">
+          <path d="M94 22 H106"/><path d="M202 22 H214"/><path d="M310 22 H322"/><path d="M418 22 H430"/><path d="M526 22 H538"/>
+        </g>
+        <defs><marker id="pp" markerWidth="7" markerHeight="7" refX="4" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 z" fill="var(--q-dim)"/></marker></defs>
+      </g>
+    </svg>
+    <figcaption><b>Figura 23.1 — A cadeia do asset.</b> Cada etapa alimenta a seguinte: o detalhe do high-poly é assado nas UVs do low-poly retopologizado, vira textura PBR, e é exportado. As etapas em cobre são baking; a final, em teal, é a saída. Esta é a espinha de quase todo asset de produção.</figcaption>
+  </figure>
+
+  <h3>23.1 — O fluxo de um asset de game, passo a passo</h3>
+  <ol class="passos">
+    <li><h4>High-poly: criar o detalhe</h4><p>Esculpa ou modele a versão rica — a forma com todos os chanfros, parafusos, desgastes e relevos. Vem do <strong>hard surface (vol. 2)</strong>, do <strong>boolean (vol. 3)</strong> e da escultura. É a fonte do que será assado.</p></li>
+    <li><h4>Retopo: criar o low-poly</h4><p>Construa a malha leve e limpa que vai para o jogo — boa topologia, silhueta fiel, polígonos só onde contam (<strong>topologia, vol. 6</strong>). É o objeto que recebe os mapas e é exportado.</p></li>
+    <li><h4>UV: desdobrar o low</h4><p>Abra UVs sem sobreposição, com boa margem e texel density consistente (<strong>UV mapping, vol. 7</strong>) — e um segundo canal de lightmap se a engine precisar (Cap. 10). É onde os mapas vão morar.</p></li>
+    <li><h4>Bake: assar o conjunto de mapas</h4><p>Selected to Active do high para o low (Cap. 3, 4): normal, AO, curvature, position, thickness, ID (Caps. 5–8). Salve cada um. É o coração deste guia.</p></li>
+    <li><h4>Texturizar: construir o PBR</h4><p>Use os mapas assados como máscaras para construir o material (base color, roughness, metallic, normal) — no Blender ou no Substance. O desgaste segue a forma (Cap. 6).</p></li>
+    <li><h4>Preparar e exportar</h4><p>Aplicar transformações, triangular, conferir escala/eixos (Caps. 13, 14); empacotar texturas (ORM, caminhos, Cap. 22); exportar no formato do destino (Caps. 16–19).</p></li>
+    <li><h4>Conferir no engine</h4><p>Importar, validar escala, orientação, materiais e normal map (Cap. 20). Acertar uma vez, salvar o preset, repetir.</p></li>
+  </ol>
+
+  <h3>23.2 — O mesmo asset, destinos diferentes</h3>
+  <p>A bela notícia: o <strong>miolo do pipeline é o mesmo</strong> (high → low → UV → bake → texturizar). Só a <strong>cauda</strong> muda conforme o destino:</p>
+  <table>
+    <tr><th>Destino</th><th>O que muda na cauda</th></tr>
+    <tr><td><strong>Game engine</strong></td><td>LODs, colisão, lightmap UV, ORM, FBX/glTF/USD, conferir no engine (Cap. 20)</td></tr>
+    <tr><td><strong>Web / AR</strong></td><td>GLB, texturas WebP/KTX2, compressão Draco, resolução enxuta (Caps. 16, 22)</td></tr>
+    <tr><td><strong>VFX / pipeline</strong></td><td>USD ou Alembic, materiais MaterialX/OpenPBR, cenas referenciadas (Caps. 18, 19)</td></tr>
+    <tr><td><strong>Impressão 3D</strong></td><td>Sem texturas: malha manifold, espessura, escala física, STL/3MF (Cap. 21)</td></tr>
+    <tr><td><strong>Render no próprio Blender</strong></td><td>Sem exportar nem assar PBR — usar o material vivo e a composição (vol. 4)</td></tr>
+  </table>
+
+  <div class="caixa conceito">
+    <div class="rot">◆ Um pipeline, muitas saídas</div>
+    <p>Esta é a lição que une o guia inteiro: existe <em>um</em> fluxo de criação de asset, e ele desemboca em <em>muitas</em> saídas. Você não reaprende tudo para cada destino — você domina o miolo (modelar, retopo, UV, assar, texturizar) e troca apenas a etapa final conforme onde o trabalho vai parar. É por isso que esta coleção foi construída na ordem que foi: cada volume é uma estação dessa linha de montagem, e o baking e a exportação são a estação de embarque, de onde o asset parte para o mundo — game, web, tela de cinema ou objeto físico.</p>
+  </div>
+
+  <div class="caixa exercicio">
+    <div class="rot">✎ Exercício 23</div>
+    <p>Leve um objeto seu pelo pipeline inteiro: pegue (ou modele) um high-poly simples, faça uma retopo leve, abra UVs, asse ao menos normal + AO do high para o low, monte um material PBR com esses mapas, e exporte um GLB. Abra o GLB num visualizador (o navegador ou um viewer online). Você terá percorrido, num único asset, o caminho de toda a coleção — da forma à entrega.</p>
+  </div>
+</section>
+
+<!-- ===== CAP 24 (glossário) ===== -->
+<section class="cap" id="cap24">
+  <div class="cap-tag"><svg class="bk" viewBox="0 0 19 19"><rect x="2" y="2" width="15" height="15" rx="2" fill="none" stroke="#BC6A2C" stroke-width="1.4"/><rect x="5" y="5" width="9" height="9" fill="#BC6A2C" opacity=".4"/></svg><div class="num">CAPÍTULO 24</div><div class="fio"></div></div>
+  <h2 class="titulo">Glossário, atalhos e novidades 5.x</h2>
+
+  <h3>24.1 — Glossário</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição</th></tr>
+    <tr><td><strong>Baking</strong></td><td>Calcular e gravar informação numa textura/cache para uso posterior</td></tr>
+    <tr><td><strong>High-poly / Low-poly</strong></td><td>Modelo denso (fonte de detalhe) / leve (recebe os mapas)</td></tr>
+    <tr><td><strong>Selected to Active</strong></td><td>Modo de bake que transfere do high (selecionado) para o low (ativo)</td></tr>
+    <tr><td><strong>Cage</strong></td><td>Casca inflada do low que controla de onde os raios de bake partem</td></tr>
+    <tr><td><strong>Ray Distance / Extrusion</strong></td><td>Até onde os raios procuram o high-poly</td></tr>
+    <tr><td><strong>Normal map</strong></td><td>Mapa que codifica direções de normal (relevo aparente sem geometria)</td></tr>
+    <tr><td><strong>Tangent / Object space</strong></td><td>Normal relativa à superfície (deforma) / ao objeto (estático)</td></tr>
+    <tr><td><strong>AO / Curvature / Cavity</strong></td><td>Mapas de oclusão e borda, usados como máscaras de desgaste/sujeira</td></tr>
+    <tr><td><strong>PBR (metallic-roughness)</strong></td><td>Conjunto padrão: base color, metallic, roughness, normal, emission, AO</td></tr>
+    <tr><td><strong>ORM</strong></td><td>Occlusion-Roughness-Metallic empacotados nos canais R-G-B de uma imagem</td></tr>
+    <tr><td><strong>Displacement</strong></td><td>Mapa que move a geometria de verdade (muda a silhueta)</td></tr>
+    <tr><td><strong>Vector displacement</strong></td><td>Displacement em qualquer direção 3D (dobras, saliências)</td></tr>
+    <tr><td><strong>Lightmap</strong></td><td>Textura com a iluminação assada de superfícies estáticas</td></tr>
+    <tr><td><strong>Non-Color</strong></td><td>Color space para dados (normal, roughness) — não sRGB</td></tr>
+    <tr><td><strong>Bake Action</strong></td><td>Converter animação procedural (rig, constraints) em keyframes</td></tr>
+    <tr><td><strong>glTF / GLB</strong></td><td>Formato moderno de realtime/web (separado / binário único)</td></tr>
+    <tr><td><strong>FBX</strong></td><td>Formato de troca dominante para game engines e DCCs</td></tr>
+    <tr><td><strong>USD</strong></td><td>Descrição de cena/pipeline (layers, referências) — padrão de VFX</td></tr>
+    <tr><td><strong>Alembic</strong></td><td>Cache de geometria animada/simulada para VFX</td></tr>
+    <tr><td><strong>Manifold (watertight)</strong></td><td>Malha sólida fechada, requisito da impressão 3D</td></tr>
+    <tr><td><strong>LOD</strong></td><td>Level of Detail — versões mais leves do modelo para distância</td></tr>
+    <tr><td><strong>Z-up / Y-up</strong></td><td>Qual eixo é vertical (Blender / maioria das engines)</td></tr>
+  </table>
+
+  <h3>24.2 — Atalhos e caminhos úteis</h3>
+  <table>
+    <tr><th>Ação</th><th>Onde / como</th></tr>
+    <tr><td>Aplicar transformações (antes de exportar!)</td><td><kbd>Ctrl</kbd>+<kbd>A</kbd> ▸ All Transforms</td></tr>
+    <tr><td>Assar textura</td><td>Render Properties ▸ Bake (motor Cycles)</td></tr>
+    <tr><td>Marcar seam (para UV de bake)</td><td><kbd>Ctrl</kbd>+<kbd>E</kbd> ▸ Mark Seam (vol. 7)</td></tr>
+    <tr><td>Recalcular normais para fora</td><td>Edit Mode ▸ <kbd>Shift</kbd>+<kbd>N</kbd> (vol. 6)</td></tr>
+    <tr><td>Bake Action</td><td>Object ▸ Animation ▸ Bake Action</td></tr>
+    <tr><td>Exportar</td><td>File ▸ Export ▸ (formato)</td></tr>
+    <tr><td>Salvar imagem assada</td><td>Image Editor ▸ Image ▸ Save As</td></tr>
+    <tr><td>Checagem de impressão 3D</td><td>Add-on 3D Print Toolbox</td></tr>
+  </table>
+
+  <h3>24.3 — Novidades 4.x → 5.x para baking e exportação</h3>
+  <ul>
+    <li><strong>Baking mais previsível (5.0):</strong> assar só nas imagens selecionadas/ativas; nível de subdivisão e interpolação de UV casando com o modifier Subdivision Surface; correções em níveis de subdivisão não-zero.</li>
+    <li><strong>Multires bake melhorado (5.0):</strong> suporte a n-gons e vector displacement.</li>
+    <li><strong>Importador FBX em C++ padrão (5.0):</strong> muito mais rápido; melhor importação de materiais (OpenPBR, mais parâmetros) e animação (takes → actions com slots); opção Material Name Collision.</li>
+    <li><strong>Collada (.dae) removido (5.0):</strong> formato legado descontinuado — use glTF ou FBX.</li>
+    <li><strong>glTF como add-on de núcleo:</strong> já vem com o Blender; importar cenas como collections, exportar vertex color por nome, WebP.</li>
+    <li><strong>USD fortalecido (5.x):</strong> MaterialX escreve Principled como OpenPBR Surface; câmeras animadas; rest pose de esqueleto; mais primitivas; UsdPrimvarReader; API de hooks (USDHook) para estender export.</li>
+    <li><strong>OBJ / PLY / STL nativos em C++:</strong> rápidos, com Validate Meshes por padrão; OBJ com opção Apply Transform na importação.</li>
+    <li><strong>Motion blur melhorado (5.0):</strong> relevante ao assar/exportar movimento.</li>
+  </ul>
+
+  <div class="caixa dica">
+    <div class="rot">✔ A coleção completa</div>
+    <p>Este é o volume 9 — e o baking e a exportação são o <strong>destino</strong> de todos os outros: você assa o detalhe da <strong>Topologia (vol. 6)</strong> e do <strong>Hard Surface (vol. 2)</strong> nos mapas, gravados nas <strong>UVs (vol. 7)</strong>; exporta o <strong>Rigging (vol. 1)</strong> e a animação assada; leva os <strong>Modifiers (vol. 5)</strong> aplicados e as <strong>simulações (vol. 8)</strong> em cache/Alembic; e o que sobra da <strong>Composição (vol. 4)</strong> renderiza, enquanto o asset segue para o engine. Da primeira aresta (vol. 6) ao arquivo entregue, a coleção cobre o caminho inteiro do 3D no Blender. O manual oficial de I/O e de bake (<a class="ext" href="https://docs.blender.org/manual/en/latest/addons/import_export/index.html">docs.blender.org</a>) detalha cada exportador. Daqui, o trabalho sai do Blender e ganha o mundo.</p>
+  </div>
+
+  <hr class="fim">
+</section>
+
+</div><!-- /miolo -->
+
+<footer>
+  Baking e Exportação no Blender 5.x · Guia Completo · volume 9 da coleção · 24 capítulos em 7 partes<br>
+  Assar é transferir o detalhe; exportar é deixar o trabalho partir intacto.
+</footer>
+
+</main>
+</div><!-- /layout -->
+<script src="./apostilas-nav.js" defer></script>
+</body>
+</html>

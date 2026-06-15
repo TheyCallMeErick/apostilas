@@ -7,9 +7,13 @@ const scriptTag = '<script src="./apostilas-nav.js" defer></script>';
 
 const preferredOrder = [
   "apostila-geometry-nodes-blender.html",
+  "guia-completo-uv-mapping-blender-5x.html",
+  "guia-completo-texturizacao-pbr-blender-5x.html",
   "apostila-shader-nodes-blender.html",
   "bsdf-blender-guia-completo.html",
+  "guia-completo-baking-exportacao-blender-5x.html",
   "apostila-luz-e-camera-blender.html",
+  "guia-completo-iluminacao-eevee-cycles-blender-5x.html",
   "livro-composicao-cena-blender-5x.html",
   "guia-completo-topologia-blender-5x.html",
   "guia-completo-boolean-blender-5x.html",
